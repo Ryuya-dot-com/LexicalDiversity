@@ -70,7 +70,7 @@ jobs:
             --file deploy/cloud-run/Dockerfile \
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" \
-            --output "type=docker,name=ldfreq:${GITHUB_SHA},rewrite-timestamp=true,compatibility-version=20" .
+            --output "type=image,name=ldfreq:${GITHUB_SHA},rewrite-timestamp=true,compatibility-version=20" .
           docker image inspect "ldfreq:${GITHUB_SHA}" --format '{{.Id}}'
           docker run --rm --network none --read-only \
             --entrypoint python "ldfreq:${GITHUB_SHA}" \

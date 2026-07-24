@@ -70,18 +70,18 @@ jobs:
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --metadata-file /tmp/ldfreq-image-evidence/production-build-1.json \
-            --output "type=docker,name=${production_ref},rewrite-timestamp=true,compatibility-version=20" .
+            --output "type=image,name=${production_ref},rewrite-timestamp=true,compatibility-version=20" .
           docker buildx build --no-cache --target production --platform linux/amd64 \
             --file deploy/cloud-run/Dockerfile \
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --metadata-file /tmp/ldfreq-image-evidence/production-build-2.json \
-            --output "type=docker,name=${rebuild_ref},rewrite-timestamp=true,compatibility-version=20" .
+            --output "type=image,name=${rebuild_ref},rewrite-timestamp=true,compatibility-version=20" .
           docker buildx build --target verification --platform linux/amd64 \
             --file deploy/cloud-run/Dockerfile \
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
-            --output "type=docker,name=${verification_ref},rewrite-timestamp=true,compatibility-version=20" .
+            --output "type=image,name=${verification_ref},rewrite-timestamp=true,compatibility-version=20" .
           docker image inspect "${production_ref}" \
             > /tmp/ldfreq-image-evidence/production-image-inspect.json
           docker image inspect "${rebuild_ref}" \
