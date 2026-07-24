@@ -59,9 +59,17 @@ def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
         "# syntax=docker/dockerfile:1.7@sha256:"
         "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e\n"
     )
-    assert "ARG SOURCE_DATE_EPOCH" in dockerfile
+    assert dockerfile.count("ARG SOURCE_DATE_EPOCH") == 2
     assert f"ARG PYTHON_IMAGE={exact_image}" in dockerfile
     assert "FROM --platform=linux/amd64 ${PYTHON_IMAGE} AS application" in dockerfile
+    application_stage = dockerfile.split(
+        "FROM --platform=linux/amd64 ${PYTHON_IMAGE} AS application",
+        1,
+    )[1].split("FROM application AS verification", 1)[0]
+    assert application_stage.count("ARG SOURCE_DATE_EPOCH") == 1
+    assert application_stage.index("ARG SOURCE_DATE_EPOCH") < application_stage.index(
+        "RUN python -m pip install"
+    )
     assert "FROM application AS verification" in dockerfile
     assert dockerfile.rstrip().endswith("FROM application AS production")
     assert "@sha256:" in dockerfile
