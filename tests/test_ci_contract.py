@@ -360,6 +360,8 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert 'export SOURCE_DATE_EPOCH="${ldfreq_source_date_epoch}"' in commands
     assert commands.count("--provenance=false") == 1
     assert "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" in commands
+    assert commands.count('--output "type=image,name=') == 1
+    assert 'type=docker,name=' not in commands
     assert "rewrite-timestamp=true,compatibility-version=20" in commands
     assert 'docker image inspect "ldfreq:${GITHUB_SHA}"' in commands
     assert "docker run --rm --network none --read-only" in commands
@@ -430,6 +432,8 @@ def test_candidate_image_workflow_separates_verification_scan_push_and_release()
     assert 'export SOURCE_DATE_EPOCH="${source_date_epoch}"' in commands
     assert commands.count("--provenance=false") == 3
     assert "SOURCE_DATE_EPOCH=${source_date_epoch}" in commands
+    assert commands.count('--output "type=image,name=') == 3
+    assert 'type=docker,name=' not in commands
     assert commands.count("rewrite-timestamp=true,compatibility-version=20") == 3
     assert "test \"${rebuild_image_id}\" = \"${image_id}\"" in commands
     assert "/tmp/ldfreq-image-evidence/production-image-inspect.json" in commands
