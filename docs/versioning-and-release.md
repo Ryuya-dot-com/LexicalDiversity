@@ -97,8 +97,10 @@ not proven by files in this repository.
    digest, provenance and vulnerability scan, and reproduce the golden outputs
    inside it.
    The tag workflow writes a canonical source/build evidence file to temporary
-   storage and prints its SHA-256; it explicitly distinguishes the local Docker
-   image ID from the still-pending registry manifest digest.
+   storage and prints its SHA-256; it records the validated OCI manifest,
+   config, and layer digests separately from the still-pending registry
+   manifest digest. A separately daemon-loaded image is only an operational
+   smoke-test vehicle and is not the release identity.
 10. Publish that evidence, source/archive checksums and, for v1.0, `CITATION.cff` and a durable
    archive DOI. Record the DOI in a new commit/release without rewriting the tag.
 
@@ -108,13 +110,16 @@ golden evidence form one reviewable chain.
 
 Before changing the version to a release candidate, run the manual
 `Candidate application image` workflow from protected `main`. It builds the
-production stage twice without cache and requires identical local image IDs,
-reproduces golden outputs in a separate non-deployable stage, blocks on Critical
-findings, pushes a commit-addressed GHCR candidate, and emits an SBOM, scan,
-registry manifest, GitHub attestation, and canonical evidence. This preflight is
-not a substitute for the tag-triggered release workflow: candidate tags are not
-release tags, artifact retention is finite, and promotion requires a new
-versioned commit and immutable annotated Git tag.
+production stage twice without cache as OCI archives under a digest-pinned
+BuildKit and requires identical manifest, config, and layer digests. It
+reproduces golden outputs in a separate non-deployable stage and scans the exact
+primary archive. Registry login is unavailable until the Critical gate passes;
+the subsequent commit-addressed GHCR rebuild must publish the same manifest
+digest before the SBOM, scan, registry manifest, GitHub attestation, and
+canonical evidence are complete. This preflight is not a substitute for the
+tag-triggered release workflow: candidate tags are not release tags, artifact
+retention is finite, and promotion requires a new versioned commit and
+immutable annotated Git tag.
 
 This repository is currently a source application, not a PyPI distribution; it
 therefore has no independent package-metadata version. If packaging is added,

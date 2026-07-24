@@ -42,6 +42,7 @@ REQUIRED_PATHS = {
     "scripts/check_git_history.py",
     "scripts/check_public_release.py",
     "scripts/build_candidate_image_evidence.py",
+    "scripts/build_oci_image_evidence.py",
     "scripts/check_staging_coherence.py",
     "tests/fixtures/v1_golden/manifest.json",
 }

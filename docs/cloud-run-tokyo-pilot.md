@@ -367,12 +367,16 @@ that the Tokyo/IAP/log-retention/privacy design has been deployed.
 - Recheck the pinned base-image identity and hash-locked wheel set, then build
   the existing non-root Docker scaffold from a clean tracked checkout.
 - Use the digest-pinned Dockerfile frontend, commit-derived
-  `SOURCE_DATE_EPOCH`, timestamp rewriting, and a fixed BuildKit compatibility
-  mode. Require two independent no-cache production builds to yield the same
-  local image ID.
+  `SOURCE_DATE_EPOCH`, timestamp rewriting, a pinned Buildx release, and a
+  digest-pinned BuildKit container with a fixed compatibility mode. Require two
+  independent no-cache OCI production builds to yield the same manifest,
+  config, and complete layer-digest list.
 - Recompute the public golden outputs offline in the non-deployable verification
   stage; the production stage must contain neither tests nor verification
   scripts.
+- Generate the SBOM and vulnerability report directly from that OCI archive.
+  Permit registry login only after the scan passes, then require the published
+  rebuild to retain the scanned manifest digest.
 - Record the resulting application-image digest, provenance, vulnerability
   scan, and golden-fixture reproduction; the pinned base-image digest alone is
   not the resulting application-image digest.

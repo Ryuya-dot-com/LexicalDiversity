@@ -100,20 +100,48 @@ def test_unknown_identity_field_is_release_blocking():
     assert "release identity keys differ from the reviewed schema" in violations
 
 
-def test_release_evidence_is_canonical_and_distinguishes_local_image_identity(
+def test_release_evidence_is_canonical_and_distinguishes_oci_image_identity(
     tmp_path: Path,
 ):
-    image_id = "sha256:" + "a" * 64
+    image_config_digest = "sha256:" + "a" * 64
+    image_manifest_digest = "sha256:" + "b" * 64
+    layer_digest = "sha256:" + "c" * 64
     source_archive = tmp_path / "source.tar.gz"
     source_archive.write_bytes(b"source archive fixture")
+    oci_image_evidence = tmp_path / "release-oci-evidence.json"
+    oci_image_evidence.write_text(
+        json.dumps(
+            {
+                "oci_image_evidence_schema_version": 1,
+                "status": "validated-oci-image",
+                "platform": "linux/amd64",
+                "source_date_epoch": 1784870000,
+                "image": {
+                    "config_digest": image_config_digest,
+                    "manifest_digest": image_manifest_digest,
+                    "layer_count": 1,
+                    "layer_digests": [layer_digest],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     first = evidence.canonical_json(
         evidence.build_evidence(
-            _identity(), image_id=image_id, source_archive=source_archive
+            _identity(),
+            image_config_digest=image_config_digest,
+            image_manifest_digest=image_manifest_digest,
+            oci_image_evidence=oci_image_evidence,
+            source_archive=source_archive,
         )
     )
     second = evidence.canonical_json(
         evidence.build_evidence(
-            _identity(), image_id=image_id, source_archive=source_archive
+            _identity(),
+            image_config_digest=image_config_digest,
+            image_manifest_digest=image_manifest_digest,
+            oci_image_evidence=oci_image_evidence,
+            source_archive=source_archive,
         )
     )
     document = json.loads(first)
@@ -129,9 +157,13 @@ def test_release_evidence_is_canonical_and_distinguishes_local_image_identity(
         "sha256": "eb1a20133f0683368b8fe8524740c1ed1042e839a23e850a1c57d7a24a032129",
     }
     assert document["application_image"] == {
-        "local_image_id": image_id,
+        "platform": "linux/amd64",
+        "config_digest": image_config_digest,
+        "manifest_digest": image_manifest_digest,
+        "layer_digests": [layer_digest],
+        "oci_image_evidence": evidence.external_file_identity(oci_image_evidence),
         "registry_manifest_digest": None,
-        "status": "local-build-verified; registry publication pending",
+        "status": "OCI image verified; registry publication pending",
     }
     assert set(document["build_inputs"]["files"]) == {
         path.as_posix() for path in evidence.EVIDENCE_PATHS

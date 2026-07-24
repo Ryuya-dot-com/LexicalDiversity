@@ -80,10 +80,14 @@ Package hashes and the exact production Python base-image digest are fixed as
 inputs, but the hosted Linux install and resulting application-image digest
 remain v0.9 gates; exact inputs alone are not an end-to-end reproduction claim.
 The manual candidate-image workflow now specifies two no-cache production
-builds, timestamp normalization, offline golden verification in a non-deployable
-stage, SBOM generation, a Critical vulnerability gate, commit-addressed GHCR
-publication, provenance attestation, and canonical evidence. It has not yet run,
-so no application-image candidate digest or scan result is claimed here.
+OCI builds under digest-pinned BuildKit, timestamp normalization, manifest,
+config, and full layer-digest equality, and offline golden verification in a
+non-deployable stage. SBOM generation and the Critical vulnerability gate read
+the exact OCI archive. GHCR login follows the scan, and the independently
+rebuilt commit-addressed publication must have the scanned manifest digest
+before provenance attestation and canonical evidence are accepted. It has not
+yet passed this revised gate, so no application-image candidate digest or scan
+result is claimed here.
 Until those gates pass, do not compute ELLIPSE rating associations, generate the
 Synthetic pilot, add metrics or corpora, or claim that the release is
 reproducible.

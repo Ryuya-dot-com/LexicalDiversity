@@ -22,6 +22,9 @@ jobs:
       IMAGE_NAME: ghcr.io/ryuya-dot-com/lexicaldiversity
       SYFT_VERSION: 1.49.0
       GRYPE_VERSION: 0.116.0
+      BUILDX_VERSION: 0.35.0
+      BUILDKIT_VERSION: 0.31.2
+      BUILDKIT_IMAGE: moby/buildkit:v0.31.2@sha256:63db51c9b30208a7c2b1c40392c7ebb9ce2f85ba238a18a85420f8f5ea2d4684
     steps:
       - name: Check out protected main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,55 +52,90 @@ jobs:
           python scripts/check_public_release.py
           python scripts/check_base_image_identity.py --remote
 
+      - name: Set up pinned Buildx and BuildKit
+        id: buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        with:
+          version: v${{ env.BUILDX_VERSION }}
+          driver: docker-container
+          use: true
+          driver-opts: |
+            image=${{ env.BUILDKIT_IMAGE }}
+
       - name: Prepare evidence directory
         run: install -d -m 0700 /tmp/ldfreq-image-evidence
 
-      - name: Build production twice and non-deployable verification once
+      - name: Build and compare two independent OCI images
         id: build
         shell: bash
         run: |
           set -euo pipefail
           production_ref="ldfreq-candidate:${GITHUB_SHA}"
-          rebuild_ref="ldfreq-candidate-rebuild:${GITHUB_SHA}"
           verification_ref="ldfreq-verification:${GITHUB_SHA}"
           source_date_epoch="$(git show -s --format=%ct HEAD)"
           export SOURCE_DATE_EPOCH="${source_date_epoch}"
           buildx_version="$(docker buildx version | awk '{print $2}' | sed 's/^v//')"
+          builder_inspect="$(docker buildx inspect --bootstrap)"
+          buildkit_version="$(awk '/^BuildKit( version)?:/ {value=$NF; sub(/^v/, "", value); print value; exit}' <<< "${builder_inspect}")"
+          printf '%s\n' "${builder_inspect}" \
+            > /tmp/ldfreq-image-evidence/buildx-builder-inspect.txt
           [[ "${source_date_epoch}" =~ ^[0-9]+$ ]]
-          [[ "${buildx_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
+          test "${buildx_version}" = "${BUILDX_VERSION}"
+          test "${buildkit_version}" = "${BUILDKIT_VERSION}"
           docker buildx build --no-cache --target production --platform linux/amd64 \
             --file deploy/cloud-run/Dockerfile \
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --metadata-file /tmp/ldfreq-image-evidence/production-build-1.json \
-            --output "type=image,name=${production_ref},rewrite-timestamp=true,compatibility-version=20" .
+            --output "type=oci,dest=/tmp/ldfreq-image-evidence/production.oci.tar,rewrite-timestamp=true,compatibility-version=20" .
           docker buildx build --no-cache --target production --platform linux/amd64 \
             --file deploy/cloud-run/Dockerfile \
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --metadata-file /tmp/ldfreq-image-evidence/production-build-2.json \
-            --output "type=image,name=${rebuild_ref},rewrite-timestamp=true,compatibility-version=20" .
+            --output "type=oci,dest=/tmp/ldfreq-image-evidence/rebuild.oci.tar,rewrite-timestamp=true,compatibility-version=20" .
+          python scripts/build_oci_image_evidence.py \
+            --archive /tmp/ldfreq-image-evidence/production.oci.tar \
+            --metadata /tmp/ldfreq-image-evidence/production-build-1.json \
+            --source-date-epoch "${source_date_epoch}" \
+            --output /tmp/ldfreq-image-evidence/production-oci-evidence.json
+          python scripts/build_oci_image_evidence.py \
+            --archive /tmp/ldfreq-image-evidence/rebuild.oci.tar \
+            --metadata /tmp/ldfreq-image-evidence/production-build-2.json \
+            --source-date-epoch "${source_date_epoch}" \
+            --output /tmp/ldfreq-image-evidence/rebuild-oci-evidence.json
+          image_config_digest="$(jq -er '.image.config_digest' /tmp/ldfreq-image-evidence/production-oci-evidence.json)"
+          rebuild_image_config_digest="$(jq -er '.image.config_digest' /tmp/ldfreq-image-evidence/rebuild-oci-evidence.json)"
+          image_manifest_digest="$(jq -er '.image.manifest_digest' /tmp/ldfreq-image-evidence/production-oci-evidence.json)"
+          rebuild_image_manifest_digest="$(jq -er '.image.manifest_digest' /tmp/ldfreq-image-evidence/rebuild-oci-evidence.json)"
+          image_layer_digests="$(jq -cer '.image.layer_digests' /tmp/ldfreq-image-evidence/production-oci-evidence.json)"
+          rebuild_image_layer_digests="$(jq -cer '.image.layer_digests' /tmp/ldfreq-image-evidence/rebuild-oci-evidence.json)"
+          test "${rebuild_image_config_digest}" = "${image_config_digest}"
+          test "${rebuild_image_manifest_digest}" = "${image_manifest_digest}"
+          test "${rebuild_image_layer_digests}" = "${image_layer_digests}"
+          printf 'production OCI config: %s\nproduction OCI manifest: %s\n' \
+            "${image_config_digest}" "${image_manifest_digest}"
+          docker buildx build --target production --platform linux/amd64 \
+            --file deploy/cloud-run/Dockerfile \
+            --provenance=false \
+            --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
+            --load --tag "${production_ref}" .
           docker buildx build --target verification --platform linux/amd64 \
             --file deploy/cloud-run/Dockerfile \
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
-            --output "type=image,name=${verification_ref},rewrite-timestamp=true,compatibility-version=20" .
+            --load --tag "${verification_ref}" .
           docker image inspect "${production_ref}" \
-            > /tmp/ldfreq-image-evidence/production-image-inspect.json
-          docker image inspect "${rebuild_ref}" \
-            > /tmp/ldfreq-image-evidence/rebuild-image-inspect.json
-          image_id="$(docker image inspect "${production_ref}" --format '{{.Id}}')"
-          rebuild_image_id="$(docker image inspect "${rebuild_ref}" --format '{{.Id}}')"
-          [[ "${image_id}" =~ ^sha256:[0-9a-f]{64}$ ]]
-          printf 'production image ID: %s\nrebuild image ID: %s\n' \
-            "${image_id}" "${rebuild_image_id}"
-          test "${rebuild_image_id}" = "${image_id}"
+            > /tmp/ldfreq-image-evidence/operational-image-inspect.json
           echo "production-ref=${production_ref}" >> "${GITHUB_OUTPUT}"
           echo "verification-ref=${verification_ref}" >> "${GITHUB_OUTPUT}"
-          echo "image-id=${image_id}" >> "${GITHUB_OUTPUT}"
-          echo "rebuild-image-id=${rebuild_image_id}" >> "${GITHUB_OUTPUT}"
+          echo "image-config-digest=${image_config_digest}" >> "${GITHUB_OUTPUT}"
+          echo "rebuild-image-config-digest=${rebuild_image_config_digest}" >> "${GITHUB_OUTPUT}"
+          echo "image-manifest-digest=${image_manifest_digest}" >> "${GITHUB_OUTPUT}"
+          echo "rebuild-image-manifest-digest=${rebuild_image_manifest_digest}" >> "${GITHUB_OUTPUT}"
           echo "source-date-epoch=${source_date_epoch}" >> "${GITHUB_OUTPUT}"
           echo "buildx-version=${buildx_version}" >> "${GITHUB_OUTPUT}"
+          echo "buildkit-version=${buildkit_version}" >> "${GITHUB_OUTPUT}"
 
       - name: Smoke-test the production filesystem offline
         shell: bash
@@ -119,10 +157,10 @@ jobs:
             --entrypoint python "${{ steps.build.outputs.verification-ref }}" \
             /verification/scripts/build_v1_golden_fixtures.py --check
 
-      - name: Generate SPDX JSON SBOM
+      - name: Generate SPDX JSON SBOM from the exact OCI archive
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
-          image: ${{ steps.build.outputs.production-ref }}
+          image: oci-archive:/tmp/ldfreq-image-evidence/production.oci.tar
           format: spdx-json
           output-file: /tmp/ldfreq-image-evidence/sbom.spdx.json
           syft-version: v${{ env.SYFT_VERSION }}
@@ -130,12 +168,12 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
 
-      - name: Scan image with a Critical-severity gate
+      - name: Scan the exact OCI archive with a Critical-severity gate
         id: scan
         continue-on-error: true
         uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
         with:
-          image: ${{ steps.build.outputs.production-ref }}
+          image: oci-archive:/tmp/ldfreq-image-evidence/production.oci.tar
           fail-build: true
           severity-cutoff: critical
           only-fixed: false
@@ -152,21 +190,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Push commit-addressed candidate and verify registry manifest
+      - name: Publish the scanned manifest identity and verify the registry
         if: steps.scan.outcome == 'success'
         id: push
         shell: bash
         run: |
           set -euo pipefail
           registry_tag="${IMAGE_NAME}:candidate-${GITHUB_SHA}"
-          docker tag "${{ steps.build.outputs.production-ref }}" "${registry_tag}"
-          docker push "${registry_tag}"
+          docker buildx build --no-cache --target production --platform linux/amd64 \
+            --file deploy/cloud-run/Dockerfile \
+            --provenance=false \
+            --build-arg "SOURCE_DATE_EPOCH=${{ steps.build.outputs.source-date-epoch }}" \
+            --metadata-file /tmp/ldfreq-image-evidence/published-build.json \
+            --output "type=image,name=${registry_tag},push=true,oci-mediatypes=true,rewrite-timestamp=true,compatibility-version=20" .
+          pushed_manifest_digest="$(jq -er '.["containerimage.digest"]' /tmp/ldfreq-image-evidence/published-build.json)"
+          pushed_config_digest="$(jq -er '.["containerimage.config.digest"]' /tmp/ldfreq-image-evidence/published-build.json)"
+          test "${pushed_manifest_digest}" = "${{ steps.build.outputs.image-manifest-digest }}"
+          test "${pushed_config_digest}" = "${{ steps.build.outputs.image-config-digest }}"
           docker buildx imagetools inspect --raw "${registry_tag}" \
             > /tmp/ldfreq-image-evidence/registry-manifest.json
           registry_digest="sha256:$(sha256sum /tmp/ldfreq-image-evidence/registry-manifest.json | cut -d ' ' -f 1)"
-          [[ "${registry_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]
-          config_digest="$(python -c 'import json; print(json.load(open("/tmp/ldfreq-image-evidence/registry-manifest.json", encoding="utf-8"))["config"]["digest"])')"
-          test "${config_digest}" = "${{ steps.build.outputs.image-id }}"
+          registry_config_digest="$(jq -er '.config.digest' /tmp/ldfreq-image-evidence/registry-manifest.json)"
+          test "${registry_digest}" = "${{ steps.build.outputs.image-manifest-digest }}"
+          test "${registry_config_digest}" = "${{ steps.build.outputs.image-config-digest }}"
           docker pull "${IMAGE_NAME}@${registry_digest}"
           echo "registry-tag=${registry_tag}" >> "${GITHUB_OUTPUT}"
           echo "digest=${registry_digest}" >> "${GITHUB_OUTPUT}"
@@ -182,12 +228,15 @@ jobs:
 
       - name: Build canonical candidate evidence
         if: steps.scan.outcome == 'success'
+        id: candidate_evidence
         shell: bash
         run: |
           set -euo pipefail
           python scripts/build_candidate_image_evidence.py \
-            --image-id "${{ steps.build.outputs.image-id }}" \
-            --rebuild-image-id "${{ steps.build.outputs.rebuild-image-id }}" \
+            --image-config-digest "${{ steps.build.outputs.image-config-digest }}" \
+            --rebuild-image-config-digest "${{ steps.build.outputs.rebuild-image-config-digest }}" \
+            --image-manifest-digest "${{ steps.build.outputs.image-manifest-digest }}" \
+            --rebuild-image-manifest-digest "${{ steps.build.outputs.rebuild-image-manifest-digest }}" \
             --image-name "${IMAGE_NAME}" \
             --registry-manifest-digest "${{ steps.push.outputs.digest }}" \
             --registry-manifest /tmp/ldfreq-image-evidence/registry-manifest.json \
@@ -196,9 +245,14 @@ jobs:
             --syft-version "${SYFT_VERSION}" \
             --grype-version "${GRYPE_VERSION}" \
             --buildx-version "${{ steps.build.outputs.buildx-version }}" \
+            --buildkit-version "${{ steps.build.outputs.buildkit-version }}" \
+            --buildkit-image "${BUILDKIT_IMAGE}" \
             --source-date-epoch "${{ steps.build.outputs.source-date-epoch }}" \
+            --primary-oci-evidence /tmp/ldfreq-image-evidence/production-oci-evidence.json \
+            --rebuild-oci-evidence /tmp/ldfreq-image-evidence/rebuild-oci-evidence.json \
             --primary-build-metadata /tmp/ldfreq-image-evidence/production-build-1.json \
             --rebuild-metadata /tmp/ldfreq-image-evidence/production-build-2.json \
+            --published-build-metadata /tmp/ldfreq-image-evidence/published-build.json \
             --repository "${GITHUB_REPOSITORY}" \
             --workflow-run-id "${GITHUB_RUN_ID}" \
             --workflow-run-attempt "${GITHUB_RUN_ATTEMPT}" \
@@ -212,7 +266,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: candidate-image-evidence-${{ github.sha }}
-          path: /tmp/ldfreq-image-evidence/
+          path: |
+            /tmp/ldfreq-image-evidence/*.json
+            /tmp/ldfreq-image-evidence/*.txt
           if-no-files-found: error
           retention-days: 90
           compression-level: 9
@@ -224,7 +280,15 @@ jobs:
         run: |
           set -euo pipefail
           test "${{ steps.scan.outcome }}" = "success"
+          test "${{ steps.push.outcome }}" = "success"
+          test "${{ steps.attest.outcome }}" = "success"
+          test "${{ steps.candidate_evidence.outcome }}" = "success"
+          test -s /tmp/ldfreq-image-evidence/production-build-1.json
+          test -s /tmp/ldfreq-image-evidence/production-build-2.json
+          test -s /tmp/ldfreq-image-evidence/production-oci-evidence.json
+          test -s /tmp/ldfreq-image-evidence/rebuild-oci-evidence.json
           test -s /tmp/ldfreq-image-evidence/sbom.spdx.json
           test -s /tmp/ldfreq-image-evidence/grype.json
+          test -s /tmp/ldfreq-image-evidence/published-build.json
           test -s /tmp/ldfreq-image-evidence/registry-manifest.json
           test -s /tmp/ldfreq-image-evidence/candidate-image-evidence.json
