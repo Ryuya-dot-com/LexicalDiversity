@@ -65,14 +65,17 @@ jobs:
           [[ "${source_date_epoch}" =~ ^[0-9]+$ ]]
           [[ "${buildx_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
           docker buildx build --no-cache --target production --platform linux/amd64 \
+            --file deploy/cloud-run/Dockerfile \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --metadata-file /tmp/ldfreq-image-evidence/production-build-1.json \
             --output "type=docker,name=${production_ref},rewrite-timestamp=true,compatibility-version=20" .
           docker buildx build --no-cache --target production --platform linux/amd64 \
+            --file deploy/cloud-run/Dockerfile \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --metadata-file /tmp/ldfreq-image-evidence/production-build-2.json \
             --output "type=docker,name=${rebuild_ref},rewrite-timestamp=true,compatibility-version=20" .
           docker buildx build --target verification --platform linux/amd64 \
+            --file deploy/cloud-run/Dockerfile \
             --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
             --output "type=docker,name=${verification_ref},rewrite-timestamp=true,compatibility-version=20" .
           image_id="$(docker image inspect "${production_ref}" --format '{{.Id}}')"
