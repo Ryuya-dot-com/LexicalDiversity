@@ -1,0 +1,87 @@
+# PLACEHOLDER PILOT TEMPLATE -- this is not production approval and must not be
+# applied verbatim. Replace every UPPER_CASE placeholder, then compare it with
+# a fresh `gcloud run services describe ... --format export` result and the
+# current Cloud Run API before replacement. The external regional HTTPS load
+# balancer, IAP, Cloud Armor, log routing, IAM, and VPC firewall rules are
+# intentionally outside this service resource. Private Google Access, restricted
+# DNS, and the VPC Service Controls perimeter are also external release gates.
+#
+# The NATION_BUCKET must be a dedicated asia-northeast1 bucket containing only
+# approved static lexical resources beneath the `nation` prefix. Grant the
+# runtime service account bucket-scoped roles/storage.objectViewer only; never
+# grant object-write permissions and never store learner text in this bucket.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ldfreq-pilot
+  namespace: PROJECT_NUMBER
+  labels:
+    cloud.googleapis.com/location: asia-northeast1
+  annotations:
+    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+    run.googleapis.com/default-url-disabled: "true"
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/sessionAffinity: "false"
+        run.googleapis.com/network-interfaces: >-
+          [{"network":"projects/PROJECT_ID/global/networks/NETWORK_NAME","subnetwork":"projects/PROJECT_ID/regions/asia-northeast1/subnetworks/SUBNET_NAME","tags":"ldfreq-egress"}]
+        run.googleapis.com/vpc-access-egress: all-traffic
+    spec:
+      serviceAccountName: ldfreq-runtime@PROJECT_ID.iam.gserviceaccount.com
+      containerConcurrency: 1
+      timeoutSeconds: 1800
+      containers:
+        - name: ldfreq
+          image: asia-northeast1-docker.pkg.dev/PROJECT_ID/ldfreq/ldfreq@sha256:IMAGE_DIGEST
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: LDFREQ_SERVING_MODE
+              value: public
+            - name: LDFREQ_ALLOW_LOCAL_RESTRICTED
+              value: "0"
+            - name: LDFREQ_SERVER_ONLY_RESOURCE_IDS
+              value: bnc_coca,nation_bnc_coca_families
+            - name: LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED
+              # Fail closed. Change to "1" only with the recorded operator
+              # rights decision for the exact mounted artifact/version.
+              value: "0"
+            - name: LDFREQ_ANALYSIS_DEADLINE_SECONDS
+              value: "120"
+            - name: LDFREQ_REAL_WRITING_APPROVED
+              # Keep disabled throughout the synthetic infrastructure stage.
+              value: "0"
+            - name: LDFREQ_BNCCOCA_PATH
+              value: /mnt/nation/headwords-10000
+            - name: LDFREQ_NATION_BNCCOCA_INDEX_PATH
+              value: /mnt/nation/nation_bnc_coca_25000_family_index.csv.gz
+            - name: TMPDIR
+              value: /tmp/ldfreq/tmp
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: nation-static-lists
+              mountPath: /mnt/nation
+            - name: ephemeral-tmp
+              mountPath: /tmp/ldfreq
+      volumes:
+        - name: nation-static-lists
+          csi:
+            driver: gcsfuse.run.googleapis.com
+            readOnly: true
+            volumeAttributes:
+              bucketName: NATION_BUCKET
+              mountOptions: only-dir=nation,uid=10001,gid=10001,file-mode=0400,dir-mode=0500
+        - name: ephemeral-tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi

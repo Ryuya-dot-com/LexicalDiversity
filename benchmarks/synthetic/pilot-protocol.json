@@ -1,0 +1,558 @@
+{
+  "protocol": {
+    "id": "ldfreq-synthetic-pilot-v1",
+    "schema_version": "1.0.0",
+    "protocol_version": "1.0.0",
+    "frozen_on": "2026-07-24",
+    "status": "specified_not_executed",
+    "supersedes": null,
+    "amendment_policy": {
+      "substantive_changes_require_new_version": true,
+      "substantive_changes_require_dated_rationale": true,
+      "model_or_price_change_restarts_preflight_clock": true,
+      "pilot_records_may_not_be_replaced_after_inspection": true
+    }
+  },
+  "execution_authorization": {
+    "generation_authorized": false,
+    "api_calls_during_protocol_authoring": 0,
+    "cost_incurred_jpy": 0,
+    "authorization_rule": "Generation remains disabled until every preflight gate is recorded as pass and the 14-day freeze interval has elapsed.",
+    "credentials_required_in_protocol": false
+  },
+  "purpose": {
+    "roadmap_layer": "layer_2_synthetic_measurement_benchmark",
+    "pilot_objectives": [
+      "verify the generation API and frozen request contract",
+      "measure target-length compliance and refusal incidence",
+      "verify attempt-level provenance and manifest completeness",
+      "exercise automatic cost stopping without exceeding authorization",
+      "exercise deterministic QC and duplicate detection before core generation"
+    ],
+    "claim_boundary": {
+      "measurement_responsiveness_only": true,
+      "conditions_are_experimental_manipulations_not_quality_labels": true,
+      "human_proficiency_inference": false,
+      "cefr_targeting_or_prediction": false,
+      "human_l2_writer_simulation": false,
+      "proficiency_gold_labels": false,
+      "writing_quality_gold_labels": false,
+      "ai_authorship_detection": false
+    }
+  },
+  "design": {
+    "planned_documents": 48,
+    "factorial": {
+      "topics": 12,
+      "genres": 2,
+      "register_conditions": 2,
+      "fixed_model_snapshots": 1,
+      "replicates_per_cell": 1,
+      "formula": "12 * 2 * 2 * 1 * 1",
+      "expected_cells": 48
+    },
+    "relationship_to_core_v1": {
+      "pilot_registers": [
+        "plain",
+        "formal_academic"
+      ],
+      "neutral_register_reserved_for_core": true,
+      "core_model_snapshots": 2,
+      "core_replicates_per_cell": 3,
+      "pilot_documents_are_not_silently_promoted_to_core": true
+    },
+    "target_words": 250,
+    "word_count_acceptance": {
+      "minimum": 225,
+      "maximum": 275,
+      "role": "qc_flag_not_selection_rule"
+    },
+    "derived_token_prefixes": {
+      "lengths": [
+        100,
+        150,
+        200
+      ],
+      "created_after_generation": true,
+      "additional_api_calls": false,
+      "source": "released_normalized_text",
+      "method": "first_n_tokens_under_the_frozen_analysis_tokenizer"
+    },
+    "document_id_template": "syn-pilot-v1-{topic_id}-{genre_id}-{register_id}-r01",
+    "schedule": {
+      "method": "deterministic_fisher_yates_shuffle",
+      "seed": 20260724,
+      "input_order": "topic_id_then_genre_id_then_register_id",
+      "schedule_hash_required_before_first_request": true
+    }
+  },
+  "topics": [
+    {
+      "id": "t01_public_libraries",
+      "title": "The changing role of public libraries",
+      "argumentative_task": "Should local governments give public libraries more space for community programs even if this reduces space reserved for quiet individual study? Take a position and support it with reasons.",
+      "expository_task": "Explain how public libraries can balance quiet study, access to information, and community programs, including the main practical trade-offs."
+    },
+    {
+      "id": "t02_urban_green_space",
+      "title": "Urban green space",
+      "argumentative_task": "Should growing cities prioritize parks and trees over some additional commercial development? Take a position and support it with reasons.",
+      "expository_task": "Explain how urban green spaces affect daily life and describe the main planning trade-offs involved in creating and maintaining them."
+    },
+    {
+      "id": "t03_public_transport",
+      "title": "Reliable public transport",
+      "argumentative_task": "Should cities spend more on improving the reliability of existing public transport before expanding the network? Take a position and support it with reasons.",
+      "expository_task": "Explain the factors that make a public transport system reliable and how reliability affects residents and city planning."
+    },
+    {
+      "id": "t04_food_waste",
+      "title": "Reducing food waste in institutions",
+      "argumentative_task": "Should large institutions be required to measure and publicly report the food they waste? Take a position and support it with reasons.",
+      "expository_task": "Explain why food waste occurs in large institutions and describe practical ways to reduce it without reducing food safety."
+    },
+    {
+      "id": "t05_repair_and_reuse",
+      "title": "Repair and reuse programs",
+      "argumentative_task": "Should local governments fund repair and reuse centers as a regular public service? Take a position and support it with reasons.",
+      "expository_task": "Explain how community repair and reuse programs operate and discuss their possible environmental, economic, and practical effects."
+    },
+    {
+      "id": "t06_learning_materials",
+      "title": "Printed and digital learning materials",
+      "argumentative_task": "Should educational institutions retain printed materials when most learning resources are also available digitally? Take a position and support it with reasons.",
+      "expository_task": "Explain the different functions of printed and digital learning materials and the factors institutions should consider when combining them."
+    },
+    {
+      "id": "t07_flexible_schedules",
+      "title": "Flexible work schedules",
+      "argumentative_task": "Should organizations allow flexible work schedules whenever the job can support them? Take a position and support it with reasons.",
+      "expository_task": "Explain how flexible work schedules can affect coordination, productivity, and employees' daily routines."
+    },
+    {
+      "id": "t08_historic_buildings",
+      "title": "Preserving historic buildings",
+      "argumentative_task": "Should cities preserve historic buildings when replacement would be cheaper and more energy efficient? Take a position and support it with reasons.",
+      "expository_task": "Explain the cultural, financial, environmental, and practical considerations involved in preserving historic buildings."
+    },
+    {
+      "id": "t09_community_energy",
+      "title": "Community renewable energy",
+      "argumentative_task": "Should local communities invest directly in shared renewable-energy projects? Take a position and support it with reasons.",
+      "expository_task": "Explain how a shared community renewable-energy project might be organized and describe its likely benefits and challenges."
+    },
+    {
+      "id": "t10_citizen_science",
+      "title": "Citizen science and environmental monitoring",
+      "argumentative_task": "Should public agencies rely more on observations collected by community volunteers when monitoring the environment? Take a position and support it with reasons.",
+      "expository_task": "Explain how citizen-science projects can contribute to environmental monitoring and how data quality can be maintained."
+    },
+    {
+      "id": "t11_tourism_management",
+      "title": "Managing tourism in popular places",
+      "argumentative_task": "Should popular destinations limit visitor numbers during their busiest periods? Take a position and support it with reasons.",
+      "expository_task": "Explain how high visitor numbers affect popular destinations and describe several approaches to managing those effects."
+    },
+    {
+      "id": "t12_museum_access",
+      "title": "Public access to museums",
+      "argumentative_task": "Should publicly supported museums provide free general admission? Take a position and support it with reasons.",
+      "expository_task": "Explain how admission policies can affect museum access, finances, visitor experience, and public value."
+    }
+  ],
+  "genres": [
+    {
+      "id": "argumentative",
+      "task_field": "argumentative_task",
+      "genre_instruction": "Present a clear position, develop two or more reasons, acknowledge at least one reasonable counter-consideration, and end with a conclusion."
+    },
+    {
+      "id": "expository",
+      "task_field": "expository_task",
+      "genre_instruction": "Explain the topic in an organized way, describe important mechanisms or trade-offs, and end by summarizing the explanation without being required to take a side."
+    }
+  ],
+  "register_conditions": [
+    {
+      "id": "plain",
+      "instruction": "Use clear, direct English for a broad adult audience. Prefer familiar wording and straightforward sentence structures while preserving the complexity of the ideas.",
+      "interpretation": "register manipulation only; not a lower-quality or lower-ability label"
+    },
+    {
+      "id": "formal_academic",
+      "instruction": "Use a formal academic register with precise wording, explicit logical connections, and appropriately varied sentence structures. Do not add citations, references, or invented sources.",
+      "interpretation": "register manipulation only; not a higher-quality or higher-ability label"
+    }
+  ],
+  "prompt_contract": {
+    "system_prompt": "You are producing an original English essay for a public research benchmark. Follow the supplied topic, genre, register, and length requirements. Do not include a title, bullet list, references, notes about the instructions, or claims about your identity.",
+    "user_prompt_template": "Topic: {topic_title}\nTask: {genre_task}\nGenre requirements: {genre_instruction}\nRegister requirement: {register_instruction}\nWrite one complete essay of about 250 words in continuous prose.",
+    "placeholder_order": [
+      "topic_title",
+      "genre_task",
+      "genre_instruction",
+      "register_instruction"
+    ],
+    "rendering": {
+      "encoding": "UTF-8",
+      "unicode_normalization": "NFC",
+      "line_ending": "LF",
+      "trailing_newline": false,
+      "prompt_sha256_required": true,
+      "full_rendered_prompts_published": true
+    },
+    "forbidden_instruction_categories": [
+      "CEFR levels or proficiency bands",
+      "imitation of second-language or non-native writers",
+      "deliberate learner-like errors",
+      "claims that a register condition is a quality or ability label",
+      "personal data or private source text",
+      "requests to imitate a living author"
+    ],
+    "adaptive_prompting_after_qc": false,
+    "metric_results_may_influence_prompts": false
+  },
+  "generation_parameters": {
+    "endpoint_kind": "provider_text_generation_api",
+    "outputs_per_request": 1,
+    "temperature": 0.7,
+    "top_p": 1.0,
+    "maximum_output_tokens": 512,
+    "stop_sequences": [],
+    "stream": false,
+    "seed_policy": {
+      "base_seed": 20260724,
+      "derivation": "base_seed_plus_zero_based_schedule_index",
+      "send_when_supported": true,
+      "unsupported_behavior": "record_seed_unsupported_without_claiming_determinism"
+    },
+    "unsupported_required_parameter_behavior": "stop_and_amend_protocol_before_generation",
+    "hidden_reasoning_requested_or_stored": false
+  },
+  "preflight": {
+    "minimum_freeze_interval_days": 14,
+    "official_sources_only_for_model_price_and_terms": true,
+    "official_pages_rechecked_at_run_start": true,
+    "change_detected_at_recheck": "stop_create_new_protocol_version_and_restart_14_day_clock",
+    "frozen_provider_model_and_price": null,
+    "required_frozen_record_fields": [
+      "provider",
+      "exact_requested_model_snapshot_id",
+      "expected_resolved_model_id",
+      "official_model_documentation_url",
+      "official_pricing_url",
+      "official_terms_url",
+      "captured_at_utc",
+      "first_generation_not_before_utc",
+      "billing_currency",
+      "input_price_per_million_tokens",
+      "output_price_per_million_tokens",
+      "cached_input_price_per_million_tokens_if_applicable",
+      "other_metered_token_price_if_applicable",
+      "tax_treatment",
+      "jpy_conversion_source_if_needed",
+      "jpy_conversion_rate_if_needed",
+      "price_evidence_sha256",
+      "model_capability_evidence_sha256"
+    ],
+    "gates": [
+      {
+        "id": "P01_protocol_and_schedule",
+        "status": "pending",
+        "requirement": "The protocol, 48-cell schedule, rendered prompts, and their SHA-256 values are frozen in a reviewed commit."
+      },
+      {
+        "id": "P02_model_price_terms",
+        "status": "pending",
+        "requirement": "One dated model snapshot, its capabilities, official pricing, and applicable terms are recorded from provider-controlled sources at least 14 days before generation."
+      },
+      {
+        "id": "P03_cost_envelope",
+        "status": "pending",
+        "requirement": "The worst-case estimate for all initial attempts and allowed retries fits below the 6000 JPY pilot stop and the cumulative project estimate fits below 10000 JPY."
+      },
+      {
+        "id": "P04_secret_boundary",
+        "status": "pending",
+        "requirement": "Credentials are supplied only through an approved secret mechanism; request serialization, logs, fixtures, and release staging pass the secret scan."
+      },
+      {
+        "id": "P05_software_identity",
+        "status": "pending",
+        "requirement": "Generator commit, script hash, dependency lockfile hash, protocol hash, QC implementation hash, and analysis resource hashes are recorded."
+      },
+      {
+        "id": "P06_tests_and_stop_simulation",
+        "status": "pending",
+        "requirement": "Offline tests pass and simulated budget, model-drift, retry, duplicate, and secret-leak conditions stop exactly as specified without an external API call."
+      },
+      {
+        "id": "P07_publication_rights",
+        "status": "pending",
+        "requirement": "Provider terms and project licensing have been reviewed for publication of prompts, generated texts, and sanitized provenance."
+      }
+    ],
+    "all_gates_must_pass": true
+  },
+  "budget": {
+    "currency": "JPY",
+    "pilot_automatic_stop_jpy": 6000,
+    "project_total_hard_cap_jpy": 10000,
+    "contingency_outside_running_pilot_jpy": 4000,
+    "contingency_available_to_automatic_resume": false,
+    "pre_request_reservation_required": true,
+    "reservation_formula": "confirmed_spend_jpy + unresolved_attempt_reservations_jpy + worst_case_next_attempt_jpy",
+    "boundary_semantics": "exclusive_send_inclusive_stop",
+    "request_send_condition": "projected_pilot_total_jpy < 6000 and projected_project_total_jpy < 10000",
+    "automatic_stop_condition": "confirmed_or_reserved_pilot_total_jpy >= 6000 or confirmed_or_reserved_project_total_jpy >= 10000",
+    "all_attempts_count_toward_spend": true,
+    "failed_or_retried_attempts_are_free": false,
+    "usage_or_price_missing_behavior": "stop_before_next_request",
+    "provider_invoice_reconciliation_required": true,
+    "cost_disagreement_policy": "record both values, budget against the higher value, and stop before the next request until resolved",
+    "automatic_restart_after_budget_stop": false
+  },
+  "retry_policy": {
+    "maximum_attempts_per_cell": 3,
+    "maximum_retries_per_cell": 2,
+    "backoff_seconds": [
+      2,
+      8
+    ],
+    "jitter": false,
+    "retryable_classes": [
+      "rate_limit_with_retry_after",
+      "connection_failure_before_request_acceptance",
+      "provider_5xx_without_a_completed_response"
+    ],
+    "non_retryable_classes": [
+      "authentication_or_authorization_failure",
+      "unknown_delivery_state_after_timeout",
+      "model_id_or_response_schema_drift",
+      "price_or_terms_drift",
+      "content_refusal",
+      "length_qc_failure",
+      "duplicate_or_near_duplicate_output",
+      "finish_reason_other_than_normal_completion"
+    ],
+    "same_prompt_and_settings_on_retry": true,
+    "every_attempt_preserved": true,
+    "failed_cells_replaced_with_new_conditions": false,
+    "qc_based_best_of_n_selection": false
+  },
+  "stop_policy": {
+    "immediate_run_stop_triggers": [
+      "pilot or project budget stop condition",
+      "missing or stale preflight gate",
+      "requested or resolved model differs from frozen snapshot",
+      "official price or terms differ from the frozen evidence",
+      "usage or cost cannot be computed",
+      "credential, authorization header, cookie, or secret-like value reaches a persisted record",
+      "response schema cannot be validated",
+      "unknown delivery state makes a retry potentially duplicate a billed request"
+    ],
+    "operational_run_stop_triggers": {
+      "consecutive_cells_with_terminal_transport_failure": 3,
+      "terminal_failure_fraction": 0.2,
+      "minimum_scheduled_cells_before_fraction_rule": 10
+    },
+    "resume_requires_new_run_id_and_recorded_reason": true,
+    "resume_may_not_reset_spend": true,
+    "silent_manual_override": false,
+    "partial_results_preserved_locally": true
+  },
+  "quality_control": {
+    "word_count": {
+      "algorithm": "count matches of [A-Za-z]+(?:['’][A-Za-z]+)? after NFC normalization",
+      "target": 250,
+      "minimum": 225,
+      "maximum": 275
+    },
+    "required_document_flags": [
+      "empty_or_missing_text",
+      "non_normal_finish_reason",
+      "provider_refusal",
+      "below_word_range",
+      "above_word_range",
+      "title_or_list_wrapper",
+      "prompt_instruction_echo",
+      "exact_duplicate",
+      "near_duplicate",
+      "secret_like_content",
+      "personal_data_review_required"
+    ],
+    "duplicate_detection": {
+      "scope": "all_48_documents_all_pairs",
+      "normalization": "NFC, lowercase, normalize line endings, collapse Unicode whitespace, trim",
+      "exact_method": "SHA-256 of normalized UTF-8 text",
+      "near_method": "Jaccard similarity over sets of lowercase word-token 5-grams",
+      "near_duplicate_threshold_inclusive": 0.85,
+      "empty_5gram_behavior": "flag_for_review",
+      "pairwise_results_recorded": true
+    },
+    "disposition": {
+      "qc_failures_trigger_regeneration": false,
+      "qc_failures_are_deleted": false,
+      "non_secret_failures_are_released_with_flags": true,
+      "secret_or_personal_data_flags_block_public_release": true,
+      "blocked_records_remain_local_until_resolved": true,
+      "qc_flags_are_gold_labels": false,
+      "lexical_metric_values_may_drive_qc": false
+    }
+  },
+  "provenance": {
+    "record_granularity": "one immutable attempt record per API attempt plus one document record per planned cell",
+    "attempt_record_required_fields": [
+      "protocol_id",
+      "protocol_sha256",
+      "run_id",
+      "document_id",
+      "attempt_index",
+      "retry_reason",
+      "topic_id",
+      "genre_id",
+      "register_id",
+      "full_system_prompt",
+      "full_user_prompt",
+      "prompt_sha256",
+      "provider",
+      "endpoint_kind",
+      "requested_model_id",
+      "resolved_model_id",
+      "request_started_at_utc",
+      "response_received_at_utc",
+      "provider_request_id",
+      "sdk_name_and_version",
+      "generation_parameters",
+      "seed_sent_or_unsupported",
+      "sanitized_raw_request_body",
+      "sanitized_raw_response_body",
+      "http_or_provider_status",
+      "finish_reason",
+      "refusal_status",
+      "input_tokens",
+      "output_tokens",
+      "cached_or_other_metered_tokens",
+      "frozen_price_record_sha256",
+      "attempt_cost_billing_currency",
+      "attempt_cost_jpy",
+      "cumulative_cost_jpy",
+      "raw_text_sha256",
+      "normalized_text_sha256",
+      "qc_flags",
+      "generator_git_commit",
+      "generator_script_sha256",
+      "dependency_lock_sha256",
+      "analysis_tool_git_commit",
+      "analysis_resource_hashes"
+    ],
+    "document_record_required_fields": [
+      "document_id",
+      "condition_cell",
+      "planned_schedule_index",
+      "terminal_status",
+      "attempt_record_ids",
+      "raw_text",
+      "normalized_text",
+      "raw_text_sha256",
+      "normalized_text_sha256",
+      "word_count",
+      "qc_flags",
+      "duplicate_pair_ids",
+      "release_status"
+    ],
+    "raw_transport_headers_persisted": false,
+    "request_and_response_bodies_sanitized_before_write": true,
+    "timestamps": "UTC_ISO_8601_with_fractional_seconds_and_Z",
+    "hash_algorithm": "SHA-256"
+  },
+  "publication": {
+    "intent": "release_prompts_generated_texts_and_sanitized_provenance_as_a_public_reproducible_dataset",
+    "current_release_status": "blocked_until_preflight_generation_qc_and_rights_review",
+    "human_or_private_source_text_used": false,
+    "current_repository_boundary": {
+      "allowed_tracked_paths": [
+        "benchmarks/synthetic/pilot-protocol.json"
+      ],
+      "generated_text_request_or_response_tracking_allowed": false,
+      "promotion_requires_new_reviewed_release_gate_allowlist": true
+    },
+    "permitted_public_content": [
+      "this frozen protocol and later dated amendments",
+      "complete rendered prompts and prompt hashes",
+      "generated essay text and text hashes",
+      "sanitized request and response JSON bodies",
+      "model identifiers, settings, UTC times, provider request IDs, token use, and costs",
+      "retry, refusal, finish-reason, length, and duplicate QC flags",
+      "generator, analysis tool, dependency, and resource identities",
+      "dataset manifest, data card, and aggregate QC report"
+    ],
+    "forbidden_public_content": [
+      "API keys, access tokens, authorization headers, cookies, or signed URLs",
+      "secret-manager identifiers or credential file contents",
+      "environment dumps, billing account identifiers, or organization-private metadata",
+      "local absolute paths, usernames, hostnames, or IP addresses",
+      "unredacted transport headers or debug traces",
+      "human essays, learner records, or private corpus excerpts",
+      "hidden reasoning or chain-of-thought"
+    ],
+    "secret_controls": {
+      "credentials_from_approved_secret_channel_only": true,
+      "credentials_in_cli_arguments_or_protocol": false,
+      "persist_allowlisted_json_fields_only": true,
+      "secret_scan_before_each_write": true,
+      "secret_scan_before_release": true,
+      "scan_failure_behavior": "stop_quarantine_locally_and_do_not_publish",
+      "release_inventory_allowlist_required": true
+    },
+    "licensing": {
+      "dataset_license_frozen_now": false,
+      "license_must_be_fixed_before_generation": true,
+      "provider_terms_compatibility_required": true,
+      "no_publication_claim_before_rights_gate": true
+    }
+  },
+  "reproducibility": {
+    "analysis_reproduction": {
+      "status": "guaranteed_release_requirement",
+      "canonical_input": "released_normalized_text",
+      "requires": [
+        "released texts and hashes",
+        "analysis tool commit",
+        "dependency lockfile",
+        "resource manifests and hashes",
+        "frozen analysis configuration"
+      ]
+    },
+    "generation_request_replay": {
+      "status": "best_effort",
+      "requires": [
+        "complete prompts",
+        "provider and requested model snapshot",
+        "generation settings",
+        "seed support record",
+        "request chronology"
+      ]
+    },
+    "exact_string_regeneration": {
+      "status": "not_guaranteed",
+      "reason": "Hosted model serving, safety layers, and backend implementations can change even when a request record is complete.",
+      "released_text_not_regenerated_text_is_authoritative": true
+    }
+  },
+  "pilot_exit_gate": {
+    "required_before_core_go": [
+      "all 48 planned condition cells have a terminal attempt record without silent replacement",
+      "all attempt and document provenance fields validate",
+      "confirmed and reserved pilot spend remained below 6000 JPY",
+      "cumulative authorized project spend remained below 10000 JPY",
+      "budget and emergency stop simulations passed",
+      "length, refusal, failure, exact-duplicate, and near-duplicate rates are reported",
+      "no credential, private text, or unresolved personal-data flag is present in release staging",
+      "analysis can be reproduced from the staged released texts in a clean environment"
+    ],
+    "lexical_metric_values_may_determine_core_go_no_go": false,
+    "pilot_failures_or_unfavorable_outputs_may_be_deleted": false,
+    "prompt_change_after_pilot_requires_new_version_and_rationale": true
+  }
+}

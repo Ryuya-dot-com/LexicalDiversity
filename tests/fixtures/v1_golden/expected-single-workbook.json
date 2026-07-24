@@ -1,0 +1,1084 @@
+{
+  "sheets": [
+    {
+      "name": "summary",
+      "max_row": 2,
+      "max_column": 33,
+      "rows": [
+        [
+          "document",
+          "n_tokens",
+          "n_types",
+          "unit",
+          "lemmatizer",
+          "lemmatizer_version",
+          "frequency_list",
+          "list_lookup_unit",
+          "ttr",
+          "mattr",
+          "mtld",
+          "hdd",
+          "vocd",
+          "advanced_guiraud",
+          "pct_beyond_k",
+          "pct_off_list",
+          "p_lex_lambda",
+          "s_index",
+          "s_capped",
+          "oewn_token_coverage",
+          "oewn_type_coverage",
+          "oewn_polysemy_token_mean",
+          "oewn_polysemy_type_mean",
+          "oewn_hypernym_depth_token_mean",
+          "oewn_hypernym_depth_type_mean",
+          "tubelex_token_coverage",
+          "tubelex_type_coverage",
+          "tubelex_frequency_zipf_token_mean",
+          "tubelex_frequency_zipf_type_mean",
+          "tubelex_video_log10_prevalence_token_mean",
+          "tubelex_video_log10_prevalence_type_mean",
+          "tubelex_channel_log10_prevalence_token_mean",
+          "tubelex_channel_log10_prevalence_type_mean"
+        ],
+        [
+          "Document 001",
+          155,
+          123,
+          "token",
+          "open_flemma",
+          "open-flemma-1.0.0+b59b8f4efcd2",
+          "NGSL (New General Service List)",
+          null,
+          0.793548387097,
+          0.915471698113,
+          210.21875,
+          0.903238914818,
+          176.065175501568,
+          0.481931597341,
+          4.878048780488,
+          1.290322580645,
+          2.101,
+          3508,
+          false,
+          0.812903225806,
+          0.889830508475,
+          8.198412698413,
+          8.228571428571,
+          5.614700820974,
+          5.454980053089,
+          1,
+          1,
+          5.611780682321,
+          5.29655127074,
+          -0.823222626986,
+          -0.975944892263,
+          -0.775621225278,
+          -0.911324141847
+        ]
+      ]
+    },
+    {
+      "name": "descriptives",
+      "max_row": 27,
+      "max_column": 10,
+      "rows": [
+        [
+          "measure",
+          "n",
+          "missing",
+          "mean",
+          "sd",
+          "min",
+          "q1",
+          "median",
+          "q3",
+          "max"
+        ],
+        [
+          "n_tokens",
+          1,
+          0,
+          155,
+          null,
+          155,
+          155,
+          155,
+          155,
+          155
+        ],
+        [
+          "n_types",
+          1,
+          0,
+          123,
+          null,
+          123,
+          123,
+          123,
+          123,
+          123
+        ],
+        [
+          "ttr",
+          1,
+          0,
+          0.793548387097,
+          null,
+          0.793548387097,
+          0.793548387097,
+          0.793548387097,
+          0.793548387097,
+          0.793548387097
+        ],
+        [
+          "mattr",
+          1,
+          0,
+          0.915471698113,
+          null,
+          0.915471698113,
+          0.915471698113,
+          0.915471698113,
+          0.915471698113,
+          0.915471698113
+        ],
+        [
+          "mtld",
+          1,
+          0,
+          210.21875,
+          null,
+          210.21875,
+          210.21875,
+          210.21875,
+          210.21875,
+          210.21875
+        ],
+        [
+          "hdd",
+          1,
+          0,
+          0.903238914818,
+          null,
+          0.903238914818,
+          0.903238914818,
+          0.903238914818,
+          0.903238914818,
+          0.903238914818
+        ],
+        [
+          "vocd",
+          1,
+          0,
+          176.065175501568,
+          null,
+          176.065175501568,
+          176.065175501568,
+          176.065175501568,
+          176.065175501568,
+          176.065175501568
+        ],
+        [
+          "advanced_guiraud",
+          1,
+          0,
+          0.481931597341,
+          null,
+          0.481931597341,
+          0.481931597341,
+          0.481931597341,
+          0.481931597341,
+          0.481931597341
+        ],
+        [
+          "pct_beyond_k",
+          1,
+          0,
+          4.878048780488,
+          null,
+          4.878048780488,
+          4.878048780488,
+          4.878048780488,
+          4.878048780488,
+          4.878048780488
+        ],
+        [
+          "pct_off_list",
+          1,
+          0,
+          1.290322580645,
+          null,
+          1.290322580645,
+          1.290322580645,
+          1.290322580645,
+          1.290322580645,
+          1.290322580645
+        ],
+        [
+          "p_lex_lambda",
+          1,
+          0,
+          2.101,
+          null,
+          2.101,
+          2.101,
+          2.101,
+          2.101,
+          2.101
+        ],
+        [
+          "s_index",
+          1,
+          0,
+          3508,
+          null,
+          3508,
+          3508,
+          3508,
+          3508,
+          3508
+        ],
+        [
+          "oewn_token_coverage",
+          1,
+          0,
+          0.812903225806,
+          null,
+          0.812903225806,
+          0.812903225806,
+          0.812903225806,
+          0.812903225806,
+          0.812903225806
+        ],
+        [
+          "oewn_type_coverage",
+          1,
+          0,
+          0.889830508475,
+          null,
+          0.889830508475,
+          0.889830508475,
+          0.889830508475,
+          0.889830508475,
+          0.889830508475
+        ],
+        [
+          "oewn_polysemy_token_mean",
+          1,
+          0,
+          8.198412698413,
+          null,
+          8.198412698413,
+          8.198412698413,
+          8.198412698413,
+          8.198412698413,
+          8.198412698413
+        ],
+        [
+          "oewn_polysemy_type_mean",
+          1,
+          0,
+          8.228571428571,
+          null,
+          8.228571428571,
+          8.228571428571,
+          8.228571428571,
+          8.228571428571,
+          8.228571428571
+        ],
+        [
+          "oewn_hypernym_depth_token_mean",
+          1,
+          0,
+          5.614700820974,
+          null,
+          5.614700820974,
+          5.614700820974,
+          5.614700820974,
+          5.614700820974,
+          5.614700820974
+        ],
+        [
+          "oewn_hypernym_depth_type_mean",
+          1,
+          0,
+          5.454980053089,
+          null,
+          5.454980053089,
+          5.454980053089,
+          5.454980053089,
+          5.454980053089,
+          5.454980053089
+        ],
+        [
+          "tubelex_token_coverage",
+          1,
+          0,
+          1,
+          null,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          "tubelex_type_coverage",
+          1,
+          0,
+          1,
+          null,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          "tubelex_frequency_zipf_token_mean",
+          1,
+          0,
+          5.611780682321,
+          null,
+          5.611780682321,
+          5.611780682321,
+          5.611780682321,
+          5.611780682321,
+          5.611780682321
+        ],
+        [
+          "tubelex_frequency_zipf_type_mean",
+          1,
+          0,
+          5.29655127074,
+          null,
+          5.29655127074,
+          5.29655127074,
+          5.29655127074,
+          5.29655127074,
+          5.29655127074
+        ],
+        [
+          "tubelex_video_log10_prevalence_token_mean",
+          1,
+          0,
+          -0.823222626986,
+          null,
+          -0.823222626986,
+          -0.823222626986,
+          -0.823222626986,
+          -0.823222626986,
+          -0.823222626986
+        ],
+        [
+          "tubelex_video_log10_prevalence_type_mean",
+          1,
+          0,
+          -0.975944892263,
+          null,
+          -0.975944892263,
+          -0.975944892263,
+          -0.975944892263,
+          -0.975944892263,
+          -0.975944892263
+        ],
+        [
+          "tubelex_channel_log10_prevalence_token_mean",
+          1,
+          0,
+          -0.775621225278,
+          null,
+          -0.775621225278,
+          -0.775621225278,
+          -0.775621225278,
+          -0.775621225278,
+          -0.775621225278
+        ],
+        [
+          "tubelex_channel_log10_prevalence_type_mean",
+          1,
+          0,
+          -0.911324141847,
+          null,
+          -0.911324141847,
+          -0.911324141847,
+          -0.911324141847,
+          -0.911324141847,
+          -0.911324141847
+        ]
+      ]
+    },
+    {
+      "name": "panel_a",
+      "max_row": 13,
+      "max_column": 5,
+      "rows": [
+        [
+          "document",
+          "index_key",
+          "index",
+          "value",
+          "direction"
+        ],
+        [
+          "Document 001",
+          "ttr",
+          "TTR",
+          0.793548387097,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "rttr",
+          "RTTR (Guiraud)",
+          9.879597745501,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "cttr",
+          "CTTR",
+          6.985930561239,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "herdan",
+          "Herdan C",
+          0.95415005553,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "maas",
+          "Maas a² (↓)",
+          0.009091033059,
+          "lower"
+        ],
+        [
+          "Document 001",
+          "msttr",
+          "MSTTR",
+          0.9,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "mattr",
+          "MATTR",
+          0.915471698113,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "mtld",
+          "MTLD",
+          210.21875,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "hdd",
+          "HD-D",
+          0.903238914818,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "vocd",
+          "vocd-D",
+          176.065175501568,
+          "higher"
+        ],
+        [
+          "Document 001",
+          "yule_k",
+          "Yule's K (↓)",
+          59.105098855359,
+          "lower"
+        ],
+        [
+          "Document 001",
+          "yule_i",
+          "Yule's I",
+          86.948275862069,
+          "higher"
+        ]
+      ]
+    },
+    {
+      "name": "lfp",
+      "max_row": 5,
+      "max_column": 6,
+      "rows": [
+        [
+          "document",
+          "level",
+          "tokens",
+          "types",
+          "coverage_%",
+          "cumulative_%"
+        ],
+        [
+          "Document 001",
+          "K1",
+          128,
+          100,
+          82.58,
+          82.58
+        ],
+        [
+          "Document 001",
+          "K2",
+          21,
+          17,
+          13.55,
+          96.13
+        ],
+        [
+          "Document 001",
+          "K3",
+          4,
+          4,
+          2.58,
+          98.71
+        ],
+        [
+          "Document 001",
+          "off-list",
+          2,
+          2,
+          1.29,
+          98.71
+        ]
+      ]
+    },
+    {
+      "name": "thresholds",
+      "max_row": 4,
+      "max_column": 3,
+      "rows": [
+        [
+          "document",
+          "threshold_%",
+          "selected_list_band_needed"
+        ],
+        [
+          "Document 001",
+          "90",
+          "K2"
+        ],
+        [
+          "Document 001",
+          "95",
+          "K2"
+        ],
+        [
+          "Document 001",
+          "98",
+          "K3"
+        ]
+      ]
+    },
+    {
+      "name": "p_lex_s",
+      "max_row": 5,
+      "max_column": 4,
+      "rows": [
+        [
+          "document",
+          "measure",
+          "value",
+          "note"
+        ],
+        [
+          "Document 001",
+          "P_Lex lambda",
+          2.101,
+          "Poisson fit over complete 10-word segments"
+        ],
+        [
+          "Document 001",
+          "P_Lex segments",
+          15,
+          "Complete 10-word segments used"
+        ],
+        [
+          "Document 001",
+          "S fitted rank",
+          3508,
+          "Selected-list rank where fitted coverage reaches 100%"
+        ],
+        [
+          "Document 001",
+          "S capped",
+          false,
+          "uses the supplied list's ranks (e.g. NJ8), not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical for written text + headword/flemma coverage)"
+        ]
+      ]
+    },
+    {
+      "name": "p_lex_dist",
+      "max_row": 12,
+      "max_column": 4,
+      "rows": [
+        [
+          "document",
+          "hard_words",
+          "observed_probability",
+          "fitted_probability"
+        ],
+        [
+          "Document 001",
+          0,
+          0.2,
+          0.122334033033
+        ],
+        [
+          "Document 001",
+          1,
+          0.133333333333,
+          0.257023803401
+        ],
+        [
+          "Document 001",
+          2,
+          0.4,
+          0.270003505473
+        ],
+        [
+          "Document 001",
+          3,
+          0.266666666667,
+          0.189092455
+        ],
+        [
+          "Document 001",
+          4,
+          0,
+          0.099320811989
+        ],
+        [
+          "Document 001",
+          5,
+          0,
+          0.041734605198
+        ],
+        [
+          "Document 001",
+          6,
+          0,
+          0.014614067587
+        ],
+        [
+          "Document 001",
+          7,
+          0,
+          0.004386308
+        ],
+        [
+          "Document 001",
+          8,
+          0,
+          0.001151954138
+        ],
+        [
+          "Document 001",
+          9,
+          0,
+          0.000268917294
+        ],
+        [
+          "Document 001",
+          10,
+          0,
+          5.6499523e-05
+        ]
+      ]
+    },
+    {
+      "name": "s_empirical",
+      "max_row": 7,
+      "max_column": 3,
+      "rows": [
+        [
+          "document",
+          "rank",
+          "empirical_coverage_%"
+        ],
+        [
+          "Document 001",
+          "500",
+          70.32
+        ],
+        [
+          "Document 001",
+          "1000",
+          82.58
+        ],
+        [
+          "Document 001",
+          "1500",
+          90.97
+        ],
+        [
+          "Document 001",
+          "2000",
+          96.13
+        ],
+        [
+          "Document 001",
+          "2500",
+          97.42
+        ],
+        [
+          "Document 001",
+          "3000",
+          98.71
+        ]
+      ]
+    },
+    {
+      "name": "band_wise",
+      "max_row": 5,
+      "max_column": 8,
+      "rows": [
+        [
+          "document",
+          "level",
+          "tokens",
+          "types",
+          "MTLD",
+          "MATTR",
+          "HD-D",
+          "Min N"
+        ],
+        [
+          "Document 001",
+          "K1",
+          128,
+          100,
+          163.84,
+          0.885316455696,
+          0.879295516488,
+          50
+        ],
+        [
+          "Document 001",
+          "K2",
+          21,
+          17,
+          30.87,
+          0.809523809524,
+          0.809523809524,
+          50
+        ],
+        [
+          "Document 001",
+          "K3",
+          4,
+          4,
+          null,
+          1,
+          1,
+          50
+        ],
+        [
+          "Document 001",
+          "off-list",
+          2,
+          2,
+          null,
+          1,
+          1,
+          50
+        ]
+      ]
+    },
+    {
+      "name": "semantic_network",
+      "max_row": 2,
+      "max_column": 19,
+      "rows": [
+        [
+          "document",
+          "tokens",
+          "types",
+          "covered_tokens",
+          "covered_types",
+          "token_coverage",
+          "type_coverage",
+          "depth_covered_tokens",
+          "depth_covered_types",
+          "depth_token_coverage",
+          "depth_type_coverage",
+          "polysemy_token_mean",
+          "polysemy_type_mean",
+          "hypernym_depth_token_mean",
+          "hypernym_depth_type_mean",
+          "resource",
+          "license",
+          "lookup_pos",
+          "normalizer"
+        ],
+        [
+          "Document 001",
+          155,
+          118,
+          126,
+          105,
+          0.812903225806,
+          0.889830508475,
+          103,
+          85,
+          0.664516129032,
+          0.720338983051,
+          8.198412698413,
+          8.228571428571,
+          5.614700820974,
+          5.454980053089,
+          "Open English WordNet 2025",
+          "CC BY 4.0",
+          "all parts of speech (POS-agnostic aggregation)",
+          "open_flemma open-flemma-1.0.0+b59b8f4efcd2"
+        ]
+      ]
+    },
+    {
+      "name": "tubelex",
+      "max_row": 2,
+      "max_column": 14,
+      "rows": [
+        [
+          "document",
+          "tokens",
+          "types",
+          "covered_tokens",
+          "covered_types",
+          "token_coverage",
+          "type_coverage",
+          "frequency_zipf_token_mean",
+          "frequency_zipf_type_mean",
+          "video_log10_prevalence_token_mean",
+          "video_log10_prevalence_type_mean",
+          "channel_log10_prevalence_token_mean",
+          "channel_log10_prevalence_type_mean",
+          "metadata"
+        ],
+        [
+          "Document 001",
+          156,
+          122,
+          156,
+          122,
+          1,
+          1,
+          5.611780682321,
+          5.29655127074,
+          -0.823222626986,
+          -0.975944892263,
+          -0.775621225278,
+          -0.911324141847,
+          "{'name': 'TUBELEX-EN Treebank published frequency aggregates', 'version': '7cb5fb36add76b83a266d1967536e1a1d3faa513', 'source_asset': 'tubelex-en-treebank.tsv.xz', 'source_url': 'https://raw.githubusercontent.com/naist-nlp/tubelex/7cb5fb36add76b83a266d1967536e1a1d3faa513/frequencies/tubelex-en-treebank.tsv.xz', 'source_sha256': '4096022259d5eaa7261c3bf22c3b0af9fd58ae8eebe17894c0b34a163954f936', 'artifact_sha256': '3731f23f3385ed630777ff56b5edbed5db46eee256ededceb0ac213016f31675', 'license': 'BSD 3-Clause License', 'license_spdx': 'BSD-3-Clause', 'license_url': 'https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/LICENSE', 'method_id': 'tubelex-en-treebank-7cb5fb36-detseg-apostrophe-laplace-beta11-v2', 'lookup_unit': 'lower-cased Treebank surface/clitic lexical token', 'normalization': 'Unicode NFKC; U+02BC/U+2018/U+2019/U+201B apostrophes mapped to ASCII; then str.lower()', 'corpus_tokens': 171805865, 'corpus_types': 613309, 'corpus_videos': 105733, 'corpus_channels': 68405, 'runtime_index_rows': 515292, 'retained_reference_token_mass': 169889910, 'frequency_unseen_zipf': 0.763414439791, 'video_unseen_log10_prevalence': -5.024218769624, 'channel_unseen_log10_prevalence': -4.835100544788}"
+        ]
+      ]
+    },
+    {
+      "name": "metadata",
+      "max_row": 38,
+      "max_column": 3,
+      "rows": [
+        [
+          "document",
+          "field",
+          "value"
+        ],
+        [
+          "Document 001",
+          "ldfreq_version",
+          "0.9.0-dev.0"
+        ],
+        [
+          "Document 001",
+          "output_schema_version",
+          "1.0.0"
+        ],
+        [
+          "Document 001",
+          "unit",
+          "token"
+        ],
+        [
+          "Document 001",
+          "lemmatizer",
+          "open_flemma"
+        ],
+        [
+          "Document 001",
+          "lemmatizer_version",
+          "open-flemma-1.0.0+b59b8f4efcd2"
+        ],
+        [
+          "Document 001",
+          "lemmatizer_scope",
+          "Panel B lookup fallback"
+        ],
+        [
+          "Document 001",
+          "list",
+          "ngsl"
+        ],
+        [
+          "Document 001",
+          "list_id",
+          "ngsl"
+        ],
+        [
+          "Document 001",
+          "list_registry_id",
+          "ngsl-1.2"
+        ],
+        [
+          "Document 001",
+          "list_name",
+          "NGSL (New General Service List)"
+        ],
+        [
+          "Document 001",
+          "list_license",
+          "CC BY-SA 4.0 (Browne, Culligan & Phillips)"
+        ],
+        [
+          "Document 001",
+          "list_license_url",
+          null
+        ],
+        [
+          "Document 001",
+          "list_source_url",
+          "https://www.newgeneralservicelist.com/"
+        ],
+        [
+          "Document 001",
+          "list_modification_notice",
+          null
+        ],
+        [
+          "Document 001",
+          "list_delivery",
+          "bundled-public"
+        ],
+        [
+          "Document 001",
+          "server_only_min_tokens",
+          null
+        ],
+        [
+          "Document 001",
+          "server_only_min_types",
+          null
+        ],
+        [
+          "Document 001",
+          "list_entries",
+          2809
+        ],
+        [
+          "Document 001",
+          "list_levels",
+          3
+        ],
+        [
+          "Document 001",
+          "list_lookup_unit",
+          null
+        ],
+        [
+          "Document 001",
+          "tokenizer_policy",
+          "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop."
+        ],
+        [
+          "Document 001",
+          "thresholds",
+          "[90, 95, 98]"
+        ],
+        [
+          "Document 001",
+          "min_tokens",
+          50
+        ],
+        [
+          "Document 001",
+          "msttr_segment",
+          50
+        ],
+        [
+          "Document 001",
+          "mattr_window",
+          50
+        ],
+        [
+          "Document 001",
+          "mtld_threshold",
+          0.72
+        ],
+        [
+          "Document 001",
+          "hdd_sample",
+          42
+        ],
+        [
+          "Document 001",
+          "vocd_seed",
+          42
+        ],
+        [
+          "Document 001",
+          "advanced_cutoff",
+          2
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Tokenizer policy: ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Counting unit is token: Panel A uses lower-cased surface tokens without lemmatization."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Panel B maps tokens to flemmas/head forms before frequency-list lookup."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Coverage thresholds are selected-list matched coverage, not an automatic reader-known coverage estimate."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Proper nouns, marginal words, acronyms, and other potentially known items are not automatically credited unless they match the selected list/normalizer."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Coverage can differ from LexTutor unless the frequency list, word-family expansion, tokenizer, proper-noun/number policy, and lemmatizer all match."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "P_Lex counts unclassified off-list items as hard words under this app's no-automatic-proper-noun-adjustment policy."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "S uses the selected list's ranks, not Kojima & Yamashita's BNC-spoken family lists; values are not directly comparable to published S values."
+        ]
+      ]
+    }
+  ]
+}

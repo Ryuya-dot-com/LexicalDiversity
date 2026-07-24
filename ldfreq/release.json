@@ -1,0 +1,8 @@
+{
+  "contract_schema_version": 1,
+  "application_version": "0.9.0-dev.0",
+  "output_schema_version": "1.0.0",
+  "target_application_release": "1.0.0",
+  "release_phase": "development",
+  "versioning_scheme": "SemVer 2.0.0"
+}

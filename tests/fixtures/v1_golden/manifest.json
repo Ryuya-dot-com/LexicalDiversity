@@ -1,0 +1,140 @@
+{
+  "fixture_id": "ldfreq-public-v1-golden",
+  "schema_version": 2,
+  "status": "canonical-pre-v1",
+  "license": "CC0-1.0",
+  "human_or_learner_writing": false,
+  "external_api_calls": 0,
+  "release_identity": {
+    "application_version": "0.9.0-dev.0",
+    "output_schema_version": "1.0.0",
+    "target_application_release": "1.0.0",
+    "release_phase": "development"
+  },
+  "analysis": {
+    "documents": 2,
+    "config": {
+      "thresholds": [
+        90,
+        95,
+        98
+      ],
+      "min_tokens": 50,
+      "msttr_segment": 50,
+      "mattr_window": 50,
+      "mtld_threshold": 0.72,
+      "hdd_sample": 42,
+      "vocd_seed": 42,
+      "advanced_cutoff": 2,
+      "unit": "token"
+    },
+    "resources": {
+      "list_id": "ngsl",
+      "lemmatizer_name": "open_flemma",
+      "semantic_enabled": true,
+      "tubelex_enabled": true
+    }
+  },
+  "serialization": {
+    "float_decimal_places": 12,
+    "json_utf8": true,
+    "json_terminal_newline": true,
+    "xlsx_semantic_snapshot_normative_across_platforms": true,
+    "xlsx_binary_hash_normative_only_in_frozen_release_image": true,
+    "release_image_digest_frozen": false
+  },
+  "inputs": {
+    "document-001.txt": {
+      "bytes": 992,
+      "sha256": "600c20979bcdbeb230265c6358ef4ad1938dff489fa86b2a95d34537122ec23f"
+    },
+    "document-002.txt": {
+      "bytes": 1028,
+      "sha256": "2f0bf465535680058e91b500493020cbae68a40d7f438ffa4242919c6626e182"
+    }
+  },
+  "expected_files": {
+    "expected-single.json": {
+      "bytes": 8168,
+      "sha256": "faf3040b0c7a032e0fc61568379dcc6c0fe9a35b01fbb0aeb2b46dcd962cc676"
+    },
+    "expected-batch.json": {
+      "bytes": 27655,
+      "sha256": "52b53fa592e5b2735d10dc40f24550f4f9aea09e1da9b8f6549993b38a923c6e"
+    },
+    "expected-single-workbook.json": {
+      "bytes": 23340,
+      "sha256": "6fe3392493300be643c862ea8bd5309ef76d0f365f1d4773ee5d8953f648d880"
+    },
+    "expected-batch-workbook.json": {
+      "bytes": 43779,
+      "sha256": "09b3229b3a7f7c108d0d8a9df0f572763cafcab4eec47de2e92150e69a773b5f"
+    }
+  },
+  "provisional_xlsx_binary": {
+    "single": {
+      "bytes": 17128,
+      "sha256": "86fc08be813ad647000611a676cf6534ee0b55c0d51bfcaaa7610ec44587f540"
+    },
+    "batch": {
+      "bytes": 24758,
+      "sha256": "3cc822a8ff8469cf74b6d550c33334eb6811604e93176361c61115470a94c683"
+    }
+  },
+  "generator": {
+    "python": "3.12.10",
+    "implementation": "CPython",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "production_version_graph_sha256": "43aca90091bb41c087590b17f9c0adaaa133718dbe9e3428095a3101de0eedf1",
+    "production_wheel_lock_sha256": "db9d30561ec4ef4fb22b7c1217a96bb18b19bf462bf96de609303c15714388aa",
+    "base_image_identity_sha256": "ab6bd98a84b6583f00bc4f212837c979a9311cdde50022cc7063611f6dfd4fb3",
+    "installed_versions": {
+      "altair": "6.0.0",
+      "attrs": "25.4.0",
+      "blinker": "1.9.0",
+      "cachetools": "7.0.5",
+      "certifi": "2026.2.25",
+      "charset-normalizer": "3.4.5",
+      "click": "8.3.1",
+      "defusedxml": "0.7.1",
+      "et-xmlfile": "2.0.0",
+      "gitdb": "4.0.12",
+      "gitpython": "3.1.46",
+      "idna": "3.11",
+      "jinja2": "3.1.6",
+      "joblib": "1.5.3",
+      "jsonschema": "4.26.0",
+      "jsonschema-specifications": "2025.9.1",
+      "markupsafe": "3.0.3",
+      "narwhals": "2.18.0",
+      "nltk": "3.10.0",
+      "numpy": "2.4.2",
+      "openpyxl": "3.1.5",
+      "packaging": "26.0",
+      "pandas": "2.3.3",
+      "pillow": "12.1.1",
+      "plotly": "6.6.0",
+      "protobuf": "6.33.6",
+      "pyarrow": "23.0.1",
+      "pydeck": "0.9.1",
+      "python-dateutil": "2.9.0.post0",
+      "pytz": "2026.1.post1",
+      "referencing": "0.37.0",
+      "regex": "2026.2.28",
+      "requests": "2.32.5",
+      "rpds-py": "0.30.0",
+      "simplemma": "1.2.0",
+      "six": "1.17.0",
+      "smmap": "5.0.3",
+      "streamlit": "1.55.0",
+      "tenacity": "9.1.4",
+      "toml": "0.10.2",
+      "tornado": "6.5.5",
+      "tqdm": "4.67.3",
+      "typing-extensions": "4.15.0",
+      "tzdata": "2025.3",
+      "urllib3": "2.6.3",
+      "watchdog": "6.0.0"
+    }
+  }
+}

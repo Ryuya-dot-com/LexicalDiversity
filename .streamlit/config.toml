@@ -1,0 +1,13 @@
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = "none"
+
+[server]
+enableCORS = true
+enableXsrfProtection = true
+enableStaticServing = false
+maxUploadSize = 20
+maxMessageSize = 25
+disconnectedSessionTTL = 120

@@ -1,0 +1,685 @@
+{
+  "contract_id": "ldfreq-public-v1-metric-scope",
+  "contract_version": "1.0.0",
+  "target_application_release": "1.0.0",
+  "release_line": "1.x",
+  "status": "frozen",
+  "frozen_on": "2026-07-24",
+  "normative_order": [
+    "tests/test_v1_metric_scope.py",
+    "docs/v1-metric-scope.json",
+    "docs/v1-scope-freeze.md"
+  ],
+  "inclusion_rule": {
+    "implemented_in_runtime": true,
+    "covered_by_automated_tests": true,
+    "runtime_resources_must_be_green_and_license_verified": true,
+    "research_benchmarks_are_runtime_resources": false
+  },
+  "metrics": {
+    "panel_a": {
+      "construct": "lexical diversity and repetition in lower-cased surface-token sequences",
+      "reference_list_required": false,
+      "counting_unit": "lower-cased surface token",
+      "keys": [
+        "ttr",
+        "rttr",
+        "cttr",
+        "herdan",
+        "maas",
+        "msttr",
+        "mattr",
+        "mtld",
+        "hdd",
+        "vocd",
+        "yule_k",
+        "yule_i"
+      ],
+      "diversity_direction": {
+        "ttr": 1,
+        "rttr": 1,
+        "cttr": 1,
+        "herdan": 1,
+        "maas": -1,
+        "msttr": 1,
+        "mattr": 1,
+        "mtld": 1,
+        "hdd": 1,
+        "vocd": 1,
+        "yule_k": -1,
+        "yule_i": 1
+      },
+      "project_minimum_tokens": {
+        "ttr": 1,
+        "rttr": 1,
+        "cttr": 1,
+        "herdan": 2,
+        "maas": 2,
+        "msttr": 50,
+        "mattr": 50,
+        "mtld": 50,
+        "hdd": 42,
+        "vocd": 50,
+        "yule_k": 100,
+        "yule_i": 100
+      }
+    },
+    "panel_b": {
+      "construct": "match to ranks, bands, or families in the selected frequency list",
+      "reference_list_required": true,
+      "lookup_unit": "resource-specific flemma, headword, or word-family head",
+      "keys": [
+        "lfp",
+        "coverage_threshold",
+        "advanced_guiraud",
+        "pct_beyond_k",
+        "mean_rank",
+        "p_lex",
+        "s_index",
+        "band_wise"
+      ],
+      "nested_keys": {
+        "lfp_row": [
+          "level",
+          "tokens",
+          "types",
+          "coverage_%",
+          "cumulative_%"
+        ],
+        "coverage_threshold": {
+          "shape": "map<integer_percentage, integer_band|null>"
+        },
+        "mean_rank": [
+          "mean_rank",
+          "mean_log_rank",
+          "pct_off_list"
+        ],
+        "p_lex_short_text": [
+          "lambda",
+          "n_segments"
+        ],
+        "p_lex_complete_segments": [
+          "lambda",
+          "n_segments",
+          "mean_hard_per_seg",
+          "observed_distribution",
+          "fitted_distribution"
+        ],
+        "s_index_short_text": [
+          "S",
+          "note"
+        ],
+        "s_index_computable": [
+          "S",
+          "empirical_coverage_pct",
+          "capped",
+          "reference_list_note"
+        ],
+        "band_wise_row": [
+          "level",
+          "tokens",
+          "types",
+          "MTLD",
+          "MATTR",
+          "HD-D",
+          "Min N"
+        ]
+      }
+    },
+    "semantic_network": {
+      "construct": "POS-agnostic Open English WordNet inventory polysemy and noun/verb hypernym depth",
+      "registry_resource_id": "open-english-wordnet-2025-metrics",
+      "artifact_manifest_id": "open_english_wordnet_2025_lemma_metrics",
+      "output_keys": [
+        "tokens",
+        "types",
+        "covered_tokens",
+        "covered_types",
+        "token_coverage",
+        "type_coverage",
+        "depth_covered_tokens",
+        "depth_covered_types",
+        "depth_token_coverage",
+        "depth_type_coverage",
+        "polysemy_token_mean",
+        "polysemy_type_mean",
+        "hypernym_depth_token_mean",
+        "hypernym_depth_type_mean",
+        "resource",
+        "license",
+        "lookup_pos",
+        "normalizer"
+      ],
+      "measure_keys": [
+        "token_coverage",
+        "type_coverage",
+        "depth_token_coverage",
+        "depth_type_coverage",
+        "polysemy_token_mean",
+        "polysemy_type_mean",
+        "hypernym_depth_token_mean",
+        "hypernym_depth_type_mean"
+      ],
+      "means_are_conditional_on_coverage": true,
+      "pos_tagging": false,
+      "word_sense_disambiguation": false
+    },
+    "tubelex": {
+      "construct": "smoothed word-form frequency and video/channel prevalence in TUBELEX-EN Treebank aggregates",
+      "registry_resource_id": "tubelex-en-treebank-7cb5fb36-frequency-index",
+      "artifact_manifest_id": "tubelex-en-treebank-7cb5fb36-frequency-index",
+      "output_keys": [
+        "tokens",
+        "types",
+        "covered_tokens",
+        "covered_types",
+        "token_coverage",
+        "type_coverage",
+        "frequency_zipf_token_mean",
+        "frequency_zipf_type_mean",
+        "video_log10_prevalence_token_mean",
+        "video_log10_prevalence_type_mean",
+        "channel_log10_prevalence_token_mean",
+        "channel_log10_prevalence_type_mean",
+        "metadata"
+      ],
+      "measure_keys": [
+        "token_coverage",
+        "type_coverage",
+        "frequency_zipf_token_mean",
+        "frequency_zipf_type_mean",
+        "video_log10_prevalence_token_mean",
+        "video_log10_prevalence_type_mean",
+        "channel_log10_prevalence_token_mean",
+        "channel_log10_prevalence_type_mean"
+      ],
+      "metadata_keys": [
+        "name",
+        "version",
+        "source_asset",
+        "source_url",
+        "source_sha256",
+        "artifact_sha256",
+        "license",
+        "license_spdx",
+        "license_url",
+        "method_id",
+        "lookup_unit",
+        "normalization",
+        "corpus_tokens",
+        "corpus_types",
+        "corpus_videos",
+        "corpus_channels",
+        "runtime_index_rows",
+        "retained_reference_token_mass",
+        "frequency_unseen_zipf",
+        "video_unseen_log10_prevalence",
+        "channel_unseen_log10_prevalence"
+      ],
+      "unseen_units_remain_in_smoothed_means": true,
+      "category_entropy_included": false
+    }
+  },
+  "resources": {
+    "admission_rule": "registry tier runtime-resource, status green, verified license, and an allowed public-SaaS processing mode",
+    "runtime": [
+      {
+        "registry_id": "nj8",
+        "runtime_selector_id": "nj8",
+        "component": "panel_b_reference_list",
+        "provisioning": "bundled",
+        "availability": "public-default-inventory"
+      },
+      {
+        "registry_id": "ngsl-1.2",
+        "runtime_selector_id": "ngsl",
+        "component": "panel_b_reference_list_and_open_flemma_evidence",
+        "provisioning": "bundled",
+        "availability": "public-default-inventory"
+      },
+      {
+        "registry_id": "nation-bnc-coca-headwords-10000",
+        "runtime_selector_id": "bnc_coca",
+        "component": "panel_b_reference_list",
+        "provisioning": "server-injected",
+        "availability": "conditional-server-only-with-operator-attestation"
+      },
+      {
+        "registry_id": "nation-bnc-coca-families-25000",
+        "runtime_selector_id": "nation_bnc_coca_families",
+        "component": "panel_b_reference_list",
+        "provisioning": "server-injected",
+        "availability": "conditional-server-only-with-operator-attestation"
+      },
+      {
+        "registry_id": "tubelex-en-treebank-7cb5fb36-frequency-index",
+        "runtime_selector_id": null,
+        "component": "tubelex",
+        "provisioning": "bundled",
+        "availability": "public-default-inventory"
+      },
+      {
+        "registry_id": "open-english-wordnet-2025-metrics",
+        "runtime_selector_id": null,
+        "component": "semantic_network_and_open_flemma_evidence",
+        "provisioning": "bundled",
+        "availability": "public-default-inventory"
+      }
+    ],
+    "public_panel_b_runtime_selector_ids": [
+      "nj8",
+      "ngsl",
+      "bnc_coca",
+      "nation_bnc_coca_families"
+    ],
+    "public_ui_normalizers": [
+      "open_flemma",
+      "simplemma"
+    ],
+    "public_default_normalizer": "open_flemma"
+  },
+  "output_contract": {
+    "privacy": {
+      "aggregate_only": true,
+      "payload_values": {
+        "source_text_retained": false,
+        "source_filename_retained": false,
+        "token_level_output_retained": false
+      }
+    },
+    "serialization": {
+      "float_decimal_places": 12,
+      "negative_zero_normalized": true,
+      "nan_serialized_as_null": true,
+      "infinity_rejected": true,
+      "json": {
+        "encoding": "UTF-8",
+        "ensure_ascii": false,
+        "indent": 2,
+        "terminal_newline": true,
+        "key_order": "frozen insertion order"
+      },
+      "xlsx": {
+        "document_timestamp": "1980-01-01T00:00:00Z",
+        "zip_member_timestamp": "1980-01-01T00:00:00",
+        "zip_member_order": "ascending member name",
+        "zip_compression": "DEFLATE level 9",
+        "semantic_sheet_and_cell_snapshot_normative_across_platforms": true,
+        "binary_sha256_normative_only_after_release_image_digest_is_frozen": true
+      },
+      "golden_fixture_manifest": "tests/fixtures/v1_golden/manifest.json"
+    },
+    "json": {
+      "version_fields": {
+        "ldfreq_version": "Application SemVer from ldfreq/release.json",
+        "output_schema_version": "Public output-contract SemVer; equal to this document's contract_version"
+      },
+      "single_document_top_level_keys": [
+        "ldfreq_version",
+        "output_schema_version",
+        "document",
+        "settings",
+        "method_notes",
+        "privacy",
+        "n_tokens",
+        "n_types",
+        "panel_a",
+        "panel_b",
+        "semantic_network",
+        "tubelex"
+      ],
+      "document_keys": [
+        "name"
+      ],
+      "settings_keys": [
+        "unit",
+        "lemmatizer",
+        "lemmatizer_version",
+        "lemmatizer_scope",
+        "list",
+        "list_id",
+        "list_registry_id",
+        "list_name",
+        "list_license",
+        "list_license_url",
+        "list_source_url",
+        "list_modification_notice",
+        "list_delivery",
+        "server_only_min_tokens",
+        "server_only_min_types",
+        "list_entries",
+        "list_levels",
+        "list_lookup_unit",
+        "tokenizer_policy",
+        "thresholds",
+        "min_tokens",
+        "msttr_segment",
+        "mattr_window",
+        "mtld_threshold",
+        "hdd_sample",
+        "vocd_seed",
+        "advanced_cutoff"
+      ],
+      "privacy_keys": [
+        "source_text_retained",
+        "source_filename_retained",
+        "token_level_output_retained"
+      ],
+      "nullable_resource_sections": [
+        "panel_b",
+        "semantic_network",
+        "tubelex"
+      ],
+      "nonempty_batch_top_level_keys": [
+        "ldfreq_version",
+        "output_schema_version",
+        "batch",
+        "batch_diagnostics",
+        "documents"
+      ],
+      "all_skipped_batch_top_level_keys": [
+        "ldfreq_version",
+        "output_schema_version",
+        "batch",
+        "documents"
+      ],
+      "batch_keys": [
+        "n_documents"
+      ],
+      "batch_diagnostics_keys": [
+        "bands",
+        "reliability",
+        "overlap_matrix",
+        "overlap_pairs"
+      ],
+      "batch_diagnostic_row_keys": {
+        "bands": [
+          "document",
+          "level",
+          "tokens",
+          "types",
+          "coverage_%",
+          "cumulative_%"
+        ],
+        "reliability": [
+          "document",
+          "index_key",
+          "index",
+          "status",
+          "status_code",
+          "n_tokens",
+          "required_tokens",
+          "value",
+          "note"
+        ],
+        "overlap_matrix": [
+          "document_a",
+          "document_b",
+          "shared_types",
+          "union_types",
+          "jaccard"
+        ],
+        "overlap_pairs": [
+          "document_a",
+          "document_b",
+          "shared_types",
+          "a_only_types",
+          "b_only_types",
+          "union_types",
+          "jaccard"
+        ]
+      }
+    },
+    "excel": {
+      "always_sheets": [
+        "summary",
+        "descriptives",
+        "panel_a",
+        "lfp",
+        "thresholds",
+        "p_lex_s",
+        "p_lex_dist",
+        "s_empirical",
+        "band_wise",
+        "semantic_network",
+        "tubelex",
+        "metadata"
+      ],
+      "batch_only_sheets": [
+        "batch_bands",
+        "reliability",
+        "off_list",
+        "overlap_matrix",
+        "overlap_pairs"
+      ],
+      "reserved_empty_sheets": {
+        "off_list": "reserved but intentionally empty because token/head rows are outside the public privacy contract"
+      },
+      "summary_columns": [
+        "document",
+        "n_tokens",
+        "n_types",
+        "unit",
+        "lemmatizer",
+        "lemmatizer_version",
+        "frequency_list",
+        "list_lookup_unit",
+        "ttr",
+        "mattr",
+        "mtld",
+        "hdd",
+        "vocd",
+        "advanced_guiraud",
+        "pct_beyond_k",
+        "pct_off_list",
+        "p_lex_lambda",
+        "s_index",
+        "s_capped",
+        "oewn_token_coverage",
+        "oewn_type_coverage",
+        "oewn_polysemy_token_mean",
+        "oewn_polysemy_type_mean",
+        "oewn_hypernym_depth_token_mean",
+        "oewn_hypernym_depth_type_mean",
+        "tubelex_token_coverage",
+        "tubelex_type_coverage",
+        "tubelex_frequency_zipf_token_mean",
+        "tubelex_frequency_zipf_type_mean",
+        "tubelex_video_log10_prevalence_token_mean",
+        "tubelex_video_log10_prevalence_type_mean",
+        "tubelex_channel_log10_prevalence_token_mean",
+        "tubelex_channel_log10_prevalence_type_mean"
+      ],
+      "descriptive_measure_keys": [
+        "n_tokens",
+        "n_types",
+        "ttr",
+        "mattr",
+        "mtld",
+        "hdd",
+        "vocd",
+        "advanced_guiraud",
+        "pct_beyond_k",
+        "pct_off_list",
+        "p_lex_lambda",
+        "s_index",
+        "oewn_token_coverage",
+        "oewn_type_coverage",
+        "oewn_polysemy_token_mean",
+        "oewn_polysemy_type_mean",
+        "oewn_hypernym_depth_token_mean",
+        "oewn_hypernym_depth_type_mean",
+        "tubelex_token_coverage",
+        "tubelex_type_coverage",
+        "tubelex_frequency_zipf_token_mean",
+        "tubelex_frequency_zipf_type_mean",
+        "tubelex_video_log10_prevalence_token_mean",
+        "tubelex_video_log10_prevalence_type_mean",
+        "tubelex_channel_log10_prevalence_token_mean",
+        "tubelex_channel_log10_prevalence_type_mean"
+      ],
+      "row_columns": {
+        "descriptives": [
+          "measure",
+          "n",
+          "missing",
+          "mean",
+          "sd",
+          "min",
+          "q1",
+          "median",
+          "q3",
+          "max"
+        ],
+        "panel_a": [
+          "document",
+          "index_key",
+          "index",
+          "value",
+          "direction"
+        ],
+        "lfp": [
+          "document",
+          "level",
+          "tokens",
+          "types",
+          "coverage_%",
+          "cumulative_%"
+        ],
+        "thresholds": [
+          "document",
+          "threshold_%",
+          "selected_list_band_needed"
+        ],
+        "p_lex_s": [
+          "document",
+          "measure",
+          "value",
+          "note"
+        ],
+        "p_lex_dist": [
+          "document",
+          "hard_words",
+          "observed_probability",
+          "fitted_probability"
+        ],
+        "s_empirical": [
+          "document",
+          "rank",
+          "empirical_coverage_%"
+        ],
+        "band_wise": [
+          "document",
+          "level",
+          "tokens",
+          "types",
+          "MTLD",
+          "MATTR",
+          "HD-D",
+          "Min N"
+        ],
+        "metadata": [
+          "document",
+          "field",
+          "value"
+        ]
+      }
+    }
+  },
+  "interpretation_boundary": {
+    "allowed_claim": "descriptive properties of a submitted text under recorded tokenizer, normalizer, resource versions, lookup units, and parameters",
+    "prohibited_claims": [
+      "grade or essay score",
+      "CEFR level",
+      "vocabulary knowledge diagnosis",
+      "writer proficiency estimate",
+      "writing quality prediction",
+      "AI authorship detection"
+    ],
+    "comparison_requirements": [
+      "identical tokenizer, normalizer, resource versions, lookup units, and parameters",
+      "prefer comparable text length, prompt, topic, genre, register, and sampling conditions",
+      "report coverage and missingness with conditional means"
+    ],
+    "higher_or_lower_is_automatically_better": false,
+    "automatic_warnings_are_validated_cut_scores": false,
+    "panel_b_off_list_means_unknown_to_reader": false,
+    "tubelex_is_coca_or_a_balanced_proficiency_norm": false,
+    "oewn_inventory_senses_are_contextual_senses_used": false
+  },
+  "non_goals": [
+    {
+      "id": "ellipse_rating_prediction",
+      "rule": "ELLIPSE may be used only in an offline external-association study; no fitted rating model, score field, or runtime dependency enters v1.0."
+    },
+    {
+      "id": "cefr_grade_quality_or_proficiency_prediction",
+      "rule": "No classifier, regressor, composite score, or UI label for these outcomes."
+    },
+    {
+      "id": "ai_authorship_detection",
+      "rule": "The tool is not an AI detector."
+    },
+    {
+      "id": "future_masc_oanc_dispersion_metrics",
+      "rule": "MASC/OANC document frequency, generic contextual diversity, dispersion tuples, register entropy, and association metrics remain post-v1 until implemented and admitted."
+    },
+    {
+      "id": "tubelex_category_entropy",
+      "rule": "Raw or adjusted category entropy is excluded pending a validated shrinkage or Jensen-Shannon design."
+    },
+    {
+      "id": "pos_aware_or_contextual_semantics",
+      "rule": "POS tagging, contextual sense disambiguation, and contextual semantic sophistication are not provided."
+    },
+    {
+      "id": "complete_taales_or_coca_replication",
+      "rule": "No claim of complete TAALES reconstruction or numerical equivalence to COCA-based TAALES indices."
+    },
+    {
+      "id": "permission_pending_runtime_resources",
+      "rule": "AntBNC, legacy EAPFoundation data, legacy TAALES tables, and user-supplied Range data are not public-v1 runtime resources."
+    }
+  ],
+  "semver": {
+    "consumer_rule": "Consumers of 1.x JSON should ignore unknown additive fields but may rely on every frozen key and its meaning remaining present.",
+    "major": {
+      "required_for": [
+        "remove or rename a metric, JSON field, Excel sheet, or frozen column",
+        "change a metric formula, denominator, weighting, counting unit, tokenizer semantics, lookup semantics, or interpretation construct",
+        "change a field type, nullability rule, nesting, or meaning incompatibly",
+        "replace or remove a pinned runtime resource identity without retaining the old option",
+        "change an existing default in a way that changes existing-config output",
+        "weaken the aggregate-only privacy boundary"
+      ]
+    },
+    "minor": {
+      "allowed_for": [
+        "add an optional metric or optional namespaced field while preserving all frozen behavior",
+        "append an Excel column without reordering frozen columns",
+        "add a new green resource under a new identity while retaining old resource identities and defaults",
+        "add an interpretation card or non-breaking warning"
+      ],
+      "required_gates": [
+        "method and interpretation card",
+        "rights and provenance review",
+        "deterministic or bounded-nondeterministic tests",
+        "schema and migration-note update"
+      ]
+    },
+    "patch": {
+      "allowed_for": [
+        "documentation, citation, test, performance, packaging, or security fixes that do not change the frozen schema or intended metric semantics",
+        "a bug fix that restores an already frozen formula without changing keys, defaults, or resource identity"
+      ],
+      "numerical_bugfix_rule": "Any numerical delta must be declared in release notes, covered by updated golden fixtures, and must not rewrite an already published immutable release."
+    }
+  },
+  "change_gate": {
+    "scope_json_and_japanese_document_updated_together": true,
+    "cross_check_test_must_pass": "tests/test_v1_metric_scope.py",
+    "public_release_inventory_gate_must_pass": "scripts/check_public_release.py",
+    "new_metric_requires_incremental_interpretive_value": true,
+    "new_resource_requires_green_status_and_reproducible_identity": true
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "nj8",
+  "name": "New JACET List of 8,000 Basic Words (New JACET8000)",
+  "creator": "JACET Basic Word Revision Committee; distributed via Shin Ishikawa",
+  "version": "NJ8 (as supplied, 2023 file)",
+  "n_levels": 8,
+  "band_size": 1000,
+  "unit": "flemma",
+  "supports_units": ["flemma", "word form (no lemmatization)"],
+  "lemmatizer_default": "open_flemma",
+  "lemmatizer_nwlc_parity": "antbnc",
+  "population": "Japanese EFL learners (university)",
+  "license": "© JACET — redistribution is permitted for this project",
+  "redistributable": true,
+  "public_web": true,
+  "permission_evidence": "Redistribution confirmed by the project owner on 2026-07-22; retain the original copyright and citation.",
+  "rights_reviewed_at": "2026-07-22",
+  "delivery": "bundled under data/NJ8 for the public Streamlit app",
+  "citation": "JACET (2016). New JACET List of 8,000 Basic Words.",
+  "notes": [
+    "2-column CSV: rank,Word. No POS, no inflected forms.",
+    "22 entries carry parenthetical variants (e.g. 'mom (mommy, mum, ...)') -> expanded to the head rank.",
+    "Spreadsheet artifacts: 'TRUE'/'FALSE' are the words true/false (restored by lower-casing).",
+    "Because the list is POS-less and one-entry-per-spelling, it is already flemma-grained."
+  ]
+}

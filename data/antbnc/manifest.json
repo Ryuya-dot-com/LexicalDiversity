@@ -1,0 +1,21 @@
+{
+  "id": "antbnc",
+  "name": "AntBNC Lemma List (ver. 004)",
+  "creator": "Laurence Anthony",
+  "source_url": "https://www.laurenceanthony.net/software/antconc/",
+  "description": "Form -> lemma list derived from the British National Corpus (all words with frequency > 2). Distributed with AntConc/AntWordProfiler.",
+  "role": "optional lemmatizer back-end for NWLC近似 (approximate parity with Mizumoto's New Word Level Checker)",
+  "file": "antbnc_lemmas_ver_004.txt",
+  "format": "headword <TAB> -> <TAB> form1 <TAB> form2 ...",
+  "redistributable": false,
+  "public_web": false,
+  "private_server_only_supported": true,
+  "public_server_only_supported": false,
+  "client_download": false,
+  "rights_status": "permission-pending",
+  "delivery": "Payload is excluded from Git and may be injected through an operator-controlled server path/secret. Public-SaaS lookup remains disabled until explicit server-side processing permission is documented; client delivery is always disabled.",
+  "notes": [
+    "NWLC近似 only: NWLC uses an AntBNC list manually matched to JACET headwords; the raw list is close but not identical.",
+    "Higher-quality lemmatization than simplemma for English (e.g. went -> go, was -> be)."
+  ]
+}

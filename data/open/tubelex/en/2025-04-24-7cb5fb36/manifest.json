@@ -1,0 +1,163 @@
+{
+  "analysis_method": {
+    "audited_runtime_nltk_versions": [
+      "3.10.0"
+    ],
+    "category_entropy_public": false,
+    "channel_log10_prevalence": "log10((channel_df + 1) / (D_channel + 2))",
+    "frequency_zipf": "log10(1e9 * (count + 1) / (N + source_V))",
+    "id": "tubelex-en-treebank-7cb5fb36-detseg-apostrophe-laplace-beta11-v2",
+    "normalization": "Unicode NFKC; U+02BC/U+2018/U+2019/U+201B apostrophes mapped to ASCII; then str.lower()",
+    "production_runtime_nltk_version": "3.10.0",
+    "source_treebank_nltk_version": "3.8.1",
+    "tokenizer": "deterministic .?!/line pre-segmentation followed by audited NLTK TreebankWordTokenizer rules; no Punkt model",
+    "unseen_in_means": true,
+    "video_log10_prevalence": "log10((video_df + 1) / (D_video + 2))"
+  },
+  "artifact": {
+    "bytes": 4572297,
+    "columns": [
+      "word",
+      "count",
+      "videos",
+      "channels",
+      "count:howto",
+      "count:gaming",
+      "count:entertainment",
+      "count:education",
+      "count:science",
+      "count:sports",
+      "count:nonprofits",
+      "count:autos",
+      "count:people",
+      "count:music",
+      "count:news",
+      "count:film",
+      "count:travel",
+      "count:comedy",
+      "count:pets"
+    ],
+    "file": "tubelex_en_treebank_7cb5fb36_frequency_index.csv.gz",
+    "format": "deterministic gzip-compressed UTF-8 CSV",
+    "rows": 515292,
+    "sha256": "3731f23f3385ed630777ff56b5edbed5db46eee256ededceb0ac213016f31675"
+  },
+  "attribution_file": "NOTICE.md",
+  "build": {
+    "algorithm_version": 1,
+    "callable": "ldfreq.tubelex.build_tubelex_aggregates",
+    "columns": 19,
+    "gzip_mtime": 0,
+    "included_token_mass": 171805865,
+    "lookup_filter": {
+      "excluded_rows": 98017,
+      "fullmatch_regex": "len(token)<=64; optional leading ASCII apostrophe; every remaining apostrophe/hyphen-separated component satisfies str.isalpha()",
+      "policy": "TUBELEX English Penn Treebank tokens after NFKC and lower, restricted to Unicode-alphabetic lexical components and at most 64 code points",
+      "retained_rows": 515292,
+      "retained_token_mass": 169889910,
+      "retained_token_mass_ratio": 0.9888481397302705,
+      "source_rows": 613309,
+      "source_vocabulary_size": 613309
+    },
+    "physical_rows": 613311,
+    "row_order": "ascending Unicode code-point order by exact word field",
+    "source_compression": "plain TSV or LZMA/xz",
+    "source_parser": "physical UTF-8 lines; tab delimiter; csv.QUOTE_NONE",
+    "source_tokenization": "TUBELEX English treebank variant built upstream with NLTK 3.8.1; runtime adapter uses word-tokenizer rules audited through the production NLTK 3.10.0 pin, with deterministic .?!/line pre-segmentation and without Punkt",
+    "totals_policy": "included rows must exactly equal declared totals",
+    "word_rows": 613309
+  },
+  "id": "tubelex-en-treebank-7cb5fb36-frequency-index",
+  "license": "BSD 3-Clause License",
+  "license_spdx": "BSD-3-Clause",
+  "license_url": "https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/LICENSE",
+  "name": "TUBELEX English Treebank-variant frequency and contextual-diversity index",
+  "privacy": {
+    "channel_ids_bundled": false,
+    "contiguous_subtitle_passages_bundled": false,
+    "document_names_bundled": false,
+    "local_source_path_recorded": false,
+    "published_frequency_keys_bundled": true,
+    "raw_subtitles_bundled": false,
+    "video_ids_bundled": false
+  },
+  "schema": {
+    "base_columns": [
+      "word",
+      "count",
+      "videos",
+      "channels"
+    ],
+    "categories": [
+      "howto",
+      "gaming",
+      "entertainment",
+      "education",
+      "science",
+      "sports",
+      "nonprofits",
+      "autos",
+      "people",
+      "music",
+      "news",
+      "film",
+      "travel",
+      "comedy",
+      "pets"
+    ],
+    "category_columns": [
+      "count:howto",
+      "count:gaming",
+      "count:entertainment",
+      "count:education",
+      "count:science",
+      "count:sports",
+      "count:nonprofits",
+      "count:autos",
+      "count:people",
+      "count:music",
+      "count:news",
+      "count:film",
+      "count:travel",
+      "count:comedy",
+      "count:pets"
+    ],
+    "source_variant": "English Penn Treebank tokenizer",
+    "total_row": "[TOTAL]"
+  },
+  "source": {
+    "acquired_on": "2026-07-22",
+    "asset": "tubelex-en-treebank.tsv.xz",
+    "bundled": false,
+    "bytes": 4152940,
+    "checksum_check": "matched-caller-supplied-expected-sha256",
+    "local_path_recorded": false,
+    "retrieved_by_builder": false,
+    "sha256": "4096022259d5eaa7261c3bf22c3b0af9fd58ae8eebe17894c0b34a163954f936",
+    "url": "https://raw.githubusercontent.com/naist-nlp/tubelex/7cb5fb36add76b83a266d1967536e1a1d3faa513/frequencies/tubelex-en-treebank.tsv.xz"
+  },
+  "source_project_url": "https://github.com/naist-nlp/tubelex",
+  "totals": {
+    "category_counts": {
+      "autos": 2269188,
+      "comedy": 1448434,
+      "education": 45682925,
+      "entertainment": 21712969,
+      "film": 5390228,
+      "gaming": 11190388,
+      "howto": 10331143,
+      "music": 2667215,
+      "news": 9400743,
+      "nonprofits": 8026361,
+      "people": 29417376,
+      "pets": 917772,
+      "science": 14890400,
+      "sports": 3969422,
+      "travel": 4491301
+    },
+    "channels": 68405,
+    "count": 171805865,
+    "videos": 105733
+  },
+  "version": "7cb5fb36add76b83a266d1967536e1a1d3faa513"
+}

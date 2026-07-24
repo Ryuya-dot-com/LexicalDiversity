@@ -1,0 +1,668 @@
+---
+title: "分散指標のコーパス設計依存性 — シミュレーションによる検証"
+subtitle: "contextual-dispersion corpus artifact(ロードマップ Phase 2)のためのメソッド検証"
+date: 2026-07-22
+lang: ja
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "コードを表示"
+    embed-resources: true
+    fig-dpi: 150
+jupyter: python3
+execute:
+  warning: false
+---
+
+## 目的と背景
+
+range(語を含むコーパス区画数)・contextual diversity(CD)・分散指標は、
+語の内在的性質ではなく **コーパス設計(分割数・パート定義・テキスト長・
+レジスター構成)との相対値** である — この点は現在の方法論文献の合意事項である
+(Egbert, Burch & Biber 2020; Sönning & Egbert 2026; Gries 2024)。
+本ドキュメントは、その依存構造を統制されたシミュレーションで再現・分解し、
+本プロジェクトが計画する **版固定・レジスター層別の contextual-dispersion
+資産** の設計仕様(指標選択、帰無モデル比・頻度調整列の同梱、粒度の宣言、
+不確実性区間、最低頻度フロア)を数値的根拠つきで導出する。
+
+文献の既知値(Biber et al. 2016 の D = 0.0/0.905、Sönning & Egbert 2026 の
+ゼロ件パート機構、ランダム配置での ARF/f = 1 − 1/e)をアサーションとして
+埋め込み、実装の正しさを担保している。式は Gries (2020, *Analyzing
+Dispersion*) ch. 5 に従う。乱数は seed 固定で決定的に再現できる。
+
+```{python}
+#| code-summary: "セットアップ:分散指標の実装(Gries 2020 ch.5 準拠)"
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(42)
+
+# dataviz palette (validated: CVD-safe, light surface)
+C1, C2, C3, C4, C5 = "#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"
+plt.rcParams.update({
+    "figure.facecolor": "#fcfcfb", "axes.facecolor": "#fcfcfb",
+    "axes.spines.top": False, "axes.spines.right": False,
+    "axes.grid": True, "grid.color": "#e6e4dd", "grid.linewidth": 0.6,
+    "font.size": 10, "axes.titlesize": 11,
+})
+
+
+def juilland_d(v, c):
+    """Juilland's D = 1 - (sd_pop(p)/mean(p)) / sqrt(n-1),  p_i = v_i/c_i."""
+    v, c = np.asarray(v, float), np.asarray(c, float)
+    p = v / c
+    m = p.mean()
+    if m == 0:
+        return np.nan
+    return max(0.0, 1.0 - (p.std(ddof=0) / m) / np.sqrt(len(v) - 1))
+
+
+def carroll_d2(v):
+    """Carroll's D2 = 正規化エントロピー(等サイズパート用)。"""
+    v = np.asarray(v, float)
+    f = v.sum()
+    if f == 0:
+        return np.nan
+    q = v / f
+    nz = q[q > 0]
+    return -(nz * np.log2(nz)).sum() / np.log2(len(v))
+
+
+def dp(v, c):
+    """Gries's DP = 0.5 * sum |v_i/f - s_i|(大きいほど不均等)。"""
+    v, c = np.asarray(v, float), np.asarray(c, float)
+    f, s = v.sum(), c / c.sum()
+    if f == 0:
+        return np.nan
+    return 0.5 * np.abs(v / f - s).sum()
+
+
+def dkl(v, c):
+    """KL divergence sum (v_i/f) log2((v_i/f)/s_i)(0 = 完全に均等)。"""
+    v, c = np.asarray(v, float), np.asarray(c, float)
+    f, s = v.sum(), c / c.sum()
+    if f == 0:
+        return np.nan
+    q = v / f
+    nz = q > 0
+    return (q[nz] * np.log2(q[nz] / s[nz])).sum()
+
+
+def rosengren_s(v, c):
+    """Rosengren's S_adj = (sum sqrt(s_i v_i))^2 / f."""
+    v, c = np.asarray(v, float), np.asarray(c, float)
+    f, s = v.sum(), c / c.sum()
+    if f == 0:
+        return np.nan
+    return (np.sqrt(s * v).sum()) ** 2 / f
+
+
+def range_pct(v):
+    v = np.asarray(v)
+    return 100.0 * (v > 0).sum() / len(v)
+
+
+def arf(positions, corpus_len):
+    """ARF (Savický & Hlaváčová 2002)。循環ギャップ、パート定義不要。"""
+    pos = np.sort(np.asarray(positions))
+    f = len(pos)
+    if f == 0:
+        return np.nan
+    gaps = np.diff(pos, append=pos[0] + corpus_len)
+    vbar = corpus_len / f
+    return np.minimum(gaps, vbar).sum() / vbar
+
+
+def expected_range_pct(f, part_len, corpus_len):
+    """ランダム配置下の期待 range(ポアソン近似): 1 - e^(-f c_i / N)。"""
+    return 100.0 * (1.0 - np.exp(-f * part_len / corpus_len))
+
+
+def fa_range(v, part_len):
+    """頻度調整 range(pervasiveness min-max;Gries 2024 流)。"""
+    v = np.asarray(v)
+    f, n = int(v.sum()), len(v)
+    if f == 0:
+        return np.nan
+    r_obs = (v > 0).sum()
+    r_min = int(np.ceil(f / part_len))
+    r_max = min(f, n)
+    if r_max == r_min:
+        return 1.0
+    return (r_obs - r_min) / (r_max - r_min)
+
+
+def parts_from_positions(positions, n_parts, corpus_len):
+    counts, _ = np.histogram(positions, bins=np.linspace(0, corpus_len, n_parts + 1))
+    return counts
+
+
+def auc(scores, labels):
+    """Mann-Whitney AUC(labels=True 群のスコアが高い確率)。"""
+    s, y = np.asarray(scores, float), np.asarray(labels, bool)
+    r = pd.Series(s).rank().to_numpy()
+    n1, n0 = y.sum(), (~y).sum()
+    return (r[y].sum() - n1 * (n1 + 1) / 2) / (n1 * n0)
+```
+
+## 実験A:同一分布・分割数だけ変更(Biber et al. 2016 の再現)
+
+語を「コーパス先頭 10% に完全に一様分布(10 万トークン中 1,000 回、100
+トークンごと)」に固定し、**等サイズ分割の数だけ** を変える。語もコーパスも
+一切変わらない。
+
+```{python}
+#| code-summary: "実験A"
+N, f = 1_000_000, 1_000
+positions_A = np.arange(0, N // 10, (N // 10) // f)
+
+rows = []
+for n_parts in (10, 100, 1000):
+    v = parts_from_positions(positions_A, n_parts, N)
+    c = np.full(n_parts, N // n_parts)
+    rows.append([n_parts, juilland_d(v, c), carroll_d2(v), dp(v, c),
+                 dkl(v, c), rosengren_s(v, c), range_pct(v)])
+dfA = pd.DataFrame(rows, columns=["n_parts", "Juilland D", "Carroll D2",
+                                  "DP", "DKL", "Rosengren S", "range %"]).round(3)
+
+assert abs(dfA["Juilland D"].iloc[0] - 0.0) < 1e-9
+assert abs(dfA["Juilland D"].iloc[2] - 0.905) < 0.001
+dfA
+```
+
+```{python}
+#| code-summary: "図A"
+#| fig-cap: "同一分布でも Juilland D / Carroll D2 は分割数だけで大きく動く。DP・Rosengren S・range は(等サイズ分割の)粒度に対して不変。"
+fig, ax = plt.subplots(figsize=(7, 3.6))
+x = np.arange(3)
+label_pos = {
+    "Juilland D": (x[-1] + 0.07, None, "left"),
+    "Carroll D2": (x[-1] + 0.07, None, "left"),
+    "DP": (x[0] - 0.07, dfA["DP"].iloc[0], "right"),
+    "Rosengren S": (x[-1] + 0.07, None, "left"),
+}
+for col, color in [("Juilland D", C1), ("Carroll D2", C2),
+                   ("DP", C3), ("Rosengren S", C4)]:
+    ax.plot(x, dfA[col], "o-", color=color, label=col, linewidth=2, markersize=7)
+    lx, ly, ha = label_pos[col]
+    ax.annotate(col, (lx, dfA[col].iloc[-1] if ly is None else ly),
+                color=color, fontsize=9, va="center", ha=ha)
+ax.set_xticks(x, ["10", "100", "1000"])
+ax.set_xlim(-0.3, 3.4)
+ax.set_xlabel("number of equal-size parts")
+ax.set_ylabel("index value")
+ax.set_title("Same word, same corpus — only the partition changes")
+ax.legend(loc="center left", frameon=False)
+plt.tight_layout()
+plt.show()
+```
+
+**帰結**:D と D2 は式に分割数 n が直接入っており、n だけで 0 → 0.9 まで
+動く(Biber et al. 2016 の 0.0/0.905 を正確に再現)。資産には **D・D2 を
+採用しない**。
+
+## 実験B:純粋ランダム配置・テキスト長だけ変更
+
+頻度 1/1000 の語をポアソン配置(=分散情報がゼロ)し、200 テキストの
+**長さだけ** を変える(Sönning & Egbert 2026 のゼロ件パート機構)。
+
+```{python}
+#| code-summary: "実験B"
+RATE, N_TEXTS, RUNS = 1 / 1000, 200, 300
+
+rows = []
+for L in (500, 2000, 10000):
+    corpus_len = N_TEXTS * L
+    acc = {k: [] for k in ("range", "D", "DP", "DKL", "S", "arf")}
+    for _ in range(RUNS):
+        v = rng.poisson(RATE * L, size=N_TEXTS)
+        c = np.full(N_TEXTS, L)
+        if v.sum() == 0:
+            continue
+        acc["range"].append(range_pct(v))
+        acc["D"].append(juilland_d(v, c))
+        acc["DP"].append(dp(v, c))
+        acc["DKL"].append(dkl(v, c))
+        acc["S"].append(rosengren_s(v, c))
+        pos = rng.uniform(0, corpus_len, size=int(v.sum()))
+        acc["arf"].append(arf(pos, corpus_len) / v.sum())
+    exp_r = expected_range_pct(RATE * corpus_len, L, corpus_len)
+    m = {k: np.mean(a) for k, a in acc.items()}
+    rows.append([L, m["range"], exp_r, m["range"] / exp_r, m["D"],
+                 m["DP"], m["DKL"], m["S"], m["arf"]])
+
+dfB = pd.DataFrame(rows, columns=["text_len", "range %", "E[range] %",
+                                  "range/E", "Juilland D", "DP", "DKL",
+                                  "Rosengren S", "ARF/f"]).round(3)
+assert abs(dfB["range %"].iloc[0] - 39.35) < 1.5
+assert abs(dfB["range %"].iloc[1] - 86.47) < 1.5
+dfB
+```
+
+```{python}
+#| code-summary: "図B"
+#| fig-cap: "左:range はテキスト長だけで 39%→100% に動くが、帰無期待値と常に一致(ratio≈1)。右:パートベース指標はすべて動く一方、位置ベースの ARF/f は 1−1/e ≈ 0.632 に不変。"
+fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.4))
+L_vals = dfB["text_len"]
+
+ax = axes[0]
+ax.plot(L_vals, dfB["range %"], "o-", color=C1, label="observed range", linewidth=2)
+ax.plot(L_vals, dfB["E[range] %"], "s--", color=C2, label="null E[range]", linewidth=2)
+ax.set_xscale("log")
+ax.set_xlabel("text length (tokens)")
+ax.set_ylabel("range (%)")
+ax.set_title("Range tracks the random-placement null")
+ax.legend(frameon=False)
+
+ax = axes[1]
+for col, color in [("DP", C3), ("Rosengren S", C4), ("ARF/f", C5)]:
+    ax.plot(L_vals, dfB[col], "o-", color=color, label=col, linewidth=2)
+ax.axhline(1 - 1 / np.e, color=C5, linestyle=":", linewidth=1)
+ax.set_xscale("log")
+ax.set_xlabel("text length (tokens)")
+ax.set_ylabel("index value")
+ax.set_title("Parts-based indices move; ARF does not")
+ax.legend(frameon=False)
+plt.tight_layout()
+plt.show()
+```
+
+**帰結**:短いテキストではゼロ件パートが機械的に増える(1/1000 語は 500 語
+テキストの約 39% にしか現れないが 2000 語なら約 86%)。**平均テキスト長は
+資産メタデータの必須項目** であり、テキスト長構成の異なる資産間で値を比較
+してはならない。位置ベースの **ARF** はこのアーティファクトを持たない。
+
+## 実験C:ランダム配置・頻度だけ変更(頻度交絡と2つの補正)
+
+```{python}
+#| code-summary: "実験C"
+L, N_TEXTS = 2000, 200
+corpus_len = L * N_TEXTS
+
+rows = []
+for rate in (0.1 / 1000, 1 / 1000, 10 / 1000):
+    acc = {k: [] for k in ("range", "ratio", "fa", "DP", "DKL")}
+    for _ in range(RUNS):
+        v = rng.poisson(rate * L, size=N_TEXTS)
+        c = np.full(N_TEXTS, L)
+        f_tot = v.sum()
+        if f_tot == 0:
+            continue
+        exp_r = expected_range_pct(f_tot, L, corpus_len)
+        acc["range"].append(range_pct(v))
+        acc["ratio"].append(range_pct(v) / exp_r)
+        acc["fa"].append(fa_range(v, L))
+        acc["DP"].append(dp(v, c))
+        acc["DKL"].append(dkl(v, c))
+    m = {k: np.mean(a) for k, a in acc.items()}
+    rows.append([f"{rate*1000:g}/1000", m["range"], m["ratio"], m["fa"],
+                 m["DP"], m["DKL"]])
+
+dfC = pd.DataFrame(rows, columns=["freq", "range %", "range/E",
+                                  "fa-range", "DP", "DKL"]).round(3)
+dfC
+```
+
+**帰結**:生の range は頻度だけで約 18% → 100% に動き、DP・DKL も大きく
+動く(「頻度が最大の攪乱変数」)。**帰無モデル比 range/E は完全に安定**
+(≈1.0 = 偶然と同程度の偏り)。Gries 流 fa- 調整は改善するが非単調で完全では
+ない。資産には **観測値・帰無期待値・比・fa 列を tuple で併記** する。
+
+## 実験D:同一の語・収集構成だけ変更(核心の実証)
+
+2,000 語彙・10 レジスター。40% を「特化語」(ホームレジスターで×10、
+他で×0.1)とし、**語の生成パラメータを固定したまま**、収集するコーパスの
+レジスター構成だけを変える(バランス型 10×10% vs 偏り型 82% がレジスター0)。
+
+```{python}
+#| code-summary: "実験D:コーパス生成"
+V, N_REG, DOCS, L = 2000, 10, 5000, 500
+
+zipf = 1 / np.arange(1, V + 1) ** 1.1
+base_p = zipf / zipf.sum()
+is_spec = rng.random(V) < 0.4
+home = rng.integers(0, N_REG, size=V)
+
+reg_p = np.tile(base_p, (N_REG, 1))
+for r in range(N_REG):
+    reg_p[r, is_spec & (home == r)] *= 10.0
+    reg_p[r, is_spec & (home != r)] *= 0.1
+reg_p /= reg_p.sum(axis=1, keepdims=True)
+
+homog_p = np.tile(base_p, (N_REG, 1))
+homog_p /= homog_p.sum(axis=1, keepdims=True)
+
+
+def build_corpus(p_matrix, reg_share):
+    docs_per_reg = (np.asarray(reg_share) * DOCS).astype(int)
+    counts, labels = [], []
+    for r, nd in enumerate(docs_per_reg):
+        counts.append(rng.poisson(np.tile(p_matrix[r] * L, (nd, 1))))
+        labels += [r] * nd
+    return np.vstack(counts), np.array(labels)
+
+
+balanced, lab_b = build_corpus(reg_p, [0.1] * N_REG)
+skewed, lab_s = build_corpus(reg_p, [0.82] + [0.02] * (N_REG - 1))
+homog, lab_h = build_corpus(homog_p, [0.1] * N_REG)
+
+
+def word_stats(counts, labels, w):
+    v_doc = counts[:, w]
+    v_reg = np.array([v_doc[labels == r].sum() for r in range(N_REG)])
+    c_reg = np.array([(labels == r).sum() * L for r in range(N_REG)])
+    f_tot = int(v_doc.sum())
+    exp_r = expected_range_pct(f_tot, L, len(v_doc) * L)
+    obs_r = range_pct(v_doc)
+    return dict(f=f_tot, range=obs_r,
+                ratio=obs_r / exp_r if exp_r > 0 else np.nan,
+                dp_reg=dp(v_reg, c_reg), dkl_reg=dkl(v_reg, c_reg))
+
+
+def pick(mask):
+    cand = np.where(mask & (base_p > np.median(base_p)))[0]
+    return cand[len(cand) // 2]
+
+
+w_s0 = pick(is_spec & (home == 0))
+w_s5 = pick(is_spec & (home == 5))
+w_gen = pick(~is_spec)
+
+rows = []
+for name, w in [("specialist (home=reg0)", w_s0),
+                ("specialist (home=reg5)", w_s5), ("generalist", w_gen)]:
+    for cname, counts, labels in [("balanced", balanced, lab_b),
+                                  ("skewed 82% reg0", skewed, lab_s)]:
+        s = word_stats(counts, labels, w)
+        rows.append([name, cname, s["f"], round(s["range"], 1),
+                     round(s["ratio"], 2), round(s["dp_reg"], 3),
+                     round(s["dkl_reg"], 3)])
+
+pd.DataFrame(rows, columns=["word", "corpus", "f", "doc range %",
+                            "range/E", "DP(reg)", "DKL(reg)"])
+```
+
+```{python}
+#| code-summary: "図D:CD×頻度の共線性(均質 vs レジスター層別)"
+#| fig-cap: "同一頻度帯でも、レジスター層別コーパスでは CD(文書数)が語のレジスター特化度に応じて縦に散らばる(独自情報を持つ)。均質コーパスでは CD は頻度の関数に退化する。"
+fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8), sharey=True)
+for ax, (name, counts) in zip(axes, [("homogeneous", homog),
+                                     ("register-stratified", balanced)]):
+    f_w = counts.sum(axis=0)
+    cd_w = (counts > 0).sum(axis=0)
+    keep = (f_w >= 5) & (cd_w >= 1)
+    r = np.corrcoef(np.log(f_w[keep]), np.log(cd_w[keep]))[0, 1]
+    for lab, mask, color in [("generalist", keep & ~is_spec, C1),
+                             ("specialist", keep & is_spec, C2)]:
+        ax.scatter(f_w[mask], cd_w[mask], s=8, alpha=0.45, color=color,
+                   label=lab, edgecolors="none")
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_xlabel("word frequency f")
+    ax.set_title(f"{name}   r(logCD, logF) = {r:.3f}")
+axes[0].set_ylabel("CD (documents containing word)")
+axes[0].legend(frameon=False, loc="upper left")
+plt.tight_layout()
+plt.show()
+```
+
+**帰結**:同じ語が、収集構成次第で「頻度 412・range 6%・高 DP の周辺語」
+にも「頻度 3010・range 42%・低 DP の中核語」にも見える。ただし **汎用語は
+どの構成でもほぼ不変**(range/E ≈ 1.0)で、揺れるのは特化語だけ。つまり
+「構成への感受性」自体がレジスター特化度の信号である。均質な収集では CD は
+頻度の焼き直しにしかならない(r ≈ .98)。
+
+## 実験E(新):バースト性 — 同一頻度で「塊で使われる語」を分離できるか
+
+頻度を f = 400(1/1000)に固定し、(a) 一様ランダム配置と、(b) バースト配置
+(40 クラスタ × 10 トークン、クラスタ幅 200 トークン)を比較する。
+range 単独では「どの区画に現れたか」しか見えないが、帰無モデル比と ARF は
+塊構造を頻度から分離して検出できるはずである。
+
+```{python}
+#| code-summary: "実験E"
+L, N_TEXTS = 2000, 200
+corpus_len = L * N_TEXTS
+F_TOT, N_CLUST, CLUST_W = 400, 40, 200
+
+rows = []
+for name in ("random", "bursty"):
+    acc = {k: [] for k in ("range", "ratio", "DP", "DKL", "arf")}
+    for _ in range(200):
+        if name == "random":
+            pos = rng.uniform(0, corpus_len, size=F_TOT)
+        else:
+            centers = rng.uniform(0, corpus_len - CLUST_W, size=N_CLUST)
+            pos = (centers[:, None] + rng.uniform(0, CLUST_W, (N_CLUST, F_TOT // N_CLUST))).ravel()
+        v = parts_from_positions(pos, N_TEXTS, corpus_len)
+        c = np.full(N_TEXTS, L)
+        exp_r = expected_range_pct(F_TOT, L, corpus_len)
+        acc["range"].append(range_pct(v))
+        acc["ratio"].append(range_pct(v) / exp_r)
+        acc["DP"].append(dp(v, c))
+        acc["DKL"].append(dkl(v, c))
+        acc["arf"].append(arf(pos, corpus_len) / F_TOT)
+    m = {k: np.mean(a) for k, a in acc.items()}
+    rows.append([name, round(m["range"], 1), round(m["ratio"], 3),
+                 round(m["DP"], 3), round(m["DKL"], 3), round(m["arf"], 3)])
+
+pd.DataFrame(rows, columns=["placement", "range %", "range/E", "DP", "DKL", "ARF/f"])
+```
+
+**帰結**:頻度が同一でも、バースト語は range/E ≪ 1、ARF/f ≪ 0.632、
+高 DP/DKL として明確に分離される。逆に言えば、**生の range だけを見ると
+バースト語と低頻度語を混同する**。帰無モデル比・ARF は「トピック集中的な
+使われ方」の検出列として資産に載せる価値がある。
+
+## 実験F(新):どの指標×粒度が「真の特化度」を回復するか
+
+シミュレーションでは真値(どの語が特化語か)が既知なので、指標×粒度の
+組み合わせごとに特化語検出の AUC を計算できる。特化語と汎用語は設計上
+ほぼ頻度がマッチしている(期待頻度倍率 0.1×10 + 0.9×0.1 = 1.09)。
+
+```{python}
+#| code-summary: "実験F"
+counts, labels = balanced, lab_b
+f_w = counts.sum(axis=0)
+keep = f_w >= 20
+
+reg_sums = np.vstack([counts[labels == r].sum(axis=0) for r in range(N_REG)])
+c_reg = np.array([(labels == r).sum() * L for r in range(N_REG)])
+s_reg = c_reg / c_reg.sum()
+
+q = reg_sums / np.maximum(f_w, 1)                     # per-word register dist.
+nzmask = q > 0
+dkl_reg_w = np.where(nzmask, q * np.log2(np.maximum(q, 1e-12) / s_reg[:, None]), 0).sum(axis=0)
+reg_range_w = (reg_sums > 0).sum(axis=0)
+reg_entropy_w = -np.where(nzmask, q * np.log2(np.maximum(q, 1e-12)), 0).sum(axis=0) / np.log2(N_REG)
+
+cd_w = (counts > 0).sum(axis=0)
+exp_cd = DOCS * (1 - np.exp(-f_w / DOCS))            # equal doc sizes
+ratio_w = cd_w / np.maximum(exp_cd, 1e-9)
+s_doc = np.full(DOCS, 1 / DOCS)
+dp_doc_w = 0.5 * np.abs(counts / np.maximum(f_w, 1) - s_doc[:, None]).sum(axis=0)
+
+candidates = [
+    ("DKL over registers",        dkl_reg_w,        +1),
+    ("register entropy (lower)",  reg_entropy_w,    -1),
+    ("register range (lower)",    reg_range_w,      -1),
+    ("doc range/E (lower)",       ratio_w,          -1),
+    ("DP over documents",         dp_doc_w,         +1),
+    ("log doc CD (lower)",        np.log(np.maximum(cd_w, 1)), -1),
+    ("log frequency (control)",   np.log(np.maximum(f_w, 1)),  -1),
+]
+
+rows = []
+for name, score, sign in candidates:
+    rows.append([name, round(auc(sign * score[keep], is_spec[keep]), 3)])
+dfF = pd.DataFrame(rows, columns=["score (orientation)", "AUC for specialist detection"])
+dfF = dfF.sort_values("AUC for specialist detection", ascending=False).reset_index(drop=True)
+dfF
+```
+
+```{python}
+#| code-summary: "図F"
+#| fig-cap: "真の特化語を検出する AUC。宣言された粒度(レジスター)で計算した指標が最良で、頻度は無情報(AUC≈0.5)。"
+fig, ax = plt.subplots(figsize=(7, 3.2))
+y = np.arange(len(dfF))[::-1]
+ax.barh(y, dfF["AUC for specialist detection"], height=0.55, color=C1)
+for yi, (nm, val) in zip(y, dfF.itertuples(index=False)):
+    ax.text(val + 0.008, yi, f"{val:.3f}", va="center", fontsize=9)
+ax.set_yticks(y, dfF["score (orientation)"])
+ax.axvline(0.5, color="#8a887d", linestyle=":", linewidth=1)
+ax.set_xlim(0.4, 1.05)
+ax.set_xlabel("AUC (specialist vs generalist)")
+ax.set_title("Which measure x granularity recovers the true specialization?")
+plt.tight_layout()
+plt.show()
+```
+
+**帰結**:検出したい構造(レジスター特化)の **粒度に一致した指標が最良**
+で、文書粒度の指標がそれに続き、頻度は無情報。TUBELEX が複数粒度
+(videos/channels/categories)を併載する設計の合理性がそのまま出る。
+資産は **文書粒度とレジスター粒度の両方のサブ頻度** を持つべきである。
+
+## 実験G(新):ブートストラップ不確実性(Gries 2022 の実演)
+
+「値が、どの文書がたまたま収集されたかにどれだけ依存するか」を、文書単位の
+ブートストラップ(B = 300)で区間として示す。
+
+```{python}
+#| code-summary: "実験G"
+B = 300
+
+
+def boot_ci(counts, labels, w):
+    n_docs = counts.shape[0]
+    r_vals, k_vals = [], []
+    for _ in range(B):
+        idx = rng.integers(0, n_docs, n_docs)
+        v = counts[idx, w]
+        lb = labels[idx]
+        v_reg = np.array([v[lb == r].sum() for r in range(N_REG)])
+        c_reg = np.array([(lb == r).sum() * L for r in range(N_REG)])
+        r_vals.append(range_pct(v))
+        if v.sum() > 0 and (c_reg > 0).all():
+            k_vals.append(dkl(v_reg, c_reg))
+    return (np.percentile(r_vals, [2.5, 97.5]), np.percentile(k_vals, [2.5, 97.5]))
+
+
+rows = []
+for name, w in [("specialist (home=reg0)", w_s0), ("generalist", w_gen)]:
+    for cname, counts, labels in [("balanced", balanced, lab_b),
+                                  ("skewed 82% reg0", skewed, lab_s)]:
+        s = word_stats(counts, labels, w)
+        (rlo, rhi), (klo, khi) = boot_ci(counts, labels, w)
+        rows.append([name, cname, round(s["range"], 1),
+                     f"[{rlo:.1f}, {rhi:.1f}]", round(rhi - rlo, 1),
+                     round(s["dkl_reg"], 2), f"[{klo:.2f}, {khi:.2f}]"])
+
+pd.DataFrame(rows, columns=["word", "corpus", "range %", "range 95% CI",
+                            "CI width", "DKL(reg)", "DKL 95% CI"])
+```
+
+**帰結**:同じ語でも、区間の位置はコーパス構成で大きく移動する(実験 D の
+再確認)。資産に **文書リサンプリングによる CI を同梱** すれば、利用者は
+「その値がどれだけ収集に敏感か」を数値で見られる。頻度 – 分散を単一値でなく
+区間つき tuple で出すという Gries (2022) の推奨の実装形である。
+
+## 実験H(新):低頻度での判別性の崩壊(最低頻度フロアの導出)
+
+特化の強さ(boost 1 = なし / 3 / 10)× 頻度(0.1 / 1 / 10 per 1000)の格子で
+各セル 200 語を生成し、DKL(レジスター粒度)が「boost あり」を「boost なし」
+から分離する AUC を測る(Sönning & Egbert 2026 の evenness × frequency
+交互作用に対応)。
+
+```{python}
+#| code-summary: "実験H"
+DOCS_PER_REG, L_H = 100, 500
+c_regH = np.full(N_REG, DOCS_PER_REG * L_H)
+N_WORDS = 200
+
+rows = []
+for rate in (0.1 / 1000, 1 / 1000, 10 / 1000):
+    aucs = {}
+    dkl_by_boost = {}
+    for boost in (1, 3, 10):
+        prof = np.full(N_REG, 1.0)
+        prof[0] = boost
+        prof = prof / prof.mean()                    # 平均頻度を揃える
+        lam = rate * L_H * prof
+        vals = []
+        for _ in range(N_WORDS):
+            v_reg = np.array([rng.poisson(lam[r], DOCS_PER_REG).sum()
+                              for r in range(N_REG)])
+            if v_reg.sum() == 0:
+                continue
+            vals.append(dkl(v_reg, c_regH))
+        dkl_by_boost[boost] = np.array(vals)
+    for boost in (3, 10):
+        s = np.concatenate([dkl_by_boost[1], dkl_by_boost[boost]])
+        y = np.concatenate([np.zeros(len(dkl_by_boost[1]), bool),
+                            np.ones(len(dkl_by_boost[boost]), bool)])
+        aucs[boost] = auc(s, y)
+    exp_f = rate * L_H * DOCS_PER_REG * N_REG
+    rows.append([f"{rate*1000:g}/1000", int(exp_f),
+                 round(aucs[3], 3), round(aucs[10], 3)])
+
+dfH = pd.DataFrame(rows, columns=["freq", "E[f] in corpus",
+                                  "AUC boost3 vs none", "AUC boost10 vs none"])
+dfH
+```
+
+```{python}
+#| code-summary: "図H"
+#| fig-cap: "軽度の偏り(×3)の判別性は低頻度で顕著に低下する(AUC 1.0 → 約 0.8)。強い偏り(×10)はこの頻度範囲では保たれるが、さらに低頻度では同様に崩れる。"
+fig, ax = plt.subplots(figsize=(6.4, 3.4))
+xs = [0.1, 1, 10]
+ax.plot(xs, dfH["AUC boost10 vs none"], "o-", color=C1, linewidth=2,
+        label="strong specialization (x10)")
+ax.plot(xs, dfH["AUC boost3 vs none"], "s-", color=C2, linewidth=2,
+        label="mild specialization (x3)")
+ax.axhline(0.5, color="#8a887d", linestyle=":", linewidth=1)
+ax.set_xscale("log")
+ax.set_xticks(xs, ["0.1/1000", "1/1000", "10/1000"])
+ax.set_xlabel("word frequency")
+ax.set_ylabel("AUC vs no-specialization words")
+ax.set_ylim(0.45, 1.02)
+ax.set_title("Detectability of true unevenness degrades at low frequency")
+ax.legend(frameon=False, loc="lower right")
+plt.tight_layout()
+plt.show()
+```
+
+**帰結**:観測数が少ない語では、軽度の偏り(×3)がポアソン雑音と分離
+できなくなる(AUC 1.0 → 約 0.8;強い偏り ×10 はこの範囲では保たれる)。
+Panel A の最低トークンフロアと同じ思想で、**分散列にも最低頻度フロア
+(その未満は警告つき表示)** を資産仕様に含めるべきである。
+
+## 設計への含意(まとめ)
+
+| 知見(実験) | 資産仕様への反映 |
+|---|---|
+| D・D2 は分割数のアーティファクト(A) | D/D2 を不採用。range + DP/DKL/S を採用 |
+| 全パートベース指標がテキスト長に依存(B) | 平均テキスト長・パートサイズ分布を必須メタデータ化。資産間の数値比較を非推奨と明記 |
+| 頻度が最大の攪乱変数(C) | 観測値・帰無期待値・range/E 比・fa- 調整列を tuple で併記 |
+| 同一語でも収集構成で値が激変、ただし汎用語は頑健(D) | コーパス構成(レジスター混合比)を版固定・宣言。感受性自体を情報として提示 |
+| 均質コーパスでは CD ≒ 頻度(D2) | 資産は必ずレジスター層別コーパスで構築(字幕単独等は不可) |
+| range 単独はバースト語を見逃す(E) | range/E・ARF を塊構造の検出列として追加 |
+| 粒度は検出したい構造に一致させるのが最良(F) | 文書粒度とレジスター粒度の両サブ頻度行列を保持(TUBELEX 方式) |
+| 値の収集感度は CI で可視化できる(G) | 文書ブートストラップ 95% CI を同梱(Gries 2022) |
+| 低頻度では真の偏りが判別不能(H) | 分散列に最低頻度フロア+警告列(Panel A と同じ文法) |
+
+## 参考文献
+
+- Adelman, J. S., Brown, G. D. A., & Quesada, J. F. (2006). Contextual diversity, not word frequency, determines word-naming and lexical decision times. *Psychological Science*, 17(9), 814–823.
+- Biber, D., Reppen, R., Schnur, E., & Ghanem, R. (2016). On the (non)utility of Juilland's D to measure lexical dispersion in large corpora. *International Journal of Corpus Linguistics*, 21(4), 439–464.
+- Brysbaert, M., & New, B. (2009). Moving beyond Kučera and Francis. *Behavior Research Methods*, 41(4), 977–990.
+- Church, K. W., & Gale, W. A. (1995). Inverse document frequency: A measure of deviations from Poisson. *Proc. Third Workshop on Very Large Corpora*, 121–130.
+- Egbert, J., Burch, B., & Biber, D. (2020). Lexical dispersion and corpus design. *International Journal of Corpus Linguistics*, 25(1), 89–115.
+- Gries, S. Th. (2020). Analyzing dispersion. In M. Paquot & S. Th. Gries (Eds.), *A Practical Handbook of Corpus Linguistics* (pp. 99–118). Springer.
+- Gries, S. Th. (2022). Toward more careful corpus statistics. *Research Methods in Applied Linguistics*, 1(1), 100002.
+- Gries, S. Th. (2024). *Frequency, Dispersion, Association, and Keyness: Revising and tupleizing corpus-linguistic measures*. John Benjamins.
+- Nohejl, A., & Watanabe, T. (2025). Dispersion measures as predictors of lexical decision time, word familiarity, and lexical complexity. arXiv:2501.06536.
+- Savický, P., & Hlaváčová, J. (2002). Measures of word commonness. *Journal of Quantitative Linguistics*, 9(3), 215–231.
+- Sönning, L. (2025). Advancing our understanding of dispersion measures in corpus research. *Corpora*, 20(1), 3–35.
+- Sönning, L., & Egbert, J. (2026). Sensitivity of dispersion measures to distributional patterns and corpus design. *International Journal of Corpus Linguistics*.

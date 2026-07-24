@@ -1,0 +1,243 @@
+{
+  "schema_version": "1.0.0",
+  "resource_id": "ellipse-corpus-dc3b8f0b-final",
+  "title": "ELLIPSE Corpus final train and test benchmark",
+  "reviewed_on": "2026-07-23",
+  "purpose": {
+    "tier": "evaluation-benchmark",
+    "allowed": "Offline, outcome-locked evaluation of the public tool's lexical-profile metrics.",
+    "prohibited": [
+      "public application runtime input",
+      "training or shipping a score predictor",
+      "repository, package, container, CI artifact, or public dataset payload",
+      "external API processing of essay text or row-level data"
+    ]
+  },
+  "upstream": {
+    "repository_url": "https://github.com/scrosseye/ELLIPSE-Corpus",
+    "commit": "dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43",
+    "commit_url": "https://github.com/scrosseye/ELLIPSE-Corpus/tree/dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43",
+    "license": {
+      "name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International",
+      "spdx": "CC-BY-NC-SA-4.0",
+      "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+    },
+    "citation": "Crossley, S. A., Tian, Y., Baffour, P., Franklin, A., Kim, Y., Morris, W., Benner, B., Picou, A., & Boser, U. (2023). Measuring second language proficiency using the English Language Learner Insight, Proficiency and Skills Evaluation (ELLIPSE) Corpus. International Journal of Learner Corpus Research, 9(2), 248-269. https://doi.org/10.1075/ijlcr.22026.cro",
+    "open_preprint_url": "https://zenodo.org/records/11217937"
+  },
+  "outer_archive": {
+    "pinned_download_url": "https://github.com/scrosseye/ELLIPSE-Corpus/archive/dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43.zip",
+    "accepted_variants": [
+      {
+        "id": "github-pinned-commit",
+        "root": "ELLIPSE-Corpus-dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43/",
+        "bytes": 11247833,
+        "sha256": "807da46d8301955d4f54ad6b652ffe69e3d9d6aa0aba82ba29133eb61e220042",
+        "provenance": "GitHub archive endpoint for the pinned commit"
+      },
+      {
+        "id": "github-main-snapshot-at-pinned-commit",
+        "root": "ELLIPSE-Corpus-main/",
+        "bytes": 11247401,
+        "sha256": "1e0953e04cbde26fa0693ef0772bb6c4db17d006301c35bc81eb392733183cbb",
+        "zip_comment": "dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43",
+        "provenance": "Locally audited GitHub main-branch snapshot whose ZIP comment identifies the pinned commit"
+      }
+    ],
+    "inventory_policy": "exact",
+    "maximum_members": 6,
+    "maximum_total_uncompressed_bytes": 33554432,
+    "maximum_member_bytes": 16777216,
+    "maximum_compression_ratio": 100.0
+  },
+  "members": [
+    {
+      "relative_path": "ELLIPSE_Final_github_train.csv",
+      "kind": "final-train-csv",
+      "bytes": 9861486,
+      "sha256": "782344e99668a3ff508d7410c0eb6e36da70f3b28f81c96e367f1ca04924b06c",
+      "local_provisioning": "write-after-full-verification"
+    },
+    {
+      "relative_path": "ELLIPSE_Final_github_test.zip",
+      "kind": "encrypted-final-test-archive",
+      "bytes": 1900327,
+      "sha256": "9ecddfcda83f6a99c8a24dda47fb1c30673fedeaf578a0fadac6645fd151a2f8",
+      "local_provisioning": "decrypt-final-csv-after-full-verification"
+    },
+    {
+      "relative_path": "ELL_Rubrics.docx",
+      "kind": "rubric-document",
+      "bytes": 17420,
+      "sha256": "0c0ac5dfa6ae89c9c99ffe483c13ea4a57e8152a1472797e1fe361c2c203efdc",
+      "local_provisioning": "verify-only"
+    },
+    {
+      "relative_path": "README.md",
+      "kind": "upstream-readme",
+      "bytes": 2666,
+      "sha256": "181fe4d9d6ebbce4a64de2a56f1a0afc9df19989e453dcf7f36db55614da0fed",
+      "local_provisioning": "verify-only"
+    },
+    {
+      "relative_path": "ellipsis_raw_rater_scores_anon_all_essay.zip",
+      "kind": "encrypted-raw-rater-archive",
+      "bytes": 6227206,
+      "sha256": "f9c3cede2d54144225e0651af6415137f7da07f2d2955e8f8587896c293d5e85",
+      "local_provisioning": "verify-opaque-member-only-never-decrypt-or-write"
+    }
+  ],
+  "nested_test_archive": {
+    "outer_member": "ELLIPSE_Final_github_test.zip",
+    "inventory_policy": "exact",
+    "encrypted_member_required": true,
+    "password_value_stored": false,
+    "password_reference": "Pinned upstream README.md; provide through ELLIPSE_TEST_ZIP_PASSWORD, a password file, or an interactive prompt.",
+    "member": {
+      "path": "ELLIPSE_Final_github_test.csv",
+      "bytes": 6383207,
+      "sha256": "7e990c6392a9df9554d15bdd22f0b568d19095cd6676ad39cb1eaa69c977ed7a"
+    },
+    "maximum_compression_ratio": 10.0
+  },
+  "final_csv_contract": {
+    "encoding": "UTF-8 with optional BOM",
+    "dialect": "RFC 4180-compatible comma-separated values",
+    "columns_in_order": [
+      "text_id_kaggle",
+      "full_text",
+      "gender",
+      "grade",
+      "race_ethnicity",
+      "num_words",
+      "num_words2",
+      "num_words3",
+      "num_sent",
+      "num_para",
+      "num_word_div_para",
+      "MTLD",
+      "TTR",
+      "Type",
+      "Token",
+      "task",
+      "SES",
+      "prompt",
+      "Overall",
+      "Cohesion",
+      "Syntax",
+      "Vocabulary",
+      "Phraseology",
+      "Grammar",
+      "Conventions",
+      "set"
+    ],
+    "id_column": "text_id_kaggle",
+    "text_column": "full_text",
+    "prompt_column": "prompt",
+    "task": {
+      "column": "task",
+      "allowed_values": [
+        "Independent"
+      ]
+    },
+    "score_columns": [
+      "Overall",
+      "Cohesion",
+      "Syntax",
+      "Vocabulary",
+      "Phraseology",
+      "Grammar",
+      "Conventions"
+    ],
+    "score_scale": {
+      "minimum": 1.0,
+      "maximum": 5.0,
+      "step": 0.5,
+      "missing_allowed": false
+    },
+    "splits": {
+      "train": {
+        "rows": 3911,
+        "prompts": 44,
+        "set_value": "train",
+        "allowed_missing_cells": {}
+      },
+      "test": {
+        "rows": 2571,
+        "prompts": 44,
+        "set_value": "test",
+        "allowed_missing_cells": {
+          "SES": 1
+        }
+      }
+    },
+    "combined": {
+      "rows": 6482,
+      "columns": 26,
+      "prompts": 44,
+      "unique_ids": 6482,
+      "id_overlap_between_splits": 0,
+      "exact_text_duplicates": 0,
+      "prompt_sets_identical_between_splits": true
+    }
+  },
+  "provisioning": {
+    "mode": "fetched",
+    "script": "scripts/fetch_ellipse.py",
+    "default_local_root": ".research/benchmarks/ellipse/dc3b8f0b",
+    "acquisition": {
+      "default_download_path": ".research/benchmarks/ellipse/sources/ELLIPSE-Corpus-dc3b8f0b.zip",
+      "network_allowed": true,
+      "content_opened": false,
+      "required_identity": "github-pinned-commit",
+      "next_step": "Disable network access before supplying the downloaded archive to the content-verification step."
+    },
+    "content_verification": {
+      "network_required": false,
+      "network_policy": "disabled",
+      "written_files": [
+        "ELLIPSE_Final_github_train.csv",
+        "ELLIPSE_Final_github_test.csv",
+        "verification.json"
+      ]
+    },
+    "write_policy": "Acquisition never opens ZIP content and promotes an outer archive only after its pinned size and SHA-256 match. Offline content verification creates no destination until exact inventories, all member hashes, nested decryption, and the complete CSV contract have passed. Existing destinations are never overwritten.",
+    "git_payload": false,
+    "package_payload": false,
+    "container_payload": false,
+    "ci_payload": false
+  },
+  "analysis": {
+    "plan": "benchmarks/ellipse/analysis-plan.json",
+    "plan_sha256": "f1a395b583ba1643bd95057045d91efac3267a333bf48ad3db3ddeb53bc1d43d",
+    "human_readable_spec": "docs/ellipse-confirmatory-analysis-spec.md",
+    "human_readable_spec_sha256": "57e468b32dde72cb2db0c1483273c5040b459c880e62bcf61cb7b35de6d88a2d",
+    "lock_rule": "Freeze the plan, tool commit, dependency lock, resource hashes, and feature parameters before any metric-rating association is computed."
+  },
+  "privacy_and_release": {
+    "network_during_text_processing": "disabled",
+    "external_api_processing": "forbidden",
+    "row_level_outputs": "local-only-and-not-for-release",
+    "public_outputs": [
+      "this manifest",
+      "the analysis plan and analysis code",
+      "resource hashes and aggregate schema checks",
+      "aggregate coefficients, confidence intervals, and prompt-level aggregate performance"
+    ],
+    "never_public": [
+      "essay text",
+      "essay identifiers",
+      "prompt text",
+      "demographic rows",
+      "essay-level metrics or predictions",
+      "trained models"
+    ]
+  },
+  "audit_evidence": {
+    "local_audit": "docs/benchmark-resource-audit-2026-07-23.md",
+    "preprint_local_bytes": 706686,
+    "preprint_local_sha256": "9f1560bde1f6db7bf3a336112bb954bb3949064cb1bbe4c2d7e3de209046045b",
+    "known_documentation_discrepancy": "The paper abstract/method overview reports 29 prompts, while the released final CSV files, prompt table, and data audit contain 44. The machine-verified released data value of 44 is authoritative for this plan.",
+    "rating_reliability_boundary": "Vocabulary pre-adjudication kappa is 0.518. The reported final MFRM essay reliability of 0.94 is not treated as Vocabulary-specific reliability."
+  }
+}

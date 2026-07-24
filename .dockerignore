@@ -1,0 +1,72 @@
+# Version-control and local agent state
+.git
+.git/**
+.github
+.agents
+.codex
+.research
+.research/**
+
+# Local environments, caches, and credentials
+.env
+.env.*
+**/.env
+**/.env.*
+.venv
+venv
+__pycache__
+**/__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.streamlit/*
+!.streamlit/config.toml
+.streamlit/runtime_lists
+.streamlit/runtime_lists/**
+.streamlit/secrets.toml
+secrets
+secrets/**
+*.pem
+*.key
+
+# Legacy/local TAALES distributions and operator source material
+LexicalSophistication
+LexicalSophistication/**
+TAALED
+TAALED/**
+NationBNCCOCA
+NationBNCCOCA/**
+NGSL
+NGSL/**
+sources
+sources/**
+data/sources
+data/sources/**
+data/raw
+data/raw/**
+benchmarks
+benchmarks/**
+
+# Server-only and permission-pending lexical payloads. The Cloud Run image
+# receives Nation data from a separate read-only Tokyo Cloud Storage mount.
+data/antbnc
+data/antbnc/**
+data/bnc_coca
+data/bnc_coca/**
+data/range
+data/range/**
+antbnc*.txt
+*.xlsx
+*.xls
+*.pdf
+*.zip
+
+# Development-only material is not part of the runtime image.
+tests
+tests/**
+docs
+docs/**
+scripts
+scripts/**
+*.log

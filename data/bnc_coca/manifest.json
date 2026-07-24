@@ -1,0 +1,66 @@
+{
+  "id": "bnc_coca_server_resources",
+  "name": "BNC/COCA server-side lexical resources",
+  "delivery": "Payloads are excluded from Git and client downloads. An authorized operator may inject an admitted resource through a read-only path or secret.",
+  "client_download": false,
+  "resources": [
+    {
+      "id": "nation-bnc-coca-headwords-10000",
+      "name": "Paul Nation BNC/COCA 10,000 headwords",
+      "creator": "Paul Nation",
+      "source_url": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources/paul-nations-publications/publications/documents/10000-headwords.zip",
+      "source_bytes": 38627,
+      "source_sha256": "1a7dc1b498b88c6e7147225169d43fd3f586af17debe281ec4e8ddeb3d4b00e5",
+      "local_identity": "The ten local headword TXT files match the official archive byte-for-byte.",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "rights_status": "green-server-only",
+      "public_saas_processing": true,
+      "notes": [
+        "The product policy is narrower than the license: repository bundling and client download are disabled.",
+        "Display source, attribution, license, and modification information with the aggregate analysis."
+      ]
+    },
+    {
+      "id": "eapfoundation-bnc-coca-v2",
+      "name": "EAPFoundation BNC/COCA complete-copy v2",
+      "creator": "Sheldon Smith / EAPFoundation; based on Paul Nation's lists",
+      "source_url": "https://www.eapfoundation.com/vocab/general/bnccoca/index.php?type=v2",
+      "files": [
+        "BNC_COCA_lists.xlsx",
+        "BNC_COCA_lists.pdf"
+      ],
+      "license": "Custom educational non-commercial reuse terms with EAPFoundation acknowledgement",
+      "rights_status": "permission-pending-public-saas",
+      "public_saas_processing": false,
+      "notes": [
+        "These are EAPFoundation files, not Victoria University of Wellington official downloads.",
+        "Keep them local while migrating to the official Paul Nation basewrd1-25 family data."
+      ]
+    },
+    {
+      "id": "nation-bnc-coca-families-25000",
+      "name": "Verified official Paul Nation BNC/COCA 25,000-family server index",
+      "source_url": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources/vocabulary-analysis-programs/range/BNC_COCA_25000.zip",
+      "source_bytes": 600930,
+      "source_sha256": "ac81c7a60e5c76cd2bbf0c59b0501808f0d4fa026b2936919dd54329a9bb6a69",
+      "license": "CC BY-SA 4.0",
+      "rights_status": "green-server-only",
+      "runtime_artifact": {
+        "file": "nation_bnc_coca_25000_family_index.csv.gz",
+        "rows": 75679,
+        "families": 25000,
+        "bytes": 471046,
+        "sha256": "20c1c5a2bcf832831c9ac09a395f584a1b1cc5106b094f0cf6f5ca84b5baf081",
+        "git_tracked": false,
+        "client_download": false
+      },
+      "notes": [
+        "Only basewrd1.txt through basewrd25.txt are admitted.",
+        "Executables, Range program files, placeholders, and auxiliary lists are excluded.",
+        "Runtime independently pins the artifact size and SHA-256 and validates 25 bands of 1,000 families and 75,679 rows.",
+        "Server-only analysis rejects documents below 100 lexical tokens or 20 distinct types; public deployment still requires query budgets and rate controls."
+      ]
+    }
+  ]
+}

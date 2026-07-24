@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: CPython 3.12.10 hash-locked verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      LC_ALL: C.UTF-8
+      TZ: UTC
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_CACHE_DIR: "1"
+      PIP_NO_INPUT: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONHASHSEED: "0"
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+    steps:
+      - name: Check out reviewed repository inventory
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up CPython 3.12.10
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.12.10"
+          check-latest: false
+          architecture: x64
+
+      - name: Install exact runtime and CI dependency graphs
+        run: >-
+          python -m pip install --no-cache-dir --no-deps --only-binary=:all:
+          --require-hashes --requirement requirements-ci-linux-x86_64.lock
+
+      - name: Verify base image identity and lock contracts
+        run: |
+          python scripts/check_version_contract.py --development
+          python scripts/check_base_image_identity.py
+
+      - name: Verify Python and locked runtime identities
+        run: python scripts/check_runtime_environment.py
+
+      - name: Verify installed dependency consistency
+        run: python -m pip check
+
+      - name: Run complete pytest suite
+        run: python -m pytest -p no:cacheprovider
+
+      - name: Enforce public release inventory
+        run: python scripts/check_public_release.py
+
+      - name: Reject whitespace errors and checkout mutations
+        shell: bash
+        run: |
+          for private_path in .research LexicalSophistication TAALED; do
+            if [[ -e "${private_path}" || -L "${private_path}" ]]; then
+              echo "private research path appeared in CI: ${private_path}" >&2
+              exit 1
+            fi
+          done
+          while IFS= read -r benchmark_path; do
+            case "${benchmark_path}" in
+              benchmarks/ellipse/analysis-plan.json|benchmarks/ellipse/manifest.json) ;;
+              *) echo "benchmark payload appeared in CI: ${benchmark_path}" >&2; exit 1 ;;
+            esac
+          done < <(find benchmarks/ellipse -type f -print)
+          git diff --check
+          git diff --exit-code
+          git diff --cached --check
+          git diff --cached --exit-code
+          if [[ -n "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
+            git status --short
+            exit 1
+          fi

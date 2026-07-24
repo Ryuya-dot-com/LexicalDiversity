@@ -1,0 +1,21 @@
+{
+  "id": "ngsl",
+  "name": "New General Service List (NGSL)",
+  "creator": "Charles Browne, Brent Culligan, and Joseph Phillips",
+  "source_url": "https://www.newgeneralservicelist.com/new-general-service-list",
+  "license": "Creative Commons Attribution-ShareAlike 4.0 International",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "redistributable": true,
+  "version": "NGSL 1.2 local download",
+  "files": [
+    "NGSL_1.2_stats.csv",
+    "NGSL_1.2_lemmatized_for_research.csv"
+  ],
+  "delivery": "bundled with the app so Streamlit deployments have one open frequency list by default",
+  "notes": [
+    "The stats file supplies rank order via SFI Rank.",
+    "The lemmatized-for-research file supplies inflected forms mapped to each headword.",
+    "The public open_flemma normalizer verifies the research file SHA-256, retains source collisions as ambiguous, and combines it with project-owned inflection rules.",
+    "Derived rank_map size depends on the loader's duplicate handling and normalization."
+  ]
+}

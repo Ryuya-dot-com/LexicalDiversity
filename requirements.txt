@@ -1,0 +1,7 @@
+streamlit>=1.55
+simplemma>=1.0
+pandas>=2.0
+numpy>=1.24
+plotly>=5.20
+openpyxl>=3.1
+nltk==3.10.0

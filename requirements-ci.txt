@@ -1,0 +1,11 @@
+# Human-readable input graph for the generated Linux x86_64 hash lock. Runtime
+# packages come only from the reviewed production graph; test-only packages are
+# pinned here. CI installs requirements-ci-linux-x86_64.lock with --no-deps,
+# --only-binary=:all:, and --require-hashes.
+-r deploy/cloud-run/requirements-prod.txt
+
+pytest==9.0.3
+iniconfig==2.3.0
+pluggy==1.6.0
+pygments==2.19.2
+pyyaml==6.0.3

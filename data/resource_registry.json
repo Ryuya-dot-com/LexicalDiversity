@@ -1,0 +1,1670 @@
+{
+  "schema_version": "1.1.0",
+  "last_reviewed": "2026-07-23",
+  "policy_document": "docs/resource-governance.md",
+  "required_entry_fields": [
+    "id",
+    "name",
+    "category",
+    "tier",
+    "provisioning",
+    "source",
+    "license",
+    "evidence",
+    "version",
+    "hash",
+    "artifacts",
+    "redistribution",
+    "web_use",
+    "build_provenance",
+    "status",
+    "review"
+  ],
+  "status_definitions": {
+    "green": {
+      "public_payload_default": "allowed-with-recorded-conditions",
+      "meaning": "Reviewed evidence supports the specifically recorded redistribution and web-use modes."
+    },
+    "yellow": {
+      "public_payload_default": "blocked",
+      "meaning": "Origin is known, but evidence for redistribution or public web use is incomplete."
+    },
+    "red-local-only": {
+      "public_payload_default": "blocked",
+      "meaning": "Migration or research reference that must remain outside public source, builds, deployment, and delivery."
+    }
+  },
+  "tier_definitions": {
+    "runtime-resource": {
+      "meaning": "A lexical resource used or proposed for use by the analysis runtime."
+    },
+    "evaluation-benchmark": {
+      "meaning": "Human or synthetic evaluation data used only by an offline research workflow, never by the public application runtime."
+    },
+    "migration-reference": {
+      "meaning": "A local reference retained for migration, comparison, or provenance research."
+    }
+  },
+  "provisioning_mode_definitions": {
+    "bundled": {
+      "meaning": "Reviewed payload artifacts are intentionally included in the public source/release inventory."
+    },
+    "server-injected": {
+      "meaning": "An operator supplies the payload outside Git and injects it into an approved private runtime."
+    },
+    "fetched": {
+      "meaning": "An operator obtains a pinned upstream payload into an ignored local research root and verifies it before use."
+    },
+    "local-snapshot": {
+      "meaning": "A pre-existing local payload is retained outside public source and deployment artifacts."
+    }
+  },
+  "resources": [
+    {
+      "id": "nj8",
+      "name": "New JACET List of 8,000 Basic Words",
+      "category": "ranked-word-list",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "bundled",
+        "spec": "data/NJ8/manifest.json",
+        "default_local_root": "data/NJ8",
+        "git_payload": true,
+        "package_payload": true,
+        "container_payload": true,
+        "ci_payload": true
+      },
+      "source": {
+        "creator_or_rights_holder": "Japan Association of College English Teachers (JACET), Basic Word Revision Committee",
+        "primary_url": null,
+        "acquired_from": "Local project snapshot supplied via Shin Ishikawa",
+        "acquired_on": null,
+        "origin": "NJ8 ranked list supplied to the project as a 2023 CSV snapshot."
+      },
+      "license": {
+        "name": "JACET copyright; redistribution permission confirmed by the project owner",
+        "spdx": null,
+        "url": null,
+        "local_notice": "data/NJ8/manifest.json",
+        "scope": "Permission applies to this NJ8 snapshot and does not generalize to other JACET works.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "project-owner-confirmation",
+          "reference": "User confirmation in the project conversation on 2026-07-22",
+          "supports": [
+            "repository-redistribution",
+            "public-web-use"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "local-manifest",
+          "reference": "data/NJ8/manifest.json",
+          "supports": [
+            "creator",
+            "version",
+            "citation"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "New JACET8000 (JACET 2016)",
+        "local_snapshot": "NJ8 as supplied, 2023 file"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "all deployable artifacts",
+        "state": "per-artifact",
+        "value": null,
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/NJ8/NJ8.csv",
+          "type": "file",
+          "bytes": 112171,
+          "sha256": "1433dcd94135f86cfdbcbf5bafc209661678f1104f5062041b737834e99d3cf8",
+          "public_build": true
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "allowed",
+        "server_copy": "allowed",
+        "client_download": "allowed-with-attribution",
+        "derived_bulk_data": "review-required",
+        "conditions": [
+          "Preserve JACET ownership and the JACET 2016 citation.",
+          "Do not extend this decision to other JACET datasets."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "allowed",
+        "private_server_processing": "allowed",
+        "private_local_processing": "allowed",
+        "aggregate_result_publication": "allowed-with-citation",
+        "notes": "Approval is grounded in explicit project-owner confirmation."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "NJ8 CSV supplied to the project"
+        ],
+        "transformations": [
+          "No build transformation is recorded for the bundled CSV."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "direct-snapshot"
+      },
+      "status": {
+        "level": "green",
+        "reason": "The project owner explicitly confirmed redistribution permission for NJ8.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "project-owner",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "Any change in NJ8 file, intended distribution mode, or JACET terms",
+        "open_questions": [
+          "Record the original acquisition date and a stable primary distribution URL if available.",
+          "Preserve a written permission artifact outside conversational history if available."
+        ]
+      }
+    },
+    {
+      "id": "ngsl-1.2",
+      "name": "New General Service List 1.2",
+      "category": "ranked-word-list",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "bundled",
+        "spec": "data/ngsl/manifest.json",
+        "default_local_root": "data/ngsl",
+        "git_payload": true,
+        "package_payload": true,
+        "container_payload": true,
+        "ci_payload": true
+      },
+      "source": {
+        "creator_or_rights_holder": "Charles Browne, Brent Culligan, and Joseph Phillips",
+        "primary_url": "https://www.newgeneralservicelist.com/new-general-service-list",
+        "acquired_from": "New General Service List Project",
+        "acquired_on": null,
+        "origin": "Upstream NGSL 1.2 statistics and research lemmatization files."
+      },
+      "license": {
+        "name": "Creative Commons Attribution-ShareAlike 4.0 International",
+        "spdx": "CC-BY-SA-4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "local_notice": "data/ngsl/manifest.json",
+        "scope": "NGSL data files and adaptations; attribution and ShareAlike conditions apply.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "primary-source-license-statement",
+          "reference": "https://www.newgeneralservicelist.com/new-general-service-list",
+          "supports": [
+            "license",
+            "redistribution",
+            "public-web-use"
+          ],
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "local-manifest",
+          "reference": "data/ngsl/manifest.json",
+          "supports": [
+            "version",
+            "artifact-identity"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "NGSL 1.2",
+        "local_snapshot": "NGSL 1.2 local download"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "all deployable artifacts",
+        "state": "per-artifact",
+        "value": null,
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/ngsl/NGSL_1.2_lemmatized_for_research.csv",
+          "type": "file",
+          "bytes": 89485,
+          "sha256": "d814f2a0a3c61479a2c5ad037661719a0cc6e7dbcde31f181b54f12d0f1e11a4",
+          "public_build": true
+        },
+        {
+          "path": "data/ngsl/NGSL_1.2_stats.csv",
+          "type": "file",
+          "bytes": 62566,
+          "sha256": "2098bab8955a120a9766c6282a51d7d578c6cb0a7d946600d2ffb73ba25a0b44",
+          "public_build": true
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "allowed-with-license",
+        "server_copy": "allowed-with-license",
+        "client_download": "allowed-with-license",
+        "derived_bulk_data": "allowed-with-license-review",
+        "conditions": [
+          "Provide attribution to Browne, Culligan, and Phillips.",
+          "Preserve the CC BY-SA 4.0 license link.",
+          "Distribute adaptations under compatible ShareAlike terms."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "allowed",
+        "private_server_processing": "allowed",
+        "private_local_processing": "allowed",
+        "aggregate_result_publication": "allowed-with-attribution",
+        "notes": "Web use remains subject to CC BY-SA attribution and adaptation analysis."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "NGSL_1.2_stats.csv",
+          "NGSL_1.2_lemmatized_for_research.csv"
+        ],
+        "transformations": [
+          "Files are stored as direct upstream snapshots; runtime loaders normalize and construct rank mappings.",
+          "The public open_flemma runtime verifies the research-form file SHA-256, retains ambiguous form-to-head collisions, and uses unique rows as open lexical evidence for project-owned inflection rules."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "direct-snapshot-with-runtime-normalization"
+      },
+      "status": {
+        "level": "green",
+        "reason": "The primary source explicitly applies CC BY-SA 4.0 to NGSL.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "NGSL version, file, license, build transformation, or delivery mode changes",
+        "open_questions": [
+          "Record the original acquisition date.",
+          "Add a dedicated local NOTICE containing attribution and the complete license reference."
+        ]
+      }
+    },
+    {
+      "id": "antbnc-lemma-004",
+      "name": "AntBNC Lemma List 004",
+      "category": "lemmatization-lookup",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "local-snapshot",
+        "spec": "data/antbnc/manifest.json",
+        "default_local_root": "data/antbnc",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Laurence Anthony",
+        "primary_url": "https://www.laurenceanthony.net/resources/wordlists/",
+        "acquired_from": "Laurence Anthony's official word-list download directory",
+        "acquired_on": null,
+        "origin": "Form-to-lemma list derived from BNC words occurring more than twice."
+      },
+      "license": {
+        "name": null,
+        "spdx": null,
+        "url": null,
+        "local_notice": "data/antbnc/manifest.json",
+        "scope": "No explicit data-license text supporting third-party redistribution or public SaaS use is preserved locally.",
+        "verified": false
+      },
+      "evidence": [
+        {
+          "type": "primary-source-download",
+          "reference": "https://www.laurenceanthony.net/resources/wordlists/",
+          "supports": [
+            "creator",
+            "availability",
+            "version"
+          ],
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "local-manifest",
+          "reference": "data/antbnc/manifest.json",
+          "supports": [
+            "origin",
+            "local-intended-use"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "project-delivery-decision",
+          "reference": "User direction recorded 2026-07-22",
+          "supports": [
+            "server-side-only architecture",
+            "client download prohibited"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "004",
+        "local_snapshot": "antbnc_lemmas_ver_004.txt"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "local payload",
+        "state": "verified",
+        "value": "a447e0f059c52deabccf4b0c6713482b2ae654047ea9a113e54a1fb5580d0450",
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/antbnc/antbnc_lemmas_ver_004.txt",
+          "type": "file",
+          "bytes": 5469134,
+          "sha256": "a447e0f059c52deabccf4b0c6713482b2ae654047ea9a113e54a1fb5580d0450",
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked-by-server-only-design",
+        "server_copy": "blocked-for-public-service",
+        "client_download": "blocked",
+        "derived_bulk_data": "blocked-pending-evidence",
+        "conditions": [
+          "Payload must be operator-injected and must not enter Git, static assets, packages, images, CI artifacts, or client downloads.",
+          "Obtain or locate explicit terms covering server copying and public web processing."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "blocked",
+        "private_server_processing": "allowed-only-with-operator-authorization",
+        "private_local_processing": "allowed-with-authorized-copy",
+        "aggregate_result_publication": "review-required",
+        "notes": "Client delivery is prohibited by project architecture. Download availability does not establish public server-processing rights."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "antbnc_lemmas_ver_004 distribution archive"
+        ],
+        "transformations": [
+          "No transformation is recorded for the local text snapshot."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "direct-snapshot"
+      },
+      "status": {
+        "level": "yellow",
+        "reason": "The official source is known, but explicit redistribution and public web-use terms have not been preserved or verified.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "Receipt of primary-source terms or written permission",
+        "open_questions": [
+          "Does it permit server-side use in a public SaaS product?",
+          "Which BNC-derived-data conditions apply?"
+        ]
+      }
+    },
+    {
+      "id": "nation-bnc-coca-headwords-10000",
+      "name": "Paul Nation BNC/COCA 10,000 headword bands",
+      "category": "ranked-headword-list",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "server-injected",
+        "spec": "data/resource_registry.json",
+        "default_local_root": null,
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Paul Nation",
+        "primary_url": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources/paul-nations-publications/publications/documents/10000-headwords.zip",
+        "acquired_from": "Victoria University of Wellington, Paul Nation resources",
+        "acquired_on": "2026-07-22",
+        "origin": "Ten official 1,000-headword bands derived from BNC/COCA frequency rankings."
+      },
+      "license": {
+        "name": "Creative Commons Attribution-ShareAlike 4.0 International",
+        "spdx": "CC-BY-SA-4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "local_notice": "data/bnc_coca/manifest.json",
+        "scope": "The official Paul Nation resources page assigns CC BY-SA 4.0 or GPL as appropriate; the vocabulary-list data files are reviewed as CC BY-SA 4.0. Product policy nevertheless prohibits repository and client delivery.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "primary-source-page",
+          "reference": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources",
+          "supports": [
+            "creator",
+            "origin",
+            "availability",
+            "CC BY-SA 4.0 terms"
+          ],
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "local-manifest",
+          "reference": "data/bnc_coca/manifest.json",
+          "supports": [
+            "artifact-list",
+            "local-intended-use"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "verified-source-archive",
+          "reference": "10000-headwords.zip; 38,627 bytes; SHA-256 1a7dc1b498b88c6e7147225169d43fd3f586af17debe281ec4e8ddeb3d4b00e5",
+          "supports": [
+            "source identity",
+            "byte-for-byte identity of the ten local TXT files"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "project-delivery-decision",
+          "reference": "User direction recorded 2026-07-22",
+          "supports": [
+            "server-side-only architecture",
+            "client download prohibited"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "Official 10000-headwords.zip as retrieved 2026-07-22",
+        "local_snapshot": "Ten byte-identical 1,000-headword TXT files"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "official source archive; local files are also hashed per artifact",
+        "state": "verified-source-and-per-artifact",
+        "value": "1a7dc1b498b88c6e7147225169d43fd3f586af17debe281ec4e8ddeb3d4b00e5",
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/bnc_coca/headwords 1st 1000.txt",
+          "type": "file",
+          "bytes": 6922,
+          "sha256": "b1bc5d9d797eb1f21cd7724b1c201440d287c5724ec0e4e4d4090d5123cf692f",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 2nd 1000.txt",
+          "type": "file",
+          "bytes": 7815,
+          "sha256": "693b7068534d1dd335b50feef1f09c7598afa88dce807d020397b457785073a9",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 3rd 1000.txt",
+          "type": "file",
+          "bytes": 9122,
+          "sha256": "d22afa462d426035e24a34c3b400bb629babb0b5a4f571fd54496a0a34a24ffd",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 4th 1000.txt",
+          "type": "file",
+          "bytes": 8635,
+          "sha256": "a4c4d76c029a49fdc656c22d91b201523e3f11cf2e3eeb4539f23af037409a55",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 5th 1000.txt",
+          "type": "file",
+          "bytes": 8648,
+          "sha256": "0364af40dfa68b2e0f60e9581c02c53e06740e8c138fffaf9fbb96c61eafcdf0",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 6th 1000.txt",
+          "type": "file",
+          "bytes": 8755,
+          "sha256": "5e210e85b67e7822e73a8fac3db7c3cc10afb0025c1e235062ca6b2c1bd237c8",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 7th 1000.txt",
+          "type": "file",
+          "bytes": 8988,
+          "sha256": "3ad7716d82623b0b868f117080b2b792f1a4ded7b9beac6c7e9aea713a263d20",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 8th 1000.txt",
+          "type": "file",
+          "bytes": 9081,
+          "sha256": "96293b09026cc50a125eccdd0806a05773b9c5e0776c0ff55cfe122f7f4f8449",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 9th 1000.txt",
+          "type": "file",
+          "bytes": 9192,
+          "sha256": "54955a9a9b53f399276e08044e1b1b977b9307b776b5748aafc4766f67fdc936",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/headwords 10th 1000.txt",
+          "type": "file",
+          "bytes": 9324,
+          "sha256": "5cefefc18fb4ee4ce7df2bb8a9c9c5cded50a56e8843a9f2b867e294d7179412",
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked-by-server-only-design",
+        "server_copy": "allowed-with-CC-BY-SA-attribution",
+        "client_download": "blocked-by-product-policy",
+        "derived_bulk_data": "license-allows-under-CC-BY-SA-but-product-policy-blocks",
+        "conditions": [
+          "Payloads must be operator-injected and must not enter Git, static assets, packages, images, CI artifacts, or client downloads.",
+          "Display Paul Nation, the source URL, CC BY-SA 4.0, and modification information.",
+          "Return aggregate analysis only; do not expose token-to-rank or bulk lookup output.",
+          "Reject documents below 100 lexical tokens or 20 distinct types, and apply deployment-level query budgets and rate controls."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "allowed-server-side-with-attribution",
+        "private_server_processing": "allowed-with-attribution",
+        "private_local_processing": "allowed-with-attribution",
+        "aggregate_result_publication": "allowed",
+        "notes": "Client delivery is prohibited by product policy even though CC BY-SA permits sharing under its conditions."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "Official Paul Nation 10000-headwords.zip"
+        ],
+        "transformations": [
+          "Verified that the ten local TXT files are byte-for-byte identical to the official archive; runtime loader lowercases headwords and assigns bands."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "verified-official-snapshot-with-runtime-parsing"
+      },
+      "status": {
+        "level": "green",
+        "reason": "The ten files match the verified official archive, and the official resource terms support server-side use under CC BY-SA 4.0. Repository and client delivery remain blocked by product policy.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "Change to the official archive, upstream terms, delivery mode, or aggregate-only output policy",
+        "open_questions": [
+          "Archive a durable snapshot of the official resource-page terms with the release evidence."
+        ]
+      }
+    },
+    {
+      "id": "nation-bnc-coca-families-25000",
+      "name": "Paul Nation BNC/COCA 25,000 server word-family index",
+      "category": "derived-word-family-lookup",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "server-injected",
+        "spec": "scripts/build_nation_bnc_coca_index.py",
+        "default_local_root": ".streamlit/runtime_lists/nation_bnc_coca_25000",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Paul Nation",
+        "primary_url": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources/vocabulary-analysis-programs/range/BNC_COCA_25000.zip",
+        "acquired_from": "Victoria University of Wellington, Paul Nation resources",
+        "acquired_on": "2026-07-22",
+        "origin": "Official BNC/COCA 25,000-family Range data; only basewrd1.txt through basewrd25.txt are admitted."
+      },
+      "license": {
+        "name": "Creative Commons Attribution-ShareAlike 4.0 International",
+        "spdx": "CC-BY-SA-4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "local_notice": "Generated beside the private runtime artifact as NOTICE.md",
+        "scope": "The official resource terms support CC BY-SA 4.0 use. The derived lookup remains server-only by product policy.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "primary-source-terms",
+          "reference": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources",
+          "supports": [
+            "creator",
+            "CC BY-SA 4.0 terms for data resources"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "verified-source-archive",
+          "reference": "BNC_COCA_25000.zip; 600,930 bytes; SHA-256 ac81c7a60e5c76cd2bbf0c59b0501808f0d4fa026b2936919dd54329a9bb6a69",
+          "supports": [
+            "source identity",
+            "build reproducibility"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "project-delivery-decision",
+          "reference": "User direction recorded 2026-07-22",
+          "supports": [
+            "server-side-only architecture",
+            "client download prohibited",
+            "aggregate-only results"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "Official BNC_COCA_25000.zip retrieved 2026-07-22",
+        "local_snapshot": "Algorithm v1 deterministic server index from basewrd1-25"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "official source archive",
+        "state": "verified",
+        "value": "ac81c7a60e5c76cd2bbf0c59b0501808f0d4fa026b2936919dd54329a9bb6a69",
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [],
+      "redistribution": {
+        "repository_bundle": "blocked-by-server-only-product-policy",
+        "server_copy": "allowed-with-CC-BY-SA-attribution",
+        "client_download": "blocked-by-product-policy",
+        "derived_bulk_data": "license-allows-under-CC-BY-SA-but-product-policy-blocks",
+        "conditions": [
+          "Build only from the pinned official source and admit only basewrd1-25.",
+          "Store artifact, manifest, and NOTICE outside static assets on an operator-controlled server.",
+          "Return aggregate measures and resource metadata only; never return list rows or token mappings.",
+          "Reject documents below 100 lexical tokens or 20 distinct types, and apply deployment-level query budgets and rate controls."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "allowed-server-side-with-attribution",
+        "private_server_processing": "allowed-with-attribution",
+        "private_local_processing": "allowed-with-attribution",
+        "aggregate_result_publication": "allowed",
+        "notes": "Runtime loading verifies the adjacent manifest, an independently code-pinned production artifact size/SHA-256, schema, 75,679 rows, 25 bands, and 1,000 families per band."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "Official BNC_COCA_25000.zip"
+        ],
+        "transformations": [
+          "Selected basewrd1-25 only; removed Range trailing-zero markers; lowercased forms; mapped members to family head/band/ordinal; sorted and gzip-compressed deterministically."
+        ],
+        "build_script": "scripts/build_nation_bnc_coca_index.py",
+        "reproducible": true,
+        "method": "pinned-official-source-to-private-server-index",
+        "expected_runtime_artifact": {
+          "file": "nation_bnc_coca_25000_family_index.csv.gz",
+          "bytes": 471046,
+          "sha256": "20c1c5a2bcf832831c9ac09a395f584a1b1cc5106b094f0cf6f5ca84b5baf081",
+          "rows": 75679,
+          "families": 25000,
+          "public_build": false
+        }
+      },
+      "status": {
+        "level": "green",
+        "reason": "The official CC BY-SA source is pinned and a deterministic, aggregate-only server index has been built and independently verified.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "Change to source archive, official terms, parser, output schema, delivery mode, or client-output policy",
+        "open_questions": []
+      }
+    },
+    {
+      "id": "eapfoundation-bnc-coca-v2",
+      "name": "EAPFoundation BNC/COCA word-family lists v2",
+      "category": "ranked-word-family-list",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "local-snapshot",
+        "spec": "data/bnc_coca/manifest.json",
+        "default_local_root": "data/bnc_coca",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Sheldon Smith / EAPFoundation; based on Paul Nation's BNC/COCA lists",
+        "primary_url": "https://www.eapfoundation.com/vocab/general/bnccoca/index.php?type=v2",
+        "acquired_from": "EAPFoundation BNC/COCA complete-copy downloads",
+        "acquired_on": null,
+        "origin": "EAPFoundation PDF/XLSX adaptation of the BNC/COCA word-family lists. These files are not the Victoria University of Wellington official archive."
+      },
+      "license": {
+        "name": "EAPFoundation educational non-commercial reuse terms",
+        "spdx": null,
+        "url": "https://www.eapfoundation.com/vocab/general/bnccoca/index.php?type=v2",
+        "local_notice": "data/bnc_coca/manifest.json",
+        "scope": "The source page supports reuse/adaptation for educational non-commercial purposes with EAPFoundation acknowledgement, but does not expressly address public SaaS or repository redistribution.",
+        "verified": false
+      },
+      "evidence": [
+        {
+          "type": "primary-source-page",
+          "reference": "https://www.eapfoundation.com/vocab/general/bnccoca/index.php?type=v2",
+          "supports": [
+            "creator",
+            "educational non-commercial reuse statement",
+            "acknowledgement requirement"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "download-hash-match",
+          "reference": "Current EAPFoundation downloads match the local XLSX/PDF SHA-256 values",
+          "supports": [
+            "source identity",
+            "version provenance"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "project-delivery-decision",
+          "reference": "User direction recorded 2026-07-22",
+          "supports": [
+            "server-side-only architecture",
+            "client download prohibited"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "EAPFoundation complete-copy version 2",
+        "local_snapshot": "Local PDF/XLSX created 2023-04"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "all local payload artifacts",
+        "state": "per-artifact",
+        "value": null,
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/bnc_coca/BNC_COCA_lists.pdf",
+          "type": "file",
+          "bytes": 16576261,
+          "sha256": "82648ae796dd223b55e52d5363436bc1a0b99ff28b75fb7cef1d1e407efe8244",
+          "public_build": false
+        },
+        {
+          "path": "data/bnc_coca/BNC_COCA_lists.xlsx",
+          "type": "file",
+          "bytes": 1229314,
+          "sha256": "ffa12ecc6109c5ea4ecc1b80d9202c6e39b03feee55edc405b347135768bdcfe",
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked-by-product-policy-and-ambiguous-terms",
+        "server_copy": "operator-review-required-for-noncommercial-educational-use",
+        "client_download": "blocked-by-product-policy",
+        "derived_bulk_data": "blocked",
+        "conditions": [
+          "Do not include the XLSX or PDF in Git, images, packages, CI artifacts, or client downloads.",
+          "Use only in a non-commercial educational deployment after operator review and display EAPFoundation acknowledgement.",
+          "Prefer migration to the official Paul Nation basewrd1-25 source."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "blocked-pending-explicit-SaaS-terms",
+        "private_server_processing": "conditional-noncommercial-educational-use",
+        "private_local_processing": "conditional-noncommercial-educational-use",
+        "aggregate_result_publication": "review-required",
+        "notes": "The server-only switch may be used only when the operator has separately confirmed the deployment fits the custom terms."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "EAPFoundation BNC_COCA_lists.xlsx and BNC_COCA_lists.pdf"
+        ],
+        "transformations": [
+          "Runtime loader parses the direct XLSX snapshot into a private form-to-family mapping."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "direct-snapshot-with-runtime-parsing"
+      },
+      "status": {
+        "level": "yellow",
+        "reason": "The source and non-commercial educational reuse statement are verified, but public-SaaS and redistribution terms are not explicit; an official Nation source can replace it.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "Migration to official Nation basewrd data or receipt of written permission from Sheldon Smith",
+        "open_questions": [
+          "Does the custom reuse statement cover this exact public server-side lookup mode?",
+          "Can the EAPFoundation files be removed after the official Nation family index is validated?"
+        ]
+      }
+    },
+    {
+      "id": "taales-2.8.1-legacy-application",
+      "name": "TAALES 2.8.1 legacy macOS application bundle",
+      "category": "legacy-application-bundle",
+      "tier": "migration-reference",
+      "provisioning": {
+        "mode": "local-snapshot",
+        "spec": "data/resource_registry.json",
+        "default_local_root": "LexicalSophistication/TAALES_2.8.1.app",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "TAALES authors and multiple third-party software/data rights holders",
+        "primary_url": null,
+        "acquired_from": "Local LexicalSophistication migration-reference directory",
+        "acquired_on": null,
+        "origin": "Python 2/py2app desktop application with bundled NLP software and lexical resources."
+      },
+      "license": {
+        "name": null,
+        "spdx": null,
+        "url": null,
+        "local_notice": null,
+        "scope": "No bundle-level LICENSE, COPYING, NOTICE, or redistribution grant was located.",
+        "verified": false
+      },
+      "evidence": [
+        {
+          "type": "local-bundle-audit",
+          "reference": "LexicalSophistication/TAALES_2.8.1.app/Contents",
+          "supports": [
+            "version",
+            "absence-of-bundle-level-license",
+            "mixed-third-party-content"
+          ],
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "repository-policy",
+          "reference": ".gitignore:13-15",
+          "supports": [
+            "local-only-intent"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "TAALES 2.8.1",
+        "local_snapshot": "TAALES_2.8.1.app"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "directory bundle",
+        "state": "not-recorded",
+        "value": null,
+        "verified_on": null,
+        "reason": "The ignored mixed-resource directory has not been normalized into a canonical tree hash."
+      },
+      "artifacts": [
+        {
+          "path": "LexicalSophistication/TAALES_2.8.1.app",
+          "type": "directory",
+          "bytes": null,
+          "sha256": null,
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked",
+        "server_copy": "blocked",
+        "client_download": "blocked",
+        "derived_bulk_data": "blocked-until-individual-review",
+        "conditions": [
+          "Inventory and review every software and data component independently before any promotion."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "blocked",
+        "private_server_processing": "blocked-by-default",
+        "private_local_processing": "allowed-for-migration-audit",
+        "aggregate_result_publication": "review-required",
+        "notes": "The bundle must not enter a public build context or deployment sync."
+      },
+      "build_provenance": {
+        "upstream_inputs": [],
+        "transformations": [
+          "Original py2app build process and complete dependency provenance are not recorded."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "unreproducible-legacy-binary-bundle"
+      },
+      "status": {
+        "level": "red-local-only",
+        "reason": "The legacy application is a mixed-rights migration reference without a bundle-level web redistribution grant.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "A component-level inventory and license review is proposed",
+        "open_questions": [
+          "What were the original TAALES distribution terms?",
+          "Which bundled software notices and data permissions apply?",
+          "Can any component be independently rebuilt from a cleared source?"
+        ]
+      }
+    },
+    {
+      "id": "taales-legacy-coca-derived-tables",
+      "name": "COCA-derived frequency, range, n-gram, lemma, and association tables bundled with TAALES",
+      "category": "corpus-derived-lookup-tables",
+      "tier": "migration-reference",
+      "provisioning": {
+        "mode": "local-snapshot",
+        "spec": "data/resource_registry.json",
+        "default_local_root": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Corpus of Contemporary American English data provider; local derivative authorship not fully recorded",
+        "primary_url": "https://www.english-corpora.org/coca/",
+        "acquired_from": "Bundled inside the local TAALES 2.8.1 application",
+        "acquired_on": null,
+        "origin": "Genre-specific COCA tables used by TAALES for frequency, range, and association indices."
+      },
+      "license": {
+        "name": null,
+        "spdx": null,
+        "url": null,
+        "local_notice": null,
+        "scope": "No terms authorizing redistribution of these bulk derivative tables or public SaaS use were located in the bundle.",
+        "verified": false
+      },
+      "evidence": [
+        {
+          "type": "full-record-comparison",
+          "reference": "academic_bi_contingency.csv versus COCA_academic_bigram_list.csv",
+          "supports": [
+            "coca-derivation"
+          ],
+          "detail": "All 150,000 records match on n-gram, frequency, and order; zero mismatches.",
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "legacy-source-code",
+          "reference": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources/TAALES_2.8.1.py:2387-2452",
+          "supports": [
+            "coca-naming",
+            "runtime-use",
+            "association-fields"
+          ],
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "index-guide",
+          "reference": "TAALES 2.8 Index Guide, TAALES Indices rows 149-153",
+          "supports": [
+            "COCA Academic corpus attribution",
+            "Davies 2009 citation"
+          ],
+          "verified_on": "2026-07-21"
+        }
+      ],
+      "version": {
+        "upstream": "COCA snapshot/version not recorded",
+        "local_snapshot": "TAALES 2.8.1 bundled tables, file timestamps 2018-02"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "representative audited artifacts; full collection not inventoried in this entry",
+        "state": "partial-per-artifact",
+        "value": null,
+        "verified_on": "2026-07-21",
+        "reason": "The red collection contains many additional tables; promotion requires a complete inventory."
+      },
+      "artifacts": [
+        {
+          "path": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources/academic_bi_contingency.csv",
+          "type": "file",
+          "bytes": 13758105,
+          "sha256": "680b5de16dd3726e732270d6a6c4ecebdc81efb01a441e97407c05e6baed485a",
+          "public_build": false
+        },
+        {
+          "path": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources/COCA_academic_bigram_list.csv",
+          "type": "file",
+          "bytes": 7555298,
+          "sha256": "7ac697450630de61c83452100e41e65262e5b343c53c385349290a7ba251471d",
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked",
+        "server_copy": "blocked",
+        "client_download": "blocked",
+        "derived_bulk_data": "blocked",
+        "conditions": [
+          "Obtain terms or written permission specific to the downloaded source and derived tables, or replace them with reproducibly built open data."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "blocked",
+        "private_server_processing": "blocked-by-default",
+        "private_local_processing": "allowed-for-migration-audit",
+        "aggregate_result_publication": "review-required",
+        "notes": "Keeping payloads server-side reduces disclosure but does not create permission to copy or use them."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "Unversioned COCA Academic and other genre-specific frequency tables"
+        ],
+        "transformations": [
+          "Association statistics include MI, MI2, T, delta-p, and approximate collexeme values.",
+          "The generation script and exact upstream license/order record are absent."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "undocumented-legacy-derivative"
+      },
+      "status": {
+        "level": "red-local-only",
+        "reason": "Bulk COCA-derived tables have strong provenance evidence but no located permission for redistribution or public web use.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "Written COCA permission or an open replacement build is available",
+        "open_questions": [
+          "Which COCA product/version supplied the underlying tables?",
+          "What purchase or research-use terms applied to that copy?",
+          "Were TAALES authors granted redistribution or web-service rights?"
+        ]
+      }
+    },
+    {
+      "id": "taales-legacy-other-third-party-data",
+      "name": "Other third-party lexical and corpus datasets bundled with TAALES",
+      "category": "mixed-third-party-data-collection",
+      "tier": "migration-reference",
+      "provisioning": {
+        "mode": "local-snapshot",
+        "spec": "data/resource_registry.json",
+        "default_local_root": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Multiple rights holders including ELP/HAL, BNC, TOEFL11/NNS, TASA, MRC, EAT/USF, SUBTLEX, and published norm authors",
+        "primary_url": null,
+        "acquired_from": "Bundled inside the local TAALES 2.8.1 application",
+        "acquired_on": null,
+        "origin": "Legacy lookup-table snapshots supporting contextual distinctiveness, psycholinguistic, semantic, frequency, and learner-corpus indices."
+      },
+      "license": {
+        "name": null,
+        "spdx": null,
+        "url": null,
+        "local_notice": null,
+        "scope": "Citations exist for many sources, but no collection-level redistribution permission exists; every dataset requires individual review.",
+        "verified": false
+      },
+      "evidence": [
+        {
+          "type": "legacy-source-code",
+          "reference": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources/TAALES_2.8.1.py:2132-2385",
+          "supports": [
+            "resource-file-inventory",
+            "runtime-use"
+          ],
+          "verified_on": "2026-07-21"
+        },
+        {
+          "type": "index-guide",
+          "reference": "TAALES 2.8 Index Guide 1-26-18.xlsx",
+          "supports": [
+            "dataset-attribution",
+            "research-citations"
+          ],
+          "verified_on": "2026-07-21"
+        }
+      ],
+      "version": {
+        "upstream": "Mixed and incompletely recorded",
+        "local_snapshot": "TAALES 2.8.1 resource directory"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "collection",
+        "state": "not-recorded",
+        "value": null,
+        "verified_on": null,
+        "reason": "The collection has not been split into independently reviewable and hashed registry entries."
+      },
+      "artifacts": [
+        {
+          "path": "LexicalSophistication/TAALES_2.8.1.app/Contents/Resources",
+          "type": "directory-subset-excluding-separately-listed-COCA-tables",
+          "bytes": null,
+          "sha256": null,
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked",
+        "server_copy": "blocked",
+        "client_download": "blocked",
+        "derived_bulk_data": "blocked-until-individual-review",
+        "conditions": [
+          "Split the collection into one registry entry per upstream dataset and verify each license and intended use."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "blocked",
+        "private_server_processing": "blocked-by-default",
+        "private_local_processing": "allowed-for-migration-audit",
+        "aggregate_result_publication": "review-required",
+        "notes": "Research citations identify provenance but are not treated as web-use permission."
+      },
+      "build_provenance": {
+        "upstream_inputs": [],
+        "transformations": [
+          "Multiple undocumented conversions and merges are present; complete build provenance is unavailable."
+        ],
+        "build_script": null,
+        "reproducible": false,
+        "method": "mixed-undocumented-legacy-snapshots"
+      },
+      "status": {
+        "level": "red-local-only",
+        "reason": "The collection combines many separately licensed or restricted datasets without deployable permission evidence.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "An individual dataset is proposed for implementation or replacement",
+        "open_questions": [
+          "Which individual datasets have licenses permitting redistribution and public SaaS use?",
+          "Which metrics can be rebuilt from WordNet or other clearly open resources?",
+          "Which legacy tables include undocumented transformations or merged sources?"
+        ]
+      }
+    },
+    {
+      "id": "tubelex-en-treebank-7cb5fb36-frequency-index",
+      "name": "TUBELEX English Treebank-variant frequency and contextual-diversity index",
+      "category": "derived-frequency-and-contextual-diversity-table",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "bundled",
+        "spec": "data/open/tubelex/en/2025-04-24-7cb5fb36/manifest.json",
+        "default_local_root": "data/open/tubelex/en/2025-04-24-7cb5fb36",
+        "git_payload": true,
+        "package_payload": true,
+        "container_payload": true,
+        "ci_payload": true
+      },
+      "source": {
+        "creator_or_rights_holder": "Adam Nohejl and TUBELEX contributors",
+        "primary_url": "https://github.com/naist-nlp/tubelex",
+        "acquired_from": "Official TUBELEX GitHub repository at a fixed commit",
+        "acquired_on": "2026-07-22",
+        "origin": "Deterministic lexical lookup table built from the published TUBELEX English Penn Treebank frequency list; subtitle text was neither fetched nor bundled."
+      },
+      "license": {
+        "name": "BSD 3-Clause License",
+        "spdx": "BSD-3-Clause",
+        "url": "https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/LICENSE",
+        "local_notice": "data/open/tubelex/en/2025-04-24-7cb5fb36/NOTICE.md",
+        "scope": "The repository-published frequency table and this project's deterministic derived index may be redistributed and used by the public service while preserving the BSD notice and disclaimer.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "pinned-primary-source-readme",
+          "reference": "https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/README.md",
+          "supports": [
+            "published-frequency-list",
+            "source-method",
+            "full-corpus-text-not-published"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "pinned-primary-source-license",
+          "reference": "https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/LICENSE",
+          "supports": [
+            "license",
+            "redistribution",
+            "public-web-use"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "pinned-source-asset",
+          "reference": "https://raw.githubusercontent.com/naist-nlp/tubelex/7cb5fb36add76b83a266d1967536e1a1d3faa513/frequencies/tubelex-en-treebank.tsv.xz",
+          "supports": [
+            "version",
+            "source-identity",
+            "reproducible-build"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "research-paper",
+          "reference": "https://aclanthology.org/2025.coling-main.641/",
+          "supports": [
+            "method",
+            "frequency-list-release",
+            "corpus-text-availability-boundary"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "TUBELEX commit 7cb5fb36add76b83a266d1967536e1a1d3faa513 (2025-04-24)",
+        "local_snapshot": "English Treebank frequency index, build algorithm 1"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "pinned source asset and all deployable derived artifacts",
+        "state": "per-artifact",
+        "value": null,
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/open/tubelex/en/2025-04-24-7cb5fb36/tubelex_en_treebank_7cb5fb36_frequency_index.csv.gz",
+          "type": "file",
+          "bytes": 4572297,
+          "sha256": "3731f23f3385ed630777ff56b5edbed5db46eee256ededceb0ac213016f31675",
+          "public_build": true
+        },
+        {
+          "path": "data/open/tubelex/en/2025-04-24-7cb5fb36/NOTICE.md",
+          "type": "license-notice",
+          "bytes": 3741,
+          "sha256": "2ce02b751456095ed119e1e30fe7611155a7809c2d9e35cbbcb91268fbd1c3f4",
+          "public_build": true
+        },
+        {
+          "path": "data/open/tubelex/en/2025-04-24-7cb5fb36/manifest.json",
+          "type": "build-manifest",
+          "bytes": 5417,
+          "sha256": "13800fd7382b8cbdc87297e9b3704891016f6a3bdca791103a3ba5ca621d9f5d",
+          "public_build": true
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "allowed-with-license-notice",
+        "server_copy": "allowed-with-license-notice",
+        "client_download": "allowed-by-license-not-offered-by-app",
+        "derived_bulk_data": "allowed-with-license-notice",
+        "conditions": [
+          "Ship NOTICE.md containing the complete BSD 3-Clause text and attribution.",
+          "Identify the lexical filtering, normalization, aggregation, and runtime tokenization performed by this project.",
+          "Do not imply endorsement by Adam Nohejl, NAIST NLP, or other TUBELEX contributors.",
+          "Do not bundle subtitles, video IDs, channel IDs, document names, or local source paths."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "allowed",
+        "private_server_processing": "allowed",
+        "private_local_processing": "allowed",
+        "aggregate_result_publication": "allowed-with-attribution",
+        "notes": "The service loads a hash-pinned server-side lookup table and returns only document-level frequency, prevalence, and coverage aggregates. It provides no bulk vocabulary-list download."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "tubelex-en-treebank.tsv.xz; 4,152,940 bytes; SHA-256 4096022259d5eaa7261c3bf22c3b0af9fd58ae8eebe17894c0b34a163954f936; decompressed SHA-256 5ccfde4184698c1fa8049ba7c761d253d039fa5ad4e93e15239644fe6034b5c1"
+        ],
+        "transformations": [
+          "Parse the published no-quote TSV, validate one [TOTAL] row, 613,309 source word rows, declared corpus totals, and all 15 category totals.",
+          "Normalize words with Unicode NFKC and str.lower(), retain bounded Unicode-alphabetic apostrophe/hyphen components, and reject normalized collisions.",
+          "Retain 515,292 rows covering 169,889,910 of 171,805,865 tokens; sort by Unicode code-point order and write deterministic gzip-compressed UTF-8 CSV.",
+          "At runtime, apply NFKC, normalize common typographic apostrophes to ASCII, lower-case, pre-segment sentences deterministically, and use NLTK 3.10.0 TreebankWordTokenizer rules audited as compatible with the upstream 3.8.1 lineage; then report only smoothed frequency/prevalence means and coverage."
+        ],
+        "build_script": "scripts/fetch_tubelex.py",
+        "reproducible": true,
+        "method": "verified-pinned-source-and-deterministic-derivation"
+      },
+      "status": {
+        "level": "green",
+        "reason": "TUBELEX publishes the frequency list under BSD-3-Clause; the fixed source and deterministic derived artifact are hash-pinned, attributed, and separated from unavailable subtitle text.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "TUBELEX commit, source asset/hash, build algorithm, tokenization contract, license, or delivery mode changes",
+        "open_questions": []
+      }
+    },
+    {
+      "id": "open-english-wordnet-2025-metrics",
+      "name": "Open English WordNet 2025 lemma network metrics",
+      "category": "derived-semantic-network-table",
+      "tier": "runtime-resource",
+      "provisioning": {
+        "mode": "bundled",
+        "spec": "data/open/open_english_wordnet/2025/manifest.json",
+        "default_local_root": "data/open/open_english_wordnet/2025",
+        "git_payload": true,
+        "package_payload": true,
+        "container_payload": true,
+        "ci_payload": true
+      },
+      "source": {
+        "creator_or_rights_holder": "Open English WordNet Community",
+        "primary_url": "https://github.com/globalwordnet/english-wordnet/releases/tag/2025-edition",
+        "acquired_from": "Official Open English WordNet 2025 GitHub release",
+        "acquired_on": "2026-07-22",
+        "origin": "Deterministic polysemy and hypernym-depth table built from the pinned core OEWN 2025 XML asset."
+      },
+      "license": {
+        "name": "Creative Commons Attribution 4.0 International",
+        "spdx": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "local_notice": "data/open/open_english_wordnet/2025/NOTICE.md",
+        "scope": "The derived table may be redistributed and used by the public service with attribution and an indication of changes.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "primary-source-license-statement",
+          "reference": "https://en-word.net/",
+          "supports": [
+            "license",
+            "redistribution",
+            "public-web-use"
+          ],
+          "verified_on": "2026-07-22"
+        },
+        {
+          "type": "pinned-release-asset",
+          "reference": "https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025.xml.gz",
+          "supports": [
+            "version",
+            "source-identity",
+            "reproducible-build"
+          ],
+          "verified_on": "2026-07-22"
+        }
+      ],
+      "version": {
+        "upstream": "Open English WordNet 2025 Edition; commit dc343f2683279ecbb13fab4e2fd778d7b162d287",
+        "local_snapshot": "OEWN 2025 lemma metrics, build algorithm 1"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "source asset and deployable derived artifact",
+        "state": "per-artifact",
+        "value": null,
+        "verified_on": "2026-07-22"
+      },
+      "artifacts": [
+        {
+          "path": "data/open/open_english_wordnet/2025/open_english_wordnet_2025_lemma_metrics.csv.gz",
+          "type": "file",
+          "bytes": 770980,
+          "sha256": "ec8a1f74aaca49f58129f6dd7a8f22eb3aa1f208bb15b9809e42c9b6589e9bea",
+          "public_build": true
+        },
+        {
+          "path": "data/open/open_english_wordnet/2025/NOTICE.md",
+          "type": "license-notice",
+          "bytes": 1158,
+          "sha256": "982c3c6f58ac10732d98a81e8105f9556b683ca98e8772863bdf08ada63c125d",
+          "public_build": true
+        },
+        {
+          "path": "data/open/open_english_wordnet/2025/manifest.json",
+          "type": "build-manifest",
+          "bytes": 2103,
+          "sha256": "160982afadb869f5bd5cf7c0c9dbb4fcf1b816deaee9dbc3d7a8bf7f28af5c36",
+          "public_build": true
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "allowed-with-attribution",
+        "server_copy": "allowed-with-attribution",
+        "client_download": "allowed-with-attribution",
+        "derived_bulk_data": "allowed-with-attribution",
+        "conditions": [
+          "Ship NOTICE.md and the CC BY 4.0 license link.",
+          "Identify this project's normalization, aggregation, and hypernym-depth changes.",
+          "Do not imply endorsement by the Open English WordNet Community."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "allowed",
+        "private_server_processing": "allowed",
+        "private_local_processing": "allowed",
+        "aggregate_result_publication": "allowed-with-attribution",
+        "notes": "Only aggregate metrics are retained; the source XML is not shipped to the runtime. Startup independently pins the release/source identity and the 770,980-byte artifact SHA-256 before loading 135,282 rows."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "english-wordnet-2025.xml.gz; 11,363,503 bytes; SHA-256 9ca6d1dcb75f822fdd66617f7d9da48142ace38dd544d6ad5e2feca1674ad3fe"
+        ],
+        "transformations": [
+          "Normalize lexical entries with Unicode NFKC, case-folding, underscore replacement, and whitespace collapse.",
+          "Group distinct synsets by lemma and part of speech.",
+          "Calculate sense count and longest noun/verb hypernym or instance-hypernym path depth.",
+          "Sort rows and write deterministic gzip-compressed CSV without definitions, examples, or sense keys."
+        ],
+        "build_script": "scripts/fetch_open_resources.py",
+        "reproducible": true,
+        "method": "verified-download-and-deterministic-derivation"
+      },
+      "status": {
+        "level": "green",
+        "reason": "OEWN 2025 is CC BY 4.0 and the deployable artifact is reproducibly built from a pinned verified release.",
+        "effective_on": "2026-07-22"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-22",
+        "next_review_trigger": "OEWN release, source hash, build algorithm, license, or delivery mode changes",
+        "open_questions": []
+      }
+    },
+    {
+      "id": "ellipse-corpus-dc3b8f0b-final",
+      "name": "English Language Learner Insight, Proficiency and Skills Evaluation (ELLIPSE) Corpus",
+      "category": "human-writing-evaluation-benchmark",
+      "tier": "evaluation-benchmark",
+      "provisioning": {
+        "mode": "fetched",
+        "spec": "benchmarks/ellipse/manifest.json",
+        "default_local_root": ".research/benchmarks/ellipse/dc3b8f0b",
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
+      },
+      "source": {
+        "creator_or_rights_holder": "Scott A. Crossley, Yu Tian, Perpetual Baffour, Alex Franklin, Youngmeen Kim, Wesley Morris, Meg Benner, Aigner Picou, and Ulrich Boser",
+        "primary_url": "https://github.com/scrosseye/ELLIPSE-Corpus",
+        "acquired_from": "https://github.com/scrosseye/ELLIPSE-Corpus/archive/dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43.zip",
+        "acquired_on": "2026-07-23",
+        "origin": "The final release contains 6,482 English learner essays with holistic and analytic human ratings, prompt labels, and row-level learner attributes; the final train and test files are the primary evaluation source."
+      },
+      "license": {
+        "name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International",
+        "spdx": "CC-BY-NC-SA-4.0",
+        "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+        "local_notice": "benchmarks/ellipse/manifest.json",
+        "scope": "The pinned upstream README applies CC BY-NC-SA 4.0 to the data. This record does not infer that the same license governs the separately archived preprint. The project additionally prohibits bundling or serving row-level corpus payloads and limits processing to non-commercial local research and publication of reviewed aggregate results.",
+        "verified": true
+      },
+      "evidence": [
+        {
+          "type": "pinned-primary-source-license-statement",
+          "reference": "https://github.com/scrosseye/ELLIPSE-Corpus/blob/dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43/README.md",
+          "supports": [
+            "official-source",
+            "license",
+            "noncommercial-scope",
+            "sharealike-duty",
+            "final-file-identities"
+          ],
+          "verified_on": "2026-07-23"
+        },
+        {
+          "type": "pinned-source-archive",
+          "reference": "https://github.com/scrosseye/ELLIPSE-Corpus/archive/dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43.zip",
+          "supports": [
+            "upstream-commit",
+            "archive-identity",
+            "reproducible-fetch"
+          ],
+          "detail": "The exact commit archive is 11,247,833 bytes with SHA-256 807da46d8301955d4f54ad6b652ffe69e3d9d6aa0aba82ba29133eb61e220042.",
+          "verified_on": "2026-07-23"
+        },
+        {
+          "type": "local-benchmark-audit",
+          "reference": "docs/benchmark-resource-audit-2026-07-23.md",
+          "supports": [
+            "local-archive-identity",
+            "member-hashes",
+            "schema",
+            "record-counts",
+            "prompt-counts",
+            "train-test-integrity",
+            "local-only-policy"
+          ],
+          "detail": "The separately acquired local main-branch archive is 11,247,401 bytes with SHA-256 1e0953e04cbde26fa0693ef0772bb6c4db17d006301c35bc81eb392733183cbb and records the same upstream commit in its ZIP comment.",
+          "verified_on": "2026-07-23"
+        }
+      ],
+      "version": {
+        "upstream": "ELLIPSE-Corpus commit dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43",
+        "local_snapshot": "Pinned fetch root dc3b8f0b; final train/test corpus files only for primary analysis"
+      },
+      "hash": {
+        "algorithm": "SHA-256",
+        "scope": "audited local source material and primary fetched analysis files; the exact pinned fetch archive and transient members are recorded in build_provenance",
+        "state": "per-artifact",
+        "value": null,
+        "verified_on": "2026-07-23"
+      },
+      "artifacts": [
+        {
+          "path": ".research/benchmarks/ellipse/sources/ELLIPSE-Corpus-dc3b8f0b.zip",
+          "type": "pinned-fetched-source-archive",
+          "bytes": 11247833,
+          "sha256": "807da46d8301955d4f54ad6b652ffe69e3d9d6aa0aba82ba29133eb61e220042",
+          "public_build": false
+        },
+        {
+          "path": "LexicalSophistication/ELLIPSE-Corpus-main.zip",
+          "type": "audited-local-source-archive",
+          "bytes": 11247401,
+          "sha256": "1e0953e04cbde26fa0693ef0772bb6c4db17d006301c35bc81eb392733183cbb",
+          "public_build": false
+        },
+        {
+          "path": "LexicalSophistication/ellipse_pre_print.pdf",
+          "type": "research-paper-preprint",
+          "bytes": 706686,
+          "sha256": "9f1560bde1f6db7bf3a336112bb954bb3949064cb1bbe4c2d7e3de209046045b",
+          "public_build": false
+        },
+        {
+          "path": ".research/benchmarks/ellipse/dc3b8f0b/ELLIPSE_Final_github_train.csv",
+          "type": "human-writing-corpus-primary-train",
+          "bytes": 9861486,
+          "sha256": "782344e99668a3ff508d7410c0eb6e36da70f3b28f81c96e367f1ca04924b06c",
+          "public_build": false
+        },
+        {
+          "path": ".research/benchmarks/ellipse/dc3b8f0b/ELLIPSE_Final_github_test.csv",
+          "type": "human-writing-corpus-primary-test",
+          "bytes": 6383207,
+          "sha256": "7e990c6392a9df9554d15bdd22f0b568d19095cd6676ad39cb1eaa69c977ed7a",
+          "public_build": false
+        }
+      ],
+      "redistribution": {
+        "repository_bundle": "blocked-by-project-policy",
+        "server_copy": "blocked-by-project-policy",
+        "client_download": "blocked-by-project-policy",
+        "derived_bulk_data": "blocked-row-level-aggregate-only",
+        "conditions": [
+          "Keep every archive, essay, writer attribute, individual feature row, individual prediction, and fitted model outside Git, packages, containers, CI artifacts, application state, and downloads.",
+          "Use the corpus only for non-commercial local research under CC BY-NC-SA 4.0 with attribution and ShareAlike obligations preserved.",
+          "Publish only disclosure-reviewed aggregate findings and provenance metadata; do not publish row-level derived data."
+        ]
+      },
+      "web_use": {
+        "public_saas_processing": "blocked-by-project-policy",
+        "private_server_processing": "blocked-by-project-policy",
+        "private_local_processing": "allowed-for-noncommercial-research",
+        "aggregate_result_publication": "allowed-with-attribution-and-disclosure-review",
+        "notes": "Human essays and row-level attributes must never be sent to an external LLM/API, telemetry service, log, application runtime, or remote research worker. Green status records a completed rights review, not product inclusion."
+      },
+      "build_provenance": {
+        "upstream_inputs": [
+          "GitHub commit archive dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43.zip; 11,247,833 bytes; SHA-256 807da46d8301955d4f54ad6b652ffe69e3d9d6aa0aba82ba29133eb61e220042",
+          "ELLIPSE_Final_github_train.csv; 9,861,486 bytes; SHA-256 782344e99668a3ff508d7410c0eb6e36da70f3b28f81c96e367f1ca04924b06c",
+          "ELLIPSE_Final_github_test.zip; 1,900,327 bytes; SHA-256 9ecddfcda83f6a99c8a24dda47fb1c30673fedeaf578a0fadac6645fd151a2f8; decrypted test CSV SHA-256 7e990c6392a9df9554d15bdd22f0b568d19095cd6676ad39cb1eaa69c977ed7a"
+        ],
+      "transformations": [
+        "With network access enabled, fetch the exact upstream commit archive as an opaque file, reject a size or SHA-256 mismatch without opening ZIP content, and promote it only into the ignored local source root.",
+        "After network access is disabled, verify the exact outer inventory and every member hash, then copy the final train CSV and decrypt the final test CSV locally without recording credentials; retain only those two primary CSVs plus a payload-free verification record under the ignored analysis root.",
+          "Treat the 3,911-row train and 2,571-row test CSVs as the 6,482-row primary corpus; exclude the raw-rater file from primary analysis because its score coding and ID discrepancies remain unresolved.",
+          "Process essays with networking, telemetry, and external APIs disabled, and emit only disclosure-reviewed aggregate research results."
+        ],
+        "build_script": "scripts/fetch_ellipse.py",
+        "reproducible": true,
+        "method": "pinned-fetch-local-decryption-and-hash-verification",
+        "expected_primary_records": 6482,
+        "expected_unique_essay_ids": 6482,
+        "expected_prompt_labels": 44
+      },
+      "status": {
+        "level": "green",
+        "reason": "The official pinned README applies CC BY-NC-SA 4.0 and the exact commit archive and corpus members are hash-audited for the recorded non-commercial local research use. Project policy independently blocks every payload from the public tool and release pipeline.",
+        "effective_on": "2026-07-23"
+      },
+      "review": {
+        "authority": "resource-governance-review",
+        "last_reviewed": "2026-07-23",
+        "next_review_trigger": "Upstream commit, archive/member hash, license, corpus schema, fetch/decryption procedure, analysis purpose, processing environment, or publication mode changes",
+        "open_questions": [
+          "What caused the 14 final/raw ID mismatches and the zero-coded raw rating values?",
+          "Can the secondary raw-rater file be excluded from future default fetches while preserving reproducibility of the primary analysis?"
+        ]
+      }
+    }
+  ]
+}

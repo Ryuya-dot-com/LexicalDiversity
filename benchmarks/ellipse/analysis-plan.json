@@ -1,0 +1,541 @@
+{
+  "plan_schema": {
+    "name": "ldfreq.ellipse.confirmatory-analysis-plan",
+    "version": "1.0.0",
+    "description": "Machine-readable preregistration for the ELLIPSE external-association analysis. This file contains no essay text, writer identifier, essay identifier, or individual prediction."
+  },
+  "registration": {
+    "status": "frozen_before_confirmatory_outcome_analysis",
+    "registered_on": "2026-07-23",
+    "analysis_phase": "layer_3_external_human_writing_association",
+    "amendment_policy": {
+      "substantive_changes_require_new_version": true,
+      "substantive_changes_require_dated_rationale": true,
+      "changes_after_outcome_access_are_confirmatory": false,
+      "null_or_unfavorable_results_allow_metric_or_model_changes": false
+    }
+  },
+  "purpose": {
+    "primary": "Evaluate whether the prespecified TUBELEX type-weighted frequency and channel-prevalence block adds unknown-prompt information about ELLIPSE human Vocabulary ratings beyond text length, MTLD, and an NGSL Beyond-K2 control.",
+    "product_boundary": "This is an external-association audit of descriptive text metrics, not development of a scoring product.",
+    "release_gate": false
+  },
+  "research_questions": [
+    {
+      "id": "RQ1",
+      "tier": "primary",
+      "question": "Does the two-metric TUBELEX focal block improve leave-one-prompt-out macro-MAE for Vocabulary beyond the fixed baseline model?"
+    },
+    {
+      "id": "RQ2",
+      "tier": "confirmatory_secondary",
+      "question": "After prompt adjustment, are lower type-weighted TUBELEX Zipf frequency and lower type-weighted channel prevalence associated with higher Vocabulary ratings?"
+    },
+    {
+      "id": "RQ3",
+      "tier": "secondary",
+      "question": "Does the same fixed model show association with Overall ratings?"
+    },
+    {
+      "id": "RQ4",
+      "tier": "exploratory",
+      "question": "How do associations with the other five analytic ratings differ descriptively from the association with Vocabulary?"
+    }
+  ],
+  "governance": {
+    "research_mode": "single_researcher",
+    "public_tool_is_priority": true,
+    "corpus_access_mode": "local_fetch_only",
+    "external_api_calls_with_human_essays": false,
+    "network_and_telemetry_during_corpus_processing": "disabled",
+    "corpus_bundled_with_tool_or_release": false,
+    "individual_feature_rows_published": false,
+    "individual_predictions_published": false,
+    "fitted_model_published_or_deployed": false,
+    "permitted_public_outputs": [
+      "analysis_code",
+      "fetch_and_verification_code",
+      "aggregate_descriptive_statistics",
+      "aggregate_model_coefficients",
+      "aggregate_uncertainty_intervals",
+      "prompt-aggregated_validation_performance",
+      "resource_and_software_hashes"
+    ]
+  },
+  "data": {
+    "corpus": "English Language Learner Insight, Proficiency and Skills Evaluation (ELLIPSE) Corpus",
+    "resource_id": "ellipse-corpus-dc3b8f0b-final",
+    "verification_manifest": "benchmarks/ellipse/manifest.json",
+    "official_repository": "https://github.com/scrosseye/ELLIPSE-Corpus",
+    "upstream_commit": "dc3b8f0b3b4332fc9f64302c4ccfc4ed582f4b43",
+    "license": "CC-BY-NC-SA-4.0",
+    "accepted_outer_archives": [
+      {
+        "role": "pinned_commit_download",
+        "bytes": 11247833,
+        "sha256": "807da46d8301955d4f54ad6b652ffe69e3d9d6aa0aba82ba29133eb61e220042"
+      },
+      {
+        "role": "audited_main_snapshot_at_pinned_commit",
+        "bytes": 11247401,
+        "sha256": "1e0953e04cbde26fa0693ef0772bb6c4db17d006301c35bc81eb392733183cbb"
+      }
+    ],
+    "primary_files": [
+      {
+        "role": "provided_train",
+        "filename": "ELLIPSE_Final_github_train.csv",
+        "expected_records": 3911,
+        "sha256": "782344e99668a3ff508d7410c0eb6e36da70f3b28f81c96e367f1ca04924b06c"
+      },
+      {
+        "role": "provided_test_archive",
+        "filename": "ELLIPSE_Final_github_test.zip",
+        "expected_records": null,
+        "sha256": "9ecddfcda83f6a99c8a24dda47fb1c30673fedeaf578a0fadac6645fd151a2f8"
+      },
+      {
+        "role": "provided_test_csv",
+        "filename": "ELLIPSE_Final_github_test.csv",
+        "expected_records": 2571,
+        "sha256": "7e990c6392a9df9554d15bdd22f0b568d19095cd6676ad39cb1eaa69c977ed7a"
+      }
+    ],
+    "expected_primary_records": 6482,
+    "expected_unique_essay_ids": 6482,
+    "expected_prompt_labels": 44,
+    "prompt_column": "prompt",
+    "text_column": "full_text",
+    "provided_split_column": "set",
+    "all_prompt_labels_occur_in_both_provided_splits": true,
+    "provided_split_is_valid_for_unknown_prompt_claims": false,
+    "expected_task_value": "Independent",
+    "expected_vocabulary_values": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      3.5,
+      4.0,
+      4.5,
+      5.0
+    ],
+    "known_missingness": {
+      "primary_outcome": 0,
+      "prompt": 0,
+      "text": 0,
+      "SES": 1
+    },
+    "raw_rater_file": {
+      "used": false,
+      "reasons": [
+        "zero_score_coding_is_unresolved",
+        "fourteen_final_ids_and_fourteen_raw_ids_do_not_match",
+        "naive_two-rater_means_do_not_fully_reproduce_final_scores"
+      ]
+    }
+  },
+  "preflight_gates": [
+    {
+      "id": "P01_data_identity",
+      "requirement": "All primary-file SHA-256 values match this plan.",
+      "on_failure": "stop"
+    },
+    {
+      "id": "P02_data_schema",
+      "requirement": "The final data contain 6482 records, 6482 unique essay IDs, 44 prompt labels, complete text/prompt/Vocabulary fields, and the expected Vocabulary scale.",
+      "on_failure": "stop"
+    },
+    {
+      "id": "P03_software_identity",
+      "requirement": "The analysis commit, dependency lockfile, resource manifests, resource hashes, and all metric parameters are recorded before outcome analysis.",
+      "on_failure": "stop"
+    },
+    {
+      "id": "P04_tests",
+      "requirement": "The frozen tool commit passes its computational and resource-verification test suite.",
+      "on_failure": "stop"
+    },
+    {
+      "id": "P05_outcome_blind_qc",
+      "requirement": "Feature computation, missingness checks, variance checks, and collinearity diagnostics are completed without using outcome values or outcome-feature associations.",
+      "on_failure": "stop_and_version_as_exploratory_if_outcomes_were_accessed"
+    },
+    {
+      "id": "P06_local_only",
+      "requirement": "Network access, telemetry, external logging, and external API access are disabled while human essays are processed.",
+      "on_failure": "stop_and_treat_as_privacy_incident"
+    }
+  ],
+  "outcomes": {
+    "primary": {
+      "column": "Vocabulary",
+      "construct": "human analytic vocabulary proficiency rating",
+      "scale_min": 1.0,
+      "scale_max": 5.0,
+      "observed_step": 0.5,
+      "primary_model_treatment": "continuous",
+      "ordinal_sensitivity_levels": 9,
+      "pre_adjudication_cohens_kappa": 0.518,
+      "treated_as_error_free_gold_standard": false,
+      "attenuation_correction_applied": false
+    },
+    "secondary": [
+      {
+        "column": "Overall",
+        "construct": "human holistic language proficiency rating",
+        "role": "secondary_only"
+      }
+    ],
+    "exploratory": [
+      "Cohesion",
+      "Syntax",
+      "Phraseology",
+      "Grammar",
+      "Conventions"
+    ]
+  },
+  "tool_configuration": {
+    "unit": "token",
+    "frequency_list_id": "ngsl",
+    "frequency_list_version": "NGSL 1.2",
+    "lemmatizer_name": "open_flemma",
+    "advanced_cutoff": 2,
+    "mtld_threshold": 0.72,
+    "tubelex_enabled": true,
+    "tubelex_source_commit": "7cb5fb36add76b83a266d1967536e1a1d3faa513",
+    "tubelex_source_sha256": "4096022259d5eaa7261c3bf22c3b0af9fd58ae8eebe17894c0b34a163954f936",
+    "tubelex_method_id": "tubelex-en-treebank-7cb5fb36-detseg-apostrophe-laplace-beta11-v2",
+    "spelling_correction": false,
+    "extra_text_normalization": false
+  },
+  "metrics": {
+    "controls": [
+      {
+        "id": "n_tokens",
+        "payload_path": "n_tokens",
+        "construct": "text length",
+        "transform": {
+          "first": "natural_log",
+          "second": "natural_cubic_spline",
+          "degrees_of_freedom": 3
+        },
+        "coefficient_claim": false
+      },
+      {
+        "id": "mtld",
+        "payload_path": "panel_a.mtld",
+        "construct": "lexical diversity",
+        "transform": "training_fold_z_score",
+        "expected_direction_with_vocabulary": "positive",
+        "coefficient_claim": false
+      },
+      {
+        "id": "ngsl_pct_beyond_k2",
+        "payload_path": "panel_b.pct_beyond_k",
+        "construct": "share of normalized heads beyond the first two NGSL thousand bands, including off-list items",
+        "transform": "training_fold_z_score",
+        "expected_direction_with_vocabulary": "positive",
+        "coefficient_claim": false
+      }
+    ],
+    "focal": [
+      {
+        "id": "tubelex_frequency_zipf_type_mean",
+        "payload_path": "tubelex.frequency_zipf_type_mean",
+        "construct": "type-weighted add-one-smoothed TUBELEX frequency",
+        "transform": "training_fold_z_score",
+        "expected_direction_with_vocabulary": "negative",
+        "confirmatory_coefficient_claim": true
+      },
+      {
+        "id": "tubelex_channel_log10_prevalence_type_mean",
+        "payload_path": "tubelex.channel_log10_prevalence_type_mean",
+        "construct": "type-weighted Beta(1,1)-smoothed log10 TUBELEX channel prevalence",
+        "transform": "training_fold_z_score",
+        "expected_direction_with_vocabulary": "negative",
+        "confirmatory_coefficient_claim": true
+      }
+    ],
+    "excluded_from_confirmatory_selection": [
+      {
+        "family": "additional_panel_a_diversity",
+        "members": [
+          "ttr",
+          "mattr",
+          "hdd",
+          "vocd"
+        ],
+        "reason": "Avoid outcome-driven choice and redundant diversity testing beyond the prespecified MTLD control."
+      },
+      {
+        "family": "alternate_tubelex_weighting_or_unit",
+        "members": [
+          "tubelex_frequency_zipf_token_mean",
+          "tubelex_video_log10_prevalence_token_mean",
+          "tubelex_video_log10_prevalence_type_mean",
+          "tubelex_channel_log10_prevalence_token_mean"
+        ],
+        "reason": "Reserved for prespecified sensitivity analysis."
+      },
+      {
+        "family": "semantic_network",
+        "members": [
+          "oewn_polysemy_token_mean",
+          "oewn_polysemy_type_mean",
+          "oewn_hypernym_depth_token_mean",
+          "oewn_hypernym_depth_type_mean"
+        ],
+        "reason": "No sufficiently specific directional confirmatory hypothesis for the ELLIPSE Vocabulary rating."
+      },
+      {
+        "family": "additional_panel_b",
+        "members": [
+          "advanced_guiraud",
+          "p_lex_lambda",
+          "s_index",
+          "pct_off_list"
+        ],
+        "reason": "Reserved for exploratory reporting to keep the confirmatory set small."
+      }
+    ],
+    "selection_rules": {
+      "outcome_associations_may_influence_selection": false,
+      "substitution_after_qc_failure": false,
+      "maximum_focal_metrics": 2,
+      "collinearity_diagnostic": "variance_inflation_factor",
+      "vif_individual_interpretation_limit": 10.0,
+      "if_vif_exceeds_limit": "Retain both focal metrics for the prespecified block comparison, do not claim independent metric-specific contribution, and report single-focal models only as sensitivity analyses."
+    }
+  },
+  "models": {
+    "B0": {
+      "name": "baseline",
+      "estimator": "ordinary_least_squares",
+      "terms": [
+        "natural_cubic_spline(log(n_tokens), df=3)",
+        "z(mtld)",
+        "z(ngsl_pct_beyond_k2)"
+      ]
+    },
+    "B1": {
+      "name": "augmented",
+      "estimator": "ordinary_least_squares",
+      "extends": "B0",
+      "additional_terms": [
+        "z(tubelex_frequency_zipf_type_mean)",
+        "z(tubelex_channel_log10_prevalence_type_mean)"
+      ]
+    },
+    "association_model": {
+      "estimator": "ordinary_least_squares",
+      "base": "B1",
+      "additional_terms": [
+        "prompt_fixed_effects"
+      ],
+      "continuous_predictor_scaling": "full_analysis_sample_z_score",
+      "coefficient_unit": "Vocabulary rating points per one predictor standard deviation",
+      "standard_errors": {
+        "type": "CR2_cluster_robust",
+        "cluster": "prompt",
+        "degrees_of_freedom": "Satterthwaite"
+      }
+    }
+  },
+  "validation": {
+    "scheme": "leave_one_prompt_out",
+    "group_column": "prompt",
+    "expected_folds": 44,
+    "train_groups_per_fold": 43,
+    "test_groups_per_fold": 1,
+    "prompt_terms_used_in_prediction_model": false,
+    "feature_scaling_fit_on_training_fold_only": true,
+    "spline_knots_fit_on_training_fold_only": true,
+    "hyperparameter_tuning": false,
+    "variable_selection": false,
+    "prediction_clipping": false,
+    "primary_endpoint": {
+      "id": "delta_macro_mae",
+      "formula": "macro_MAE(B0) - macro_MAE(B1)",
+      "per_prompt_statistic": "mean_absolute_error",
+      "prompt_aggregation": "unweighted_mean_over_44_prompts",
+      "direction": "larger_is_better",
+      "evidence_rule": "lower_95_percent_confidence_limit_greater_than_zero",
+      "practical_reference_value": 0.05,
+      "practical_reference_rationale": "One tenth of the smallest observed 0.5-point outcome step."
+    },
+    "secondary_endpoints": [
+      {
+        "id": "macro_RMSE",
+        "definition": "Unweighted mean over prompts of each prompt's root mean squared prediction error."
+      },
+      {
+        "id": "essay_weighted_MAE",
+        "definition": "Mean absolute prediction error over all held-out essays, so prompts contribute in proportion to essay count."
+      },
+      {
+        "id": "essay_weighted_RMSE",
+        "definition": "Root mean squared prediction error over all held-out essays, so prompts contribute in proportion to essay count."
+      },
+      {
+        "id": "out_of_sample_R_squared",
+        "definition": "One minus the sum of held-out squared errors divided by the sum of squared deviations from the corresponding training-fold outcome mean."
+      }
+    ]
+  },
+  "inference": {
+    "confidence_level": 0.95,
+    "alpha": 0.05,
+    "primary_performance_interval": {
+      "method": "paired_nonparametric_bootstrap",
+      "resampling_unit": "prompt",
+      "resamples": 10000,
+      "seed": 20260723
+    },
+    "essay_level_bootstrap_allowed": false,
+    "post_hoc_power_analysis": false,
+    "reliability_disattenuation": false
+  },
+  "multiplicity": {
+    "primary_family": {
+      "tests": [
+        "delta_macro_mae_for_B1_vs_B0_on_Vocabulary"
+      ],
+      "correction": "none_single_primary_test",
+      "alpha": 0.05
+    },
+    "focal_coefficient_family": {
+      "tests": [
+        "tubelex_frequency_zipf_type_mean_coefficient_on_Vocabulary",
+        "tubelex_channel_log10_prevalence_type_mean_coefficient_on_Vocabulary"
+      ],
+      "correction": "Holm",
+      "sidedness": "two_sided",
+      "familywise_alpha": 0.05
+    },
+    "secondary_outcome_family": {
+      "outcomes": [
+        "Overall",
+        "Cohesion",
+        "Syntax",
+        "Phraseology",
+        "Grammar",
+        "Conventions"
+      ],
+      "focal_metrics_per_outcome": 2,
+      "expected_tests": 12,
+      "correction": "Benjamini-Hochberg",
+      "false_discovery_rate": 0.05,
+      "may_override_primary_result": false
+    },
+    "sensitivity_analyses_generate_confirmatory_p_values": false
+  },
+  "missing_data_and_exclusions": {
+    "primary_population": "all_audited_final_essays",
+    "short_texts_retained_in_primary": true,
+    "same_complete_case_set_required_for_B0_and_B1": true,
+    "outcome_imputation": "none",
+    "predictor_imputation": "none",
+    "complete_case_allowed_if_metric_missing_proportion_lt": 0.01,
+    "stop_if_metric_missing_proportion_gte": 0.01,
+    "stop_if_any_prompt_is_completely_lost": true,
+    "stop_if_any_zero_token_essay": true,
+    "winsorization": false,
+    "outlier_exclusion_in_primary": false,
+    "spelling_correction": false
+  },
+  "sensitivity_analyses": [
+    {
+      "id": "S01_ordinal_outcome",
+      "change": "Fit Vocabulary as nine ordered categories using a cumulative-logit specification."
+    },
+    {
+      "id": "S02_stability_floor",
+      "change": "Restrict to essays with at least 50 TUBELEX lookup tokens and 20 lookup types."
+    },
+    {
+      "id": "S03_equal_prompt_weighting",
+      "change": "Fit the association model with equal total weight per prompt."
+    },
+    {
+      "id": "S04_token_weighting",
+      "change": "Replace both focal type-weighted TUBELEX metrics with their token-weighted counterparts."
+    },
+    {
+      "id": "S05_video_prevalence",
+      "change": "Replace type-weighted channel prevalence with type-weighted video prevalence."
+    },
+    {
+      "id": "S06_length_form",
+      "change": "Replace the three-degree-of-freedom length spline with a linear log-length term."
+    },
+    {
+      "id": "S07_ellipse_word_count",
+      "change": "Replace tool n_tokens with the audited ELLIPSE num_words column."
+    },
+    {
+      "id": "S08_demographic_adjustment",
+      "change": "Add grade, gender, race_ethnicity, and SES using complete cases; do not interpret these coefficients causally."
+    },
+    {
+      "id": "S09_length_extremes",
+      "change": "Exclude essays below the first or above the ninety-ninth percentile of tool n_tokens."
+    },
+    {
+      "id": "S10_provided_split",
+      "change": "Fit on the provided train set and evaluate on the provided test set as known-prompt sensitivity only."
+    },
+    {
+      "id": "S11_prompt_influence",
+      "change": "Repeat coefficient estimation while omitting each prompt in turn and report the coefficient and delta-MAE ranges."
+    },
+    {
+      "id": "S12_collinearity",
+      "change": "If focal VIF exceeds 10, fit one fixed single-focal model per TUBELEX metric without selecting between them by outcome performance."
+    }
+  ],
+  "stop_rules": [
+    {
+      "id": "R01_hash_or_schema_drift",
+      "trigger": "Any audited data hash, record count, prompt count, required field, or outcome scale differs from this plan.",
+      "action": "Stop before confirmatory estimation; investigate and issue a dated plan amendment before any rerun."
+    },
+    {
+      "id": "R02_privacy_boundary",
+      "trigger": "Human essay text, identifier, individual feature row, or individual prediction may have reached an external API, telemetry system, external log, or public artifact.",
+      "action": "Stop immediately, treat as a privacy incident, and invalidate the confirmatory run."
+    },
+    {
+      "id": "R03_metric_failure",
+      "trigger": "A focal implementation must change, metric missingness reaches one percent, a prompt is lost, or the prespecified design matrix is singular.",
+      "action": "Stop; do not substitute another metric. Version any corrected analysis as an amended plan."
+    },
+    {
+      "id": "R04_result_contingent_expansion",
+      "trigger": "A result is null, weak, unfavorable, or opposite to the expected direction.",
+      "action": "Do not add metrics, change models, exclude cases, or rerun as confirmatory; report the result as an interpretation boundary."
+    },
+    {
+      "id": "R05_public_tool_priority",
+      "trigger": "Layer 3 work exceeds ten working days or would delay the public v1.0 release.",
+      "action": "Defer the ELLIPSE analysis and continue the public-tool release path."
+    }
+  ],
+  "claim_boundaries": {
+    "allowed": [
+      "The prespecified metrics were or were not associated with noisy human Vocabulary ratings in this audited ELLIPSE sample.",
+      "The fixed TUBELEX block did or did not add unknown-prompt predictive information within the ELLIPSE population under 44-fold leave-one-prompt-out evaluation.",
+      "Effect sizes and uncertainty are conditional on the frozen tokenizer, normalizer, reference resources, parameters, prompts, and sampled population."
+    ],
+    "prohibited": [
+      "The tool directly measures writer vocabulary knowledge, CEFR level, writer proficiency, or writing quality.",
+      "The associations are causal or imply that changing a metric will improve human ratings.",
+      "TUBELEX prevalence is a direct measure of familiarity, educational desirability, or word quality.",
+      "ELLIPSE leave-one-prompt-out performance guarantees generalization to adults, L1 writers, speech, academic genres, other corpora, or other populations.",
+      "The Vocabulary rating is an error-free gold standard.",
+      "The fitted evaluation model should be distributed, deployed, or exposed as an individual scoring feature."
+    ],
+    "null_result_policy": "Publish the null or weak result as a boundary on interpretation; do not block the tool release."
+  }
+}

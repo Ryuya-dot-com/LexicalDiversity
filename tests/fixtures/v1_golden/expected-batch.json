@@ -1,0 +1,892 @@
+{
+  "ldfreq_version": "0.9.0-dev.0",
+  "output_schema_version": "1.0.0",
+  "batch": {
+    "n_documents": 2
+  },
+  "batch_diagnostics": {
+    "bands": [
+      {
+        "document": "Document 001",
+        "level": "K1",
+        "tokens": 128,
+        "types": 100,
+        "coverage_%": 82.58,
+        "cumulative_%": 82.58
+      },
+      {
+        "document": "Document 001",
+        "level": "K2",
+        "tokens": 21,
+        "types": 17,
+        "coverage_%": 13.55,
+        "cumulative_%": 96.13
+      },
+      {
+        "document": "Document 001",
+        "level": "K3",
+        "tokens": 4,
+        "types": 4,
+        "coverage_%": 2.58,
+        "cumulative_%": 98.71
+      },
+      {
+        "document": "Document 001",
+        "level": "off-list",
+        "tokens": 2,
+        "types": 2,
+        "coverage_%": 1.29,
+        "cumulative_%": 98.71
+      },
+      {
+        "document": "Document 002",
+        "level": "K1",
+        "tokens": 116,
+        "types": 86,
+        "coverage_%": 73.42,
+        "cumulative_%": 73.42
+      },
+      {
+        "document": "Document 002",
+        "level": "K2",
+        "tokens": 27,
+        "types": 26,
+        "coverage_%": 17.09,
+        "cumulative_%": 90.51
+      },
+      {
+        "document": "Document 002",
+        "level": "K3",
+        "tokens": 5,
+        "types": 5,
+        "coverage_%": 3.16,
+        "cumulative_%": 93.67
+      },
+      {
+        "document": "Document 002",
+        "level": "off-list",
+        "tokens": 10,
+        "types": 9,
+        "coverage_%": 6.33,
+        "cumulative_%": 93.67
+      }
+    ],
+    "reliability": [
+      {
+        "document": "Document 001",
+        "index_key": "ttr",
+        "index": "TTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 1,
+        "value": 0.793548387097,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "rttr",
+        "index": "RTTR (Guiraud)",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 1,
+        "value": 9.879597745501,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "cttr",
+        "index": "CTTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 1,
+        "value": 6.985930561239,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "herdan",
+        "index": "Herdan C",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 2,
+        "value": 0.95415005553,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "maas",
+        "index": "Maas a² (↓)",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 2,
+        "value": 0.009091033059,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "msttr",
+        "index": "MSTTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 50,
+        "value": 0.9,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "mattr",
+        "index": "MATTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 50,
+        "value": 0.915471698113,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "mtld",
+        "index": "MTLD",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 50,
+        "value": 210.21875,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "hdd",
+        "index": "HD-D",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 42,
+        "value": 0.903238914818,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "vocd",
+        "index": "vocd-D",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 50,
+        "value": 176.065175501568,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "yule_k",
+        "index": "Yule's K (↓)",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 100,
+        "value": 59.105098855359,
+        "note": ""
+      },
+      {
+        "document": "Document 001",
+        "index_key": "yule_i",
+        "index": "Yule's I",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 155,
+        "required_tokens": 100,
+        "value": 86.948275862069,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "ttr",
+        "index": "TTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 1,
+        "value": 0.79746835443,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "rttr",
+        "index": "RTTR (Guiraud)",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 1,
+        "value": 10.024021780614,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "cttr",
+        "index": "CTTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 1,
+        "value": 7.088053775834,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "herdan",
+        "index": "Herdan C",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 2,
+        "value": 0.95529701179,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "maas",
+        "index": "Maas a² (↓)",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 2,
+        "value": 0.008830054136,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "msttr",
+        "index": "MSTTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 50,
+        "value": 0.913333333333,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "mattr",
+        "index": "MATTR",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 50,
+        "value": 0.915596330275,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "mtld",
+        "index": "MTLD",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 50,
+        "value": 218.435,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "hdd",
+        "index": "HD-D",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 42,
+        "value": 0.904835486661,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "vocd",
+        "index": "vocd-D",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 50,
+        "value": 182.733979001104,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "yule_k",
+        "index": "Yule's K (↓)",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 100,
+        "value": 64.092292901779,
+        "note": ""
+      },
+      {
+        "document": "Document 002",
+        "index_key": "yule_i",
+        "index": "Yule's I",
+        "status": "available",
+        "status_code": 2,
+        "n_tokens": 158,
+        "required_tokens": 100,
+        "value": 82.6875,
+        "note": ""
+      }
+    ],
+    "overlap_matrix": [
+      {
+        "document_a": "Document 001",
+        "document_b": "Document 001",
+        "shared_types": 123,
+        "union_types": 123,
+        "jaccard": 1.0
+      },
+      {
+        "document_a": "Document 001",
+        "document_b": "Document 002",
+        "shared_types": 35,
+        "union_types": 214,
+        "jaccard": 0.163551401869
+      },
+      {
+        "document_a": "Document 002",
+        "document_b": "Document 001",
+        "shared_types": 35,
+        "union_types": 214,
+        "jaccard": 0.163551401869
+      },
+      {
+        "document_a": "Document 002",
+        "document_b": "Document 002",
+        "shared_types": 126,
+        "union_types": 126,
+        "jaccard": 1.0
+      }
+    ],
+    "overlap_pairs": [
+      {
+        "document_a": "Document 001",
+        "document_b": "Document 002",
+        "shared_types": 35,
+        "a_only_types": 88,
+        "b_only_types": 91,
+        "union_types": 214,
+        "jaccard": 0.163551401869
+      }
+    ]
+  },
+  "documents": [
+    {
+      "ldfreq_version": "0.9.0-dev.0",
+      "output_schema_version": "1.0.0",
+      "document": {
+        "name": "Document 001"
+      },
+      "settings": {
+        "unit": "token",
+        "lemmatizer": "open_flemma",
+        "lemmatizer_version": "open-flemma-1.0.0+b59b8f4efcd2",
+        "lemmatizer_scope": "Panel B lookup fallback",
+        "list": "ngsl",
+        "list_id": "ngsl",
+        "list_registry_id": "ngsl-1.2",
+        "list_name": "NGSL (New General Service List)",
+        "list_license": "CC BY-SA 4.0 (Browne, Culligan & Phillips)",
+        "list_license_url": null,
+        "list_source_url": "https://www.newgeneralservicelist.com/",
+        "list_modification_notice": null,
+        "list_delivery": "bundled-public",
+        "server_only_min_tokens": null,
+        "server_only_min_types": null,
+        "list_entries": 2809,
+        "list_levels": 3,
+        "list_lookup_unit": null,
+        "tokenizer_policy": "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "thresholds": [
+          90,
+          95,
+          98
+        ],
+        "min_tokens": 50,
+        "msttr_segment": 50,
+        "mattr_window": 50,
+        "mtld_threshold": 0.72,
+        "hdd_sample": 42,
+        "vocd_seed": 42,
+        "advanced_cutoff": 2
+      },
+      "method_notes": [
+        "Tokenizer policy: ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "Counting unit is token: Panel A uses lower-cased surface tokens without lemmatization.",
+        "Panel B maps tokens to flemmas/head forms before frequency-list lookup.",
+        "Coverage thresholds are selected-list matched coverage, not an automatic reader-known coverage estimate.",
+        "Proper nouns, marginal words, acronyms, and other potentially known items are not automatically credited unless they match the selected list/normalizer.",
+        "Coverage can differ from LexTutor unless the frequency list, word-family expansion, tokenizer, proper-noun/number policy, and lemmatizer all match.",
+        "P_Lex counts unclassified off-list items as hard words under this app's no-automatic-proper-noun-adjustment policy.",
+        "S uses the selected list's ranks, not Kojima & Yamashita's BNC-spoken family lists; values are not directly comparable to published S values."
+      ],
+      "privacy": {
+        "source_text_retained": false,
+        "source_filename_retained": false,
+        "token_level_output_retained": false
+      },
+      "n_tokens": 155,
+      "n_types": 123,
+      "panel_a": {
+        "ttr": 0.793548387097,
+        "rttr": 9.879597745501,
+        "cttr": 6.985930561239,
+        "herdan": 0.95415005553,
+        "maas": 0.009091033059,
+        "msttr": 0.9,
+        "mattr": 0.915471698113,
+        "mtld": 210.21875,
+        "hdd": 0.903238914818,
+        "vocd": 176.065175501568,
+        "yule_k": 59.105098855359,
+        "yule_i": 86.948275862069
+      },
+      "panel_b": {
+        "lfp": [
+          {
+            "level": "K1",
+            "tokens": 128,
+            "types": 100,
+            "coverage_%": 82.58,
+            "cumulative_%": 82.58
+          },
+          {
+            "level": "K2",
+            "tokens": 21,
+            "types": 17,
+            "coverage_%": 13.55,
+            "cumulative_%": 96.13
+          },
+          {
+            "level": "K3",
+            "tokens": 4,
+            "types": 4,
+            "coverage_%": 2.58,
+            "cumulative_%": 98.71
+          },
+          {
+            "level": "off-list",
+            "tokens": 2,
+            "types": 2,
+            "coverage_%": 1.29,
+            "cumulative_%": 98.71
+          }
+        ],
+        "coverage_threshold": {
+          "90": 2,
+          "95": 2,
+          "98": 3
+        },
+        "advanced_guiraud": 0.481931597341,
+        "pct_beyond_k": 4.878048780488,
+        "mean_rank": {
+          "mean_rank": 431.300653594771,
+          "mean_log_rank": 4.759798092422,
+          "pct_off_list": 1.290322580645
+        },
+        "p_lex": {
+          "lambda": 2.101,
+          "n_segments": 15,
+          "mean_hard_per_seg": 1.733333333333,
+          "observed_distribution": {
+            "0": 0.2,
+            "1": 0.133333333333,
+            "2": 0.4,
+            "3": 0.266666666667,
+            "4": 0.0,
+            "5": 0.0,
+            "6": 0.0,
+            "7": 0.0,
+            "8": 0.0,
+            "9": 0.0,
+            "10": 0.0
+          },
+          "fitted_distribution": {
+            "0": 0.122334033033,
+            "1": 0.257023803401,
+            "2": 0.270003505473,
+            "3": 0.189092455,
+            "4": 0.099320811989,
+            "5": 0.041734605198,
+            "6": 0.014614067587,
+            "7": 0.004386308,
+            "8": 0.001151954138,
+            "9": 0.000268917294,
+            "10": 5.6499523e-05
+          }
+        },
+        "s_index": {
+          "S": 3508.0,
+          "empirical_coverage_pct": {
+            "500": 70.32,
+            "1000": 82.58,
+            "1500": 90.97,
+            "2000": 96.13,
+            "2500": 97.42,
+            "3000": 98.71
+          },
+          "capped": false,
+          "reference_list_note": "uses the supplied list's ranks (e.g. NJ8), not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical for written text + headword/flemma coverage)"
+        },
+        "band_wise": [
+          {
+            "level": "K1",
+            "tokens": 128,
+            "types": 100,
+            "MTLD": 163.84,
+            "MATTR": 0.885316455696,
+            "HD-D": 0.879295516488,
+            "Min N": 50
+          },
+          {
+            "level": "K2",
+            "tokens": 21,
+            "types": 17,
+            "MTLD": 30.87,
+            "MATTR": 0.809523809524,
+            "HD-D": 0.809523809524,
+            "Min N": 50
+          },
+          {
+            "level": "K3",
+            "tokens": 4,
+            "types": 4,
+            "MTLD": null,
+            "MATTR": 1.0,
+            "HD-D": 1.0,
+            "Min N": 50
+          },
+          {
+            "level": "off-list",
+            "tokens": 2,
+            "types": 2,
+            "MTLD": null,
+            "MATTR": 1.0,
+            "HD-D": 1.0,
+            "Min N": 50
+          }
+        ]
+      },
+      "semantic_network": {
+        "tokens": 155,
+        "types": 118,
+        "covered_tokens": 126,
+        "covered_types": 105,
+        "token_coverage": 0.812903225806,
+        "type_coverage": 0.889830508475,
+        "depth_covered_tokens": 103,
+        "depth_covered_types": 85,
+        "depth_token_coverage": 0.664516129032,
+        "depth_type_coverage": 0.720338983051,
+        "polysemy_token_mean": 8.198412698413,
+        "polysemy_type_mean": 8.228571428571,
+        "hypernym_depth_token_mean": 5.614700820974,
+        "hypernym_depth_type_mean": 5.454980053089,
+        "resource": "Open English WordNet 2025",
+        "license": "CC BY 4.0",
+        "lookup_pos": "all parts of speech (POS-agnostic aggregation)",
+        "normalizer": "open_flemma open-flemma-1.0.0+b59b8f4efcd2"
+      },
+      "tubelex": {
+        "tokens": 156,
+        "types": 122,
+        "covered_tokens": 156,
+        "covered_types": 122,
+        "token_coverage": 1.0,
+        "type_coverage": 1.0,
+        "frequency_zipf_token_mean": 5.611780682321,
+        "frequency_zipf_type_mean": 5.29655127074,
+        "video_log10_prevalence_token_mean": -0.823222626986,
+        "video_log10_prevalence_type_mean": -0.975944892263,
+        "channel_log10_prevalence_token_mean": -0.775621225278,
+        "channel_log10_prevalence_type_mean": -0.911324141847,
+        "metadata": {
+          "name": "TUBELEX-EN Treebank published frequency aggregates",
+          "version": "7cb5fb36add76b83a266d1967536e1a1d3faa513",
+          "source_asset": "tubelex-en-treebank.tsv.xz",
+          "source_url": "https://raw.githubusercontent.com/naist-nlp/tubelex/7cb5fb36add76b83a266d1967536e1a1d3faa513/frequencies/tubelex-en-treebank.tsv.xz",
+          "source_sha256": "4096022259d5eaa7261c3bf22c3b0af9fd58ae8eebe17894c0b34a163954f936",
+          "artifact_sha256": "3731f23f3385ed630777ff56b5edbed5db46eee256ededceb0ac213016f31675",
+          "license": "BSD 3-Clause License",
+          "license_spdx": "BSD-3-Clause",
+          "license_url": "https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/LICENSE",
+          "method_id": "tubelex-en-treebank-7cb5fb36-detseg-apostrophe-laplace-beta11-v2",
+          "lookup_unit": "lower-cased Treebank surface/clitic lexical token",
+          "normalization": "Unicode NFKC; U+02BC/U+2018/U+2019/U+201B apostrophes mapped to ASCII; then str.lower()",
+          "corpus_tokens": 171805865,
+          "corpus_types": 613309,
+          "corpus_videos": 105733,
+          "corpus_channels": 68405,
+          "runtime_index_rows": 515292,
+          "retained_reference_token_mass": 169889910,
+          "frequency_unseen_zipf": 0.763414439791,
+          "video_unseen_log10_prevalence": -5.024218769624,
+          "channel_unseen_log10_prevalence": -4.835100544788
+        }
+      }
+    },
+    {
+      "ldfreq_version": "0.9.0-dev.0",
+      "output_schema_version": "1.0.0",
+      "document": {
+        "name": "Document 002"
+      },
+      "settings": {
+        "unit": "token",
+        "lemmatizer": "open_flemma",
+        "lemmatizer_version": "open-flemma-1.0.0+b59b8f4efcd2",
+        "lemmatizer_scope": "Panel B lookup fallback",
+        "list": "ngsl",
+        "list_id": "ngsl",
+        "list_registry_id": "ngsl-1.2",
+        "list_name": "NGSL (New General Service List)",
+        "list_license": "CC BY-SA 4.0 (Browne, Culligan & Phillips)",
+        "list_license_url": null,
+        "list_source_url": "https://www.newgeneralservicelist.com/",
+        "list_modification_notice": null,
+        "list_delivery": "bundled-public",
+        "server_only_min_tokens": null,
+        "server_only_min_types": null,
+        "list_entries": 2809,
+        "list_levels": 3,
+        "list_lookup_unit": null,
+        "tokenizer_policy": "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "thresholds": [
+          90,
+          95,
+          98
+        ],
+        "min_tokens": 50,
+        "msttr_segment": 50,
+        "mattr_window": 50,
+        "mtld_threshold": 0.72,
+        "hdd_sample": 42,
+        "vocd_seed": 42,
+        "advanced_cutoff": 2
+      },
+      "method_notes": [
+        "Tokenizer policy: ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "Counting unit is token: Panel A uses lower-cased surface tokens without lemmatization.",
+        "Panel B maps tokens to flemmas/head forms before frequency-list lookup.",
+        "Coverage thresholds are selected-list matched coverage, not an automatic reader-known coverage estimate.",
+        "Proper nouns, marginal words, acronyms, and other potentially known items are not automatically credited unless they match the selected list/normalizer.",
+        "Coverage can differ from LexTutor unless the frequency list, word-family expansion, tokenizer, proper-noun/number policy, and lemmatizer all match.",
+        "P_Lex counts unclassified off-list items as hard words under this app's no-automatic-proper-noun-adjustment policy.",
+        "S uses the selected list's ranks, not Kojima & Yamashita's BNC-spoken family lists; values are not directly comparable to published S values."
+      ],
+      "privacy": {
+        "source_text_retained": false,
+        "source_filename_retained": false,
+        "token_level_output_retained": false
+      },
+      "n_tokens": 158,
+      "n_types": 126,
+      "panel_a": {
+        "ttr": 0.79746835443,
+        "rttr": 10.024021780614,
+        "cttr": 7.088053775834,
+        "herdan": 0.95529701179,
+        "maas": 0.008830054136,
+        "msttr": 0.913333333333,
+        "mattr": 0.915596330275,
+        "mtld": 218.435,
+        "hdd": 0.904835486661,
+        "vocd": 182.733979001104,
+        "yule_k": 64.092292901779,
+        "yule_i": 82.6875
+      },
+      "panel_b": {
+        "lfp": [
+          {
+            "level": "K1",
+            "tokens": 116,
+            "types": 86,
+            "coverage_%": 73.42,
+            "cumulative_%": 73.42
+          },
+          {
+            "level": "K2",
+            "tokens": 27,
+            "types": 26,
+            "coverage_%": 17.09,
+            "cumulative_%": 90.51
+          },
+          {
+            "level": "K3",
+            "tokens": 5,
+            "types": 5,
+            "coverage_%": 3.16,
+            "cumulative_%": 93.67
+          },
+          {
+            "level": "off-list",
+            "tokens": 10,
+            "types": 9,
+            "coverage_%": 6.33,
+            "cumulative_%": 93.67
+          }
+        ],
+        "coverage_threshold": {
+          "90": 2,
+          "95": null,
+          "98": null
+        },
+        "advanced_guiraud": 1.113780197846,
+        "pct_beyond_k": 11.111111111111,
+        "mean_rank": {
+          "mean_rank": 488.506756756757,
+          "mean_log_rank": 4.948220599279,
+          "pct_off_list": 6.329113924051
+        },
+        "p_lex": {
+          "lambda": 2.968,
+          "n_segments": 15,
+          "mean_hard_per_seg": 2.733333333333,
+          "observed_distribution": {
+            "0": 0.066666666667,
+            "1": 0.0,
+            "2": 0.333333333333,
+            "3": 0.4,
+            "4": 0.133333333333,
+            "5": 0.066666666667,
+            "6": 0.0,
+            "7": 0.0,
+            "8": 0.0,
+            "9": 0.0,
+            "10": 0.0
+          },
+          "fitted_distribution": {
+            "0": 0.051406019628,
+            "1": 0.152573066255,
+            "2": 0.226418430322,
+            "3": 0.224003300399,
+            "4": 0.166210448896,
+            "5": 0.098662522465,
+            "6": 0.048805061112,
+            "7": 0.020693345912,
+            "8": 0.007677231333,
+            "9": 0.002531780289,
+            "10": 0.00075143239
+          }
+        },
+        "s_index": {
+          "S": 6364.0,
+          "empirical_coverage_pct": {
+            "500": 62.66,
+            "1000": 73.42,
+            "1500": 86.08,
+            "2000": 90.51,
+            "2500": 92.41,
+            "3000": 93.67
+          },
+          "capped": false,
+          "reference_list_note": "uses the supplied list's ranks (e.g. NJ8), not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical for written text + headword/flemma coverage)"
+        },
+        "band_wise": [
+          {
+            "level": "K1",
+            "tokens": 116,
+            "types": 86,
+            "MTLD": 125.589333333333,
+            "MATTR": 0.862985074627,
+            "HD-D": 0.846552158898,
+            "Min N": 50
+          },
+          {
+            "level": "K2",
+            "tokens": 27,
+            "types": 26,
+            "MTLD": 204.12,
+            "MATTR": 0.962962962963,
+            "HD-D": 0.962962962963,
+            "Min N": 50
+          },
+          {
+            "level": "K3",
+            "tokens": 5,
+            "types": 5,
+            "MTLD": null,
+            "MATTR": 1.0,
+            "HD-D": 1.0,
+            "Min N": 50
+          },
+          {
+            "level": "off-list",
+            "tokens": 10,
+            "types": 9,
+            "MTLD": 28.0,
+            "MATTR": 0.9,
+            "HD-D": 0.9,
+            "Min N": 50
+          }
+        ]
+      },
+      "semantic_network": {
+        "tokens": 158,
+        "types": 124,
+        "covered_tokens": 140,
+        "covered_types": 116,
+        "token_coverage": 0.886075949367,
+        "type_coverage": 0.935483870968,
+        "depth_covered_tokens": 119,
+        "depth_covered_types": 97,
+        "depth_token_coverage": 0.753164556962,
+        "depth_type_coverage": 0.782258064516,
+        "polysemy_token_mean": 8.057142857143,
+        "polysemy_type_mean": 8.318965517241,
+        "hypernym_depth_token_mean": 5.585500201777,
+        "hypernym_depth_type_mean": 5.42815504243,
+        "resource": "Open English WordNet 2025",
+        "license": "CC BY 4.0",
+        "lookup_pos": "all parts of speech (POS-agnostic aggregation)",
+        "normalizer": "open_flemma open-flemma-1.0.0+b59b8f4efcd2"
+      },
+      "tubelex": {
+        "tokens": 158,
+        "types": 126,
+        "covered_tokens": 158,
+        "covered_types": 126,
+        "token_coverage": 1.0,
+        "type_coverage": 1.0,
+        "frequency_zipf_token_mean": 5.397022623244,
+        "frequency_zipf_type_mean": 5.080793669987,
+        "video_log10_prevalence_token_mean": -0.979931657115,
+        "video_log10_prevalence_type_mean": -1.1538083283,
+        "channel_log10_prevalence_token_mean": -0.920052941534,
+        "channel_log10_prevalence_type_mean": -1.075275956099,
+        "metadata": {
+          "name": "TUBELEX-EN Treebank published frequency aggregates",
+          "version": "7cb5fb36add76b83a266d1967536e1a1d3faa513",
+          "source_asset": "tubelex-en-treebank.tsv.xz",
+          "source_url": "https://raw.githubusercontent.com/naist-nlp/tubelex/7cb5fb36add76b83a266d1967536e1a1d3faa513/frequencies/tubelex-en-treebank.tsv.xz",
+          "source_sha256": "4096022259d5eaa7261c3bf22c3b0af9fd58ae8eebe17894c0b34a163954f936",
+          "artifact_sha256": "3731f23f3385ed630777ff56b5edbed5db46eee256ededceb0ac213016f31675",
+          "license": "BSD 3-Clause License",
+          "license_spdx": "BSD-3-Clause",
+          "license_url": "https://github.com/naist-nlp/tubelex/blob/7cb5fb36add76b83a266d1967536e1a1d3faa513/LICENSE",
+          "method_id": "tubelex-en-treebank-7cb5fb36-detseg-apostrophe-laplace-beta11-v2",
+          "lookup_unit": "lower-cased Treebank surface/clitic lexical token",
+          "normalization": "Unicode NFKC; U+02BC/U+2018/U+2019/U+201B apostrophes mapped to ASCII; then str.lower()",
+          "corpus_tokens": 171805865,
+          "corpus_types": 613309,
+          "corpus_videos": 105733,
+          "corpus_channels": 68405,
+          "runtime_index_rows": 515292,
+          "retained_reference_token_mass": 169889910,
+          "frequency_unseen_zipf": 0.763414439791,
+          "video_unseen_log10_prevalence": -5.024218769624,
+          "channel_unseen_log10_prevalence": -4.835100544788
+        }
+      }
+    }
+  ]
+}

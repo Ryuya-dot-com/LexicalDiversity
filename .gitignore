@@ -1,0 +1,81 @@
+# OS junk
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.streamlit/secrets.toml
+.streamlit/runtime_lists/
+
+# Local research inputs and working material never enter the public repository.
+/.research/
+
+# Local legacy TAALES distribution and its bundled third-party resources.
+# Keep this only as a migration reference; do not commit it to the repository.
+/LexicalSophistication/
+/TAALED/
+
+# ---------------------------------------------------------------------------
+# Word-list data
+# Default-ignore data-like files, then explicitly allow the lists this public
+# app bundles.
+# ---------------------------------------------------------------------------
+*.csv
+*.tsv
+*.tsv.xz
+*.xlsx
+*.xls
+NJ8.csv
+NationBNCCOCA/
+NGSL/
+antbnc*.txt
+data/**/*.txt
+
+# Existing local migration snapshots. NJ8 is public-cleared. Official Nation
+# data are green, but raw payloads remain excluded by the server-only product
+# policy; the separate EAPFoundation snapshot is permission-pending.
+!data/NJ8/
+!data/NJ8/NJ8.csv
+!data/NJ8/manifest.json
+/data/bnc_coca/*
+!/data/bnc_coca/manifest.json
+
+# Existing permission-pending AntBNC snapshot; local/private use only.
+/data/antbnc/*
+!/data/antbnc/manifest.json
+
+# Bundled open list data. NGSL is CC BY-SA 4.0; see data/ngsl/manifest.json.
+!data/ngsl/
+!data/ngsl/*.csv
+!data/ngsl/manifest.json
+
+# Reproducible open-resource builds may commit only the reviewed derived
+# artifacts under data/open/. Raw downloads stay outside the repository.
+/sources/
+/data/sources/
+/data/raw/
+!data/open/
+!data/open/**/
+!data/open/**/manifest.json
+!data/open/**/NOTICE.md
+!data/open/**/*.csv.gz
+
+# ELLIPSE benchmark governance is public, but its corpus and generated payloads
+# remain local. Only these two reviewed metadata files may be tracked here.
+/benchmarks/ellipse/*
+!/benchmarks/ellipse/manifest.json
+!/benchmarks/ellipse/analysis-plan.json
+
+# The Synthetic pilot is a preregistration only. Generated text, API records,
+# manifests, and QC outputs stay local until a separate release review.
+/benchmarks/synthetic/*
+!/benchmarks/synthetic/pilot-protocol.json
+
+# Quarto source is reviewed; generated notebooks, HTML, and dependency trees
+# are rebuilt outside Git and must not enter a clean public history.
+/docs/dispersion-sensitivity-simulation.html
+/docs/dispersion-sensitivity-simulation.quarto_ipynb
+/docs/dispersion-sensitivity-simulation_files/

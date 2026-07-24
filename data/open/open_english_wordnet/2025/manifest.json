@@ -1,0 +1,48 @@
+{
+  "artifact": {
+    "bytes": 770980,
+    "file": "open_english_wordnet_2025_lemma_metrics.csv.gz",
+    "format": "deterministic gzip-compressed UTF-8 CSV",
+    "rows": 135282,
+    "sha256": "ec8a1f74aaca49f58129f6dd7a8f22eb3aa1f208bb15b9809e42c9b6589e9bea"
+  },
+  "attribution_file": "NOTICE.md",
+  "build": {
+    "algorithm_version": 1,
+    "depth_definition": "longest hypernym/instance_hypernym path to a root; root depth 0; noun and verb senses only",
+    "depth_rows": 109222,
+    "hypernym_edges": 88075,
+    "lemma_sense_links": 185081,
+    "normalization": "Unicode NFKC, casefold, underscores to spaces, whitespace collapse",
+    "script": "scripts/fetch_open_resources.py",
+    "source_lexical_entries": 135969,
+    "synsets": 107519
+  },
+  "changes": [
+    "Removed definitions, examples, sense keys, and all non-hypernym relations.",
+    "Grouped distinct synsets by normalized lemma and part of speech.",
+    "Calculated polysemy and aggregate hypernym depth."
+  ],
+  "creator": "Open English WordNet Community",
+  "id": "open_english_wordnet_2025_lemma_metrics",
+  "license": "Creative Commons Attribution 4.0 International",
+  "license_evidence_url": "https://en-word.net/",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "name": "Open English WordNet 2025 lemma network metrics",
+  "redistributable": true,
+  "release_commit": "dc343f2683279ecbb13fab4e2fd778d7b162d287",
+  "release_published_at": "2025-12-31T07:29:46Z",
+  "release_tag": "2025-edition",
+  "release_url": "https://github.com/globalwordnet/english-wordnet/releases/tag/2025-edition",
+  "source": {
+    "asset": "english-wordnet-2025.xml.gz",
+    "bundled": false,
+    "bytes": 11363503,
+    "sha256": "9ca6d1dcb75f822fdd66617f7d9da48142ace38dd544d6ad5e2feca1674ad3fe",
+    "url": "https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025.xml.gz"
+  },
+  "source_embedded_license": "https://creativecommons.org/licenses/by/4.0/",
+  "source_project_url": "https://github.com/globalwordnet/english-wordnet",
+  "version": "2025",
+  "web_service_usable": true
+}

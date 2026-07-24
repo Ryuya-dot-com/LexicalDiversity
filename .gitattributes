@@ -1,0 +1,13 @@
+# Normalize source and metadata so the same Git tree checks out identically.
+* text=auto eol=lf
+
+# These are byte-identity artifacts, not text subject to line-ending conversion.
+*.csv binary
+*.gz binary
+*.png binary
+*.pdf binary
+*.xlsx binary
+*.xls binary
+*.woff binary
+*.woff2 binary
+*.zip binary
