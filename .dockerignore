@@ -69,4 +69,13 @@ docs
 docs/**
 scripts
 scripts/**
+# The production stage never copies these files. They are re-admitted solely
+# for the separate, non-deployable golden-verification stage.
+!tests/
+!tests/fixtures/
+!tests/fixtures/v1_golden/
+!tests/fixtures/v1_golden/**
+!scripts/
+!scripts/build_v1_golden_fixtures.py
+!scripts/check_runtime_environment.py
 *.log

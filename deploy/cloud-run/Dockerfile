@@ -1,10 +1,11 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 
 # The default is the reviewed linux/amd64 child manifest, not the mutable tag or
 # multi-platform index.  An override remains fail-closed and is an explicit
 # release-contract change.
+ARG SOURCE_DATE_EPOCH
 ARG PYTHON_IMAGE=python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
-FROM --platform=linux/amd64 ${PYTHON_IMAGE}
+FROM --platform=linux/amd64 ${PYTHON_IMAGE} AS application
 
 ARG PYTHON_IMAGE
 RUN set -eu; \
@@ -59,3 +60,25 @@ RUN chmod 0555 /usr/local/bin/ldfreq-entrypoint \
 EXPOSE 8080
 USER 10001:10001
 ENTRYPOINT ["/usr/local/bin/ldfreq-entrypoint"]
+
+# This stage is never deployed. It combines the exact production filesystem
+# and dependency graph with public golden fixtures and verification scripts.
+FROM application AS verification
+USER 0:0
+COPY --chown=0:0 requirements.txt /verification/requirements.txt
+COPY --chown=0:0 \
+    deploy/cloud-run/requirements-prod.txt \
+    deploy/cloud-run/requirements-prod-linux-x86_64.lock \
+    deploy/cloud-run/base-image.json \
+    /verification/deploy/cloud-run/
+COPY --chown=0:0 \
+    scripts/build_v1_golden_fixtures.py \
+    scripts/check_runtime_environment.py \
+    /verification/scripts/
+COPY --chown=0:0 tests/fixtures/v1_golden/ /verification/tests/fixtures/v1_golden/
+RUN chmod -R a-w /verification
+ENV PYTHONPATH=/opt/ldfreq
+USER 10001:10001
+
+# Keep the last/default stage deployable and free of verification material.
+FROM application AS production

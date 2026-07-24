@@ -366,6 +366,13 @@ that the Tokyo/IAP/log-retention/privacy design has been deployed.
 
 - Recheck the pinned base-image identity and hash-locked wheel set, then build
   the existing non-root Docker scaffold from a clean tracked checkout.
+- Use the digest-pinned Dockerfile frontend, commit-derived
+  `SOURCE_DATE_EPOCH`, timestamp rewriting, and a fixed BuildKit compatibility
+  mode. Require two independent no-cache production builds to yield the same
+  local image ID.
+- Recompute the public golden outputs offline in the non-deployable verification
+  stage; the production stage must contain neither tests nor verification
+  scripts.
 - Record the resulting application-image digest, provenance, vulnerability
   scan, and golden-fixture reproduction; the pinned base-image digest alone is
   not the resulting application-image digest.

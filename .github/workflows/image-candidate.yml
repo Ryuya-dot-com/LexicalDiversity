@@ -1,0 +1,217 @@
+name: Candidate application image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: image-candidate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-scan-attest:
+    name: Build, verify, scan, and attest candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      IMAGE_NAME: ghcr.io/ryuya-dot-com/lexicaldiversity
+      SYFT_VERSION: 1.49.0
+      GRYPE_VERSION: 0.116.0
+    steps:
+      - name: Check out protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up evidence Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.12.10"
+          check-latest: false
+          architecture: x64
+
+      - name: Require canonical clean main source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-list --count HEAD)" -ge 1
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          python scripts/check_version_contract.py --development
+          python scripts/check_git_history.py
+          python scripts/check_public_release.py
+          python scripts/check_base_image_identity.py --remote
+
+      - name: Prepare evidence directory
+        run: install -d -m 0700 /tmp/ldfreq-image-evidence
+
+      - name: Build production twice and non-deployable verification once
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          production_ref="ldfreq-candidate:${GITHUB_SHA}"
+          rebuild_ref="ldfreq-candidate-rebuild:${GITHUB_SHA}"
+          verification_ref="ldfreq-verification:${GITHUB_SHA}"
+          source_date_epoch="$(git show -s --format=%ct HEAD)"
+          buildx_version="$(docker buildx version | awk '{print $2}' | sed 's/^v//')"
+          [[ "${source_date_epoch}" =~ ^[0-9]+$ ]]
+          [[ "${buildx_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
+          docker buildx build --no-cache --target production --platform linux/amd64 \
+            --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
+            --metadata-file /tmp/ldfreq-image-evidence/production-build-1.json \
+            --output "type=docker,name=${production_ref},rewrite-timestamp=true,compatibility-version=20" .
+          docker buildx build --no-cache --target production --platform linux/amd64 \
+            --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
+            --metadata-file /tmp/ldfreq-image-evidence/production-build-2.json \
+            --output "type=docker,name=${rebuild_ref},rewrite-timestamp=true,compatibility-version=20" .
+          docker buildx build --target verification --platform linux/amd64 \
+            --build-arg "SOURCE_DATE_EPOCH=${source_date_epoch}" \
+            --output "type=docker,name=${verification_ref},rewrite-timestamp=true,compatibility-version=20" .
+          image_id="$(docker image inspect "${production_ref}" --format '{{.Id}}')"
+          rebuild_image_id="$(docker image inspect "${rebuild_ref}" --format '{{.Id}}')"
+          [[ "${image_id}" =~ ^sha256:[0-9a-f]{64}$ ]]
+          test "${rebuild_image_id}" = "${image_id}"
+          echo "production-ref=${production_ref}" >> "${GITHUB_OUTPUT}"
+          echo "verification-ref=${verification_ref}" >> "${GITHUB_OUTPUT}"
+          echo "image-id=${image_id}" >> "${GITHUB_OUTPUT}"
+          echo "rebuild-image-id=${rebuild_image_id}" >> "${GITHUB_OUTPUT}"
+          echo "source-date-epoch=${source_date_epoch}" >> "${GITHUB_OUTPUT}"
+          echo "buildx-version=${buildx_version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Smoke-test the production filesystem offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,uid=10001,gid=10001,mode=0700 \
+            --entrypoint python "${{ steps.build.outputs.production-ref }}" \
+            -c 'import ldfreq; print(ldfreq.__version__, ldfreq.OUTPUT_SCHEMA_VERSION)'
+
+      - name: Reproduce canonical golden outputs inside the image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,uid=10001,gid=10001,mode=0700 \
+            --entrypoint python "${{ steps.build.outputs.verification-ref }}" \
+            /verification/scripts/build_v1_golden_fixtures.py --check
+
+      - name: Generate SPDX JSON SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: ${{ steps.build.outputs.production-ref }}
+          format: spdx-json
+          output-file: /tmp/ldfreq-image-evidence/sbom.spdx.json
+          syft-version: v${{ env.SYFT_VERSION }}
+          dependency-snapshot: false
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Scan image with a Critical-severity gate
+        id: scan
+        continue-on-error: true
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
+        with:
+          image: ${{ steps.build.outputs.production-ref }}
+          fail-build: true
+          severity-cutoff: critical
+          only-fixed: false
+          output-format: json
+          output-file: /tmp/ldfreq-image-evidence/grype.json
+          grype-version: v${{ env.GRYPE_VERSION }}
+          cache-db: false
+
+      - name: Log in to GitHub Container Registry after scan success
+        if: steps.scan.outcome == 'success'
+        uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Push commit-addressed candidate and verify registry manifest
+        if: steps.scan.outcome == 'success'
+        id: push
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry_tag="${IMAGE_NAME}:candidate-${GITHUB_SHA}"
+          docker tag "${{ steps.build.outputs.production-ref }}" "${registry_tag}"
+          docker push "${registry_tag}"
+          docker buildx imagetools inspect --raw "${registry_tag}" \
+            > /tmp/ldfreq-image-evidence/registry-manifest.json
+          registry_digest="sha256:$(sha256sum /tmp/ldfreq-image-evidence/registry-manifest.json | cut -d ' ' -f 1)"
+          [[ "${registry_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]
+          config_digest="$(python -c 'import json; print(json.load(open("/tmp/ldfreq-image-evidence/registry-manifest.json", encoding="utf-8"))["config"]["digest"])')"
+          test "${config_digest}" = "${{ steps.build.outputs.image-id }}"
+          docker pull "${IMAGE_NAME}@${registry_digest}"
+          echo "registry-tag=${registry_tag}" >> "${GITHUB_OUTPUT}"
+          echo "digest=${registry_digest}" >> "${GITHUB_OUTPUT}"
+
+      - name: Attest the registry manifest
+        if: steps.scan.outcome == 'success'
+        id: attest
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Build canonical candidate evidence
+        if: steps.scan.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/build_candidate_image_evidence.py \
+            --image-id "${{ steps.build.outputs.image-id }}" \
+            --rebuild-image-id "${{ steps.build.outputs.rebuild-image-id }}" \
+            --image-name "${IMAGE_NAME}" \
+            --registry-manifest-digest "${{ steps.push.outputs.digest }}" \
+            --registry-manifest /tmp/ldfreq-image-evidence/registry-manifest.json \
+            --sbom /tmp/ldfreq-image-evidence/sbom.spdx.json \
+            --vulnerability-report /tmp/ldfreq-image-evidence/grype.json \
+            --syft-version "${SYFT_VERSION}" \
+            --grype-version "${GRYPE_VERSION}" \
+            --buildx-version "${{ steps.build.outputs.buildx-version }}" \
+            --source-date-epoch "${{ steps.build.outputs.source-date-epoch }}" \
+            --primary-build-metadata /tmp/ldfreq-image-evidence/production-build-1.json \
+            --rebuild-metadata /tmp/ldfreq-image-evidence/production-build-2.json \
+            --repository "${GITHUB_REPOSITORY}" \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --workflow-run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --attestation-id "${{ steps.attest.outputs.attestation-id }}" \
+            --attestation-url "${{ steps.attest.outputs.attestation-url }}" \
+            --output /tmp/ldfreq-image-evidence/candidate-image-evidence.json
+
+      - name: Upload SBOM, scan, manifest, and canonical evidence
+        if: always()
+        id: evidence-artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: candidate-image-evidence-${{ github.sha }}
+          path: /tmp/ldfreq-image-evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
+          overwrite: false
+
+      - name: Enforce scan and complete-evidence gates
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.scan.outcome }}" = "success"
+          test -s /tmp/ldfreq-image-evidence/sbom.spdx.json
+          test -s /tmp/ldfreq-image-evidence/grype.json
+          test -s /tmp/ldfreq-image-evidence/registry-manifest.json
+          test -s /tmp/ldfreq-image-evidence/candidate-image-evidence.json

@@ -9,7 +9,7 @@
   指標と人手評定の関連は未計算である。
 - defaultのローカル環境はPython 3.14.3、NLTK 3.9.4を含む複数の依存driftがあり、
   runtime identity checkが意図どおり停止する。別のPython 3.12.10 clean venvでは、46個の
-  exact runtime pin、NLTK 3.10.0、`pip check`、全pytest（263 passed, 2 skipped,
+  exact runtime pin、NLTK 3.10.0、`pip check`、全pytest（275 passed, 2 skipped,
   6 subtests）、release
   gateが通った。続いてclean-history rootを新public repoへpushし、GitHub hosted CIの
   全stepが成功した。旧local worktreeは広い未コミット変更を含むlegacy checkoutとして
