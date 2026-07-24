@@ -11,12 +11,14 @@
   runtime identity checkが意図どおり停止する。別のPython 3.12.10 clean venvでは、46個の
   exact runtime pin、NLTK 3.10.0、`pip check`、全pytest（263 passed, 2 skipped,
   6 subtests）、release
-  gateが通った。ただし現在のworktreeは広い未コミット変更を含み、GitHub hosted CIは
-  未実走なので、remote release evidenceはまだない。
+  gateが通った。続いてclean-history rootを新public repoへpushし、GitHub hosted CIの
+  全stepが成功した。旧local worktreeは広い未コミット変更を含むlegacy checkoutとして
+  private repoへ接続したままであり、新public releaseのcommit元には使わない。
 - 未コミット変更が広いため、新規機能を増やすより、公開範囲と再現環境を固定する方が
   90日以内の公開可能性を大きく改善する。
-- GitHub originは既にpublicで、現行treeから除外中のpermission-pending payloadが
-  過去commitから到達可能である。削除commitだけでは公開履歴の境界は修復されない。
+- 旧GitHub originの22 commitには、現行treeから除外したpermission-pending payloadが
+  到達可能だった。旧repoをprivate退避名へ移し、同じcanonical URLにclean-history
+  public repoを新設した。既存cloneやcacheから過去公開物を回収できるとは主張しない。
 
 ## 今回の判断
 
@@ -94,8 +96,7 @@
 
 canonical golden fixturesとJSON/Excel serialization regressionはローカルで完了した。
 package wheel hashとexact Python base-image manifestもローカルで固定した。
-残る順序は、(1) public historyの移行方式と既存originのvisibilityを決定、
-(2) clean-history checkoutでhosted CIを実走、(3) application imageを構築して
-生成digest・provenance・scanとgolden再現を記録、(4) v0.9 candidateを再構築、
-(5) release文書・CITATION・archiveを整備、
+public history移行とclean-history hosted CIは完了した。残る順序は、
+(1) application imageを構築して生成digest・provenance・scanとgolden再現を記録、
+(2) v0.9 candidateを再構築、(3) release文書・CITATION・archiveを整備、
 とする。Synthetic生成とELLIPSEの評定関連分析はこの列へ割り込ませない。

@@ -29,10 +29,12 @@ Every JSON export and XLSX metadata sheet records both identities. The
 [`CHANGELOG.md`](CHANGELOG.md), development check, and tag-only workflow prevent
 a dirty tree, `-dev` identity, lightweight/wrong tag, or undocumented version
 from being presented as a release.
-The already-public origin also contains legacy resource paths in reachable Git
-history. The [public-history migration gate](docs/public-history-migration.md)
-therefore blocks a release tag until a clean-history publication boundary is
-chosen; deleting a file only from the latest tree is not sufficient.
+The public repository now starts from a reviewed clean-history root. The former
+22-commit repository, whose reachable history contains legacy resource paths,
+was renamed and made private; the local legacy checkout remains attached to it.
+The [public-history migration record](docs/public-history-migration.md) preserves
+the audit and bootstrap evidence. Release tags remain blocked until the later
+version, image, citation, and archive gates pass.
 Build the reviewed, deterministic bootstrap archive without copying `.git/` or
 trusting the mixed staging area:
 

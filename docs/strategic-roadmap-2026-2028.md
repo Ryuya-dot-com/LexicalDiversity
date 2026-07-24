@@ -31,10 +31,10 @@
 4. 日本語を含む利用文書、CITATION.cff、Zenodo DOI、保守方針がそろう。
 5. 査読論文は上記資産を説明・検証する範囲で1本を主目標、追加論文は条件付きとする。
 
-2026-07-24の履歴監査により、既存GitHub originがpublicで、現行公開inventoryから
-除外した資源が過去commitから到達可能だと判明した。したがってv0.9候補より先に
-[`public-history-migration.md`](public-history-migration.md)の移行判定を行う。最新treeの
-削除だけで公開履歴全体がcleanになったとは扱わない。
+2026-07-24の履歴監査で、旧GitHub originの過去commitから除外資源へ到達できると判明した。
+旧repoをprivateで保持し、同じcanonical URLへclean-history public repoを新設した。
+root treeと全blob identity、hosted CI、main保護の証拠は
+[`public-history-migration.md`](public-history-migration.md)に固定した。
 
 **24か月の非目標:** 指標数の最大化、TAALES 全機能の複製、CEFR/評点の自動推定、
 AI作文検出、匿名の実作文 SaaS、新規学習者コーパス収集、4本の論文を前提とした
@@ -176,7 +176,7 @@ request/response、原文と正規化文の hash、QC、ツール commit、資�
 
 | 時期 | マイルストーン |
 |---|---|
-| **M0–1** | CI workflow、CPython 3.12.10、Linux x86_64 wheel hash、Python base-image manifest、runtime identity check、独立したapplication/output-schema版、tag release gate、北極星・非目標・not-a-detector、実資源を使うgolden fixtures、決定論的JSON/XLSX serializationを実装済み。次はcleanなtracked checkoutでhosted CIを実走し、未コミット作業をレビュー済み単位へ分割して着地する |
+| **M0–1** | clean-history public root、hosted CI、main保護、CPython 3.12.10、Linux x86_64 wheel hash、Python base-image manifest、runtime identity check、独立したapplication/output-schema版、tag release gate、北極星・非目標・not-a-detector、実資源を使うgolden fixtures、決定論的JSON/XLSX serializationまで完了。次はclean application imageのdigest・provenance・scanを固定する |
 | **M1–2** | v1.0 指標・出力・非目標の機械可読scope、registry schema v1.1、監査済みELLIPSE hash・commit・license evidence、fetch/verify manifest、事前分析仕様を固定済み。新しい分散指標のproduction移植はv1.x以降の条件付き課題へ移す |
 | **M2–3** | v0.9 release candidate。clean buildから得たapplication-image digest・provenance・scan、全公開指標の方法・解釈カード、CLI/ローカル起動、公開例文を固定。v1.0を遅らせず全事前gateが通る場合だけSynthetic pilot 48本を別runで実行 |
 | **M3–4** | **v1.0 + CITATION.cff + Zenodo DOI 公開**。完全な公開インベントリ監査、再現手順をクリーン環境で検証 |
@@ -219,7 +219,7 @@ MASC/OANC/ANC、AntBNC許諾、完全な TAALES-open、新しい汎用dispersion
 | 合成条件が循環的 | 操作への応答性だけを主張し、ELLIPSE人手評定を独立アンカーにする |
 | NC/SA/NDデータがMIT製品へ混入 | fetch-only research tier、raw payload非同梱、NOTICEとmanifest、公開前inventory監査 |
 | バス係数=1 | 自動CI、1コマンド再構築、継承メモ、Zenodo release、issue/保守方針 |
-| DropboxとGitの競合・権利ファイル復活 | 公開前にDropbox外の正本cloneへ移し、clean-history公開mirrorを検討 |
+| DropboxとGitの競合・権利ファイル復活 | legacy Dropbox checkoutとclean public repoを分離済み。公開変更はclean cloneのPRだけに限定し、public-history gateとbranch protectionで復活を阻止 |
 | API・依存・資源の価格/版ドリフト | 取得日・snapshot・lockfile・hashを固定し、更新は新versionとして追加。旧releaseを上書きしない |
 
 ---
@@ -247,12 +247,12 @@ MASC/OANC/ANC、AntBNC許諾、完全な TAALES-open、新しい汎用dispersion
 ELLIPSE manifest・安全なfetch/verify adapter・分析仕様固定は前倒しで完了した。ここでは
 「関連分析を実行した」ことと「実行条件を固定した」ことを区別し、後者だけを完了とする。
 
-1. **実装済み・実走待ち:** CPython 3.12.10とLinux x86_64 wheel hashの固定依存CIでpytest、release gate、benchmark
-   混入検査、checkout不変検査を毎push実行する。clean CIが成功するまで完了扱いにしない。
+1. **完了:** clean-history rootを公開し、CPython 3.12.10とLinux x86_64 wheel hashの固定依存CIでpytest、release gate、benchmark
+   混入検査、checkout不変検査を実走した。mainは最新CIを必須とする。
 2. **完了:** v1.0の指標・出力schema・解釈境界・非目標を機械可読に凍結する。
 3. **仕様完了・生成未実行:** Synthetic pilot のprotocol、全prompts、provenance schema、
    QC、retry、秘密情報境界、費用停止を固定する。
-4. **ローカル入力固定完了・hosted CI待ち:** v1 scopeからcanonical golden fixturesと
+4. **入力固定・hosted CI完了:** v1 scopeからcanonical golden fixturesと
    serialization regressionを作成し、package wheel hashとPython base-imageの
    linux/amd64 manifest digestを固定した。次にclean checkoutでapplication imageを構築し、
    その生成digestとprovenanceを記録してv0.9 candidateを再構築する。新しい分散指標はここへ混ぜない。

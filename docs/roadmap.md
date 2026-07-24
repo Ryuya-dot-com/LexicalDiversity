@@ -62,20 +62,20 @@ that v1.0, a benchmark dataset, or a validation result has been released:
   controls. The protocol is specified but has made zero API calls and spent
   zero yen.
 
-The next release evidence is a successful hosted CI run from a clean tracked
-checkout. Before that run, the already-public 22-commit history must be handled
-under [`public-history-migration.md`](public-history-migration.md): deletion from
-the latest tree does not remove three permission-pending artifacts or other
-non-release paths from earlier commits. This history decision now precedes a
-clean application-image build, its resulting digest and
-provenance, golden reproduction inside that image, and the v0.9
-release-candidate package. Canonical golden fixtures, deterministic JSON/XLSX
-serialization, package hashes, and the exact production Python base-image
-manifest are now implemented locally.
+The public-history migration is complete under
+[`public-history-migration.md`](public-history-migration.md). The reviewed root
+commit `1cd75aac8749d7512a629415441ae0703246b38a` has one reachable commit and 131
+files; its hosted CPython 3.12.10 hash-locked CI run passed every step. The old
+22-commit history is retained separately as a private, unarchived legacy
+repository and is not the source of public releases. The next release evidence
+is a clean application-image build, its resulting digest and provenance,
+golden reproduction inside that image, and the v0.9 release-candidate package.
+Canonical golden fixtures, deterministic JSON/XLSX serialization, package
+hashes, and the exact production Python base-image manifest are implemented.
 An isolated local Python 3.12.10 environment already passes all 46 exact runtime
 pins, `pip check`, and the full public-data-independent suite (263 passed,
-2 skipped, 6 subtests); this validates the lock design but does not replace the pending
-hosted run from the eventual reviewed commit.
+2 skipped, 6 subtests). The same contracts and suite passed in hosted Linux CI
+from the clean public root.
 Package hashes and the exact production Python base-image digest are fixed as
 inputs, but the hosted Linux install and resulting application-image digest
 remain v0.9 gates; exact inputs alone are not an end-to-end reproduction claim.
@@ -107,7 +107,7 @@ reproducible.
 
 ## Phase 0 — governance gate
 
-Status: **implemented for the current tree; historical publication boundary blocked**
+Status: **implemented; clean public-history boundary verified**
 
 - Maintain the machine-readable resource registry and verified hashes.
 - Admit only `green` payloads to public builds.
@@ -118,8 +118,8 @@ Status: **implemented for the current tree; historical publication boundary bloc
 - Require `scripts/check_public_release.py` to pass on the exact Git inventory
   used for every public archive and deployment.
 - Require `scripts/check_git_history.py` to pass before any release tag. The
-  current public origin fails because excluded resources remain reachable in
-  earlier commits; a deletion-only commit is not a history migration.
+  clean public root passes. The separate private legacy checkout still fails by
+  design because excluded resources remain reachable in its earlier commits.
 - Registry schema v1.1 now separates rights `status`, intended `tier`, and
   `provisioning.mode`. ELLIPSE is therefore rights-reviewed `green` while still
   being a non-runtime `evaluation-benchmark` with every payload flag disabled.

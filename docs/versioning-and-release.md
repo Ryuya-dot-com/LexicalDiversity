@@ -4,14 +4,12 @@
 
 The current application identity is `0.9.0-dev.0`; it is development work, not
 a published release. The public output contract is independently versioned as
-`1.0.0`. At the time this policy was introduced there were no Git version tags,
-the worktree contained broad uncommitted changes, hosted CI had not run, and no
-complete application-image digest or archive DOI existed. A release must not be
-claimed until those facts change through the gates below.
-The public origin also has 22 reachable legacy commits containing paths now
-excluded by the public-resource policy. The history migration described in
-[`public-history-migration.md`](public-history-migration.md) is therefore an
-additional release blocker; a clean latest tree does not erase earlier blobs.
+`1.0.0`. There are no Git version tags, complete application-image digest, or
+archive DOI. The clean public-history root and hosted CI are complete, but a
+release must not be claimed until the remaining gates below pass. The former
+22-commit history containing excluded paths is retained in a separate private
+legacy repository; see
+[`public-history-migration.md`](public-history-migration.md).
 
 The single machine-readable source is [`ldfreq/release.json`](../ldfreq/release.json).
 The UI, JSON export, isolated-worker validator, tests, changelog, and tag gate
@@ -54,8 +52,9 @@ golden fixtures.
 
 ## Commit and branch discipline
 
-The current broad worktree should be reviewed as several coherent commits, not
-as one opaque release commit:
+The broad legacy worktree was used only to construct the reviewed clean root and
+must not be pushed to the public repository. Future public changes should be
+made from a clean clone as coherent pull requests, organized along these lines:
 
 1. resource rights, manifests, and removal of non-public payloads;
 2. aggregate-only analysis, isolation, privacy, and runtime resources;
