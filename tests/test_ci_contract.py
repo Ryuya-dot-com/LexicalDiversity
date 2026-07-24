@@ -26,6 +26,9 @@ CHECKOUT_ACTION = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_ACTION = (
     "actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548"
 )
+SETUP_BUILDX_ACTION = (
+    "docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c"
+)
 SBOM_ACTION = "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610"
 SCAN_ACTION = "anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2"
 LOGIN_ACTION = "docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c"
@@ -341,12 +344,22 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert [step["uses"] for step in action_steps] == [
         CHECKOUT_ACTION,
         SETUP_PYTHON_ACTION,
+        SETUP_BUILDX_ACTION,
     ]
     assert action_steps[0]["with"] == {
         "fetch-depth": "0",
         "persist-credentials": "false",
     }
     assert action_steps[1]["with"]["python-version"] == "3.12.10"
+    assert action_steps[2]["with"] == {
+        "version": "v${{ env.BUILDX_VERSION }}",
+        "driver": "docker-container",
+        "use": "true",
+        "driver-opts": "image=${{ env.BUILDKIT_IMAGE }}\n",
+    }
+    assert verify["env"]["BUILDX_VERSION"] == image_evidence.EXPECTED_BUILDX_VERSION
+    assert verify["env"]["BUILDKIT_VERSION"] == image_evidence.EXPECTED_BUILDKIT_VERSION
+    assert verify["env"]["BUILDKIT_IMAGE"] == image_evidence.EXPECTED_BUILDKIT_IMAGE
     assert "python scripts/check_version_contract.py --release" in commands
     assert "python scripts/check_git_history.py" in commands
     assert "--requirement requirements-ci-linux-x86_64.lock" in commands
@@ -355,21 +368,28 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert "python -m pytest -p no:cacheprovider" in commands
     assert "python scripts/build_v1_golden_fixtures.py --check" in commands
     assert "python scripts/check_public_release.py" in commands
-    assert "docker buildx build --target production --platform linux/amd64" in commands
+    assert commands.count("docker buildx build --no-cache --target production") == 1
+    assert commands.count("docker buildx build --target production") == 1
     assert "--file deploy/cloud-run/Dockerfile" in commands
     assert 'export SOURCE_DATE_EPOCH="${ldfreq_source_date_epoch}"' in commands
-    assert commands.count("--provenance=false") == 1
+    assert commands.count("--provenance=false") == 2
     assert "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" in commands
-    assert commands.count('--output "type=image,name=') == 1
-    assert 'type=docker,name=' not in commands
+    assert commands.count('--output "type=oci,dest=') == 1
+    assert commands.count('--load --tag "ldfreq:${GITHUB_SHA}"') == 1
     assert "rewrite-timestamp=true,compatibility-version=20" in commands
-    assert 'docker image inspect "ldfreq:${GITHUB_SHA}"' in commands
+    assert "python scripts/build_oci_image_evidence.py" in commands
+    assert "--metadata-file /tmp/ldfreq-release-build.json" in commands
+    assert "--output /tmp/ldfreq-release-oci-evidence.json" in commands
     assert "docker run --rm --network none --read-only" in commands
     assert "python scripts/build_release_archive.py" in commands
     assert "--output /tmp/ldfreq-source.tar.gz" in commands
     assert "python scripts/build_release_evidence.py" in commands
+    assert '--image-config-digest "${ldfreq_image_config_digest}"' in commands
+    assert '--image-manifest-digest "${ldfreq_image_manifest_digest}"' in commands
+    assert "--oci-image-evidence /tmp/ldfreq-release-oci-evidence.json" in commands
     assert "--source-archive /tmp/ldfreq-source.tar.gz" in commands
     assert "--output /tmp/ldfreq-release-evidence.json" in commands
+    assert "sha256sum /tmp/ldfreq-release.oci.tar" in commands
     assert "sha256sum /tmp/ldfreq-source.tar.gz" in commands
     assert "sha256sum /tmp/ldfreq-release-evidence.json" in commands
     assert "git diff --exit-code" in commands
@@ -398,19 +418,31 @@ def test_candidate_image_workflow_is_manual_least_privilege_and_sha_pinned():
     assert job["env"]["IMAGE_NAME"] == "ghcr.io/ryuya-dot-com/lexicaldiversity"
     assert job["env"]["SYFT_VERSION"] == "1.49.0"
     assert job["env"]["GRYPE_VERSION"] == "0.116.0"
+    assert job["env"]["BUILDX_VERSION"] == "0.35.0"
+    assert job["env"]["BUILDKIT_VERSION"] == "0.31.2"
     assert job["env"]["IMAGE_NAME"] == image_evidence.EXPECTED_IMAGE_NAME
     assert job["env"]["SYFT_VERSION"] == image_evidence.EXPECTED_SYFT_VERSION
     assert job["env"]["GRYPE_VERSION"] == image_evidence.EXPECTED_GRYPE_VERSION
+    assert job["env"]["BUILDX_VERSION"] == image_evidence.EXPECTED_BUILDX_VERSION
+    assert job["env"]["BUILDKIT_VERSION"] == image_evidence.EXPECTED_BUILDKIT_VERSION
+    assert job["env"]["BUILDKIT_IMAGE"] == image_evidence.EXPECTED_BUILDKIT_IMAGE
     assert image_evidence.BUILDKIT_COMPATIBILITY_VERSION == 20
     assert [step["uses"] for step in action_steps] == [
         CHECKOUT_ACTION,
         SETUP_PYTHON_ACTION,
+        SETUP_BUILDX_ACTION,
         SBOM_ACTION,
         SCAN_ACTION,
         LOGIN_ACTION,
         ATTEST_ACTION,
         UPLOAD_ACTION,
     ]
+    assert action_steps[2]["with"] == {
+        "version": "v${{ env.BUILDX_VERSION }}",
+        "driver": "docker-container",
+        "use": "true",
+        "driver-opts": "image=${{ env.BUILDKIT_IMAGE }}\n",
+    }
     assert all(re.search(r"@[0-9a-f]{40}\Z", step["uses"]) for step in action_steps)
     assert "secrets." not in text.lower()
 
@@ -426,23 +458,33 @@ def test_candidate_image_workflow_separates_verification_scan_push_and_release()
     assert "python scripts/check_git_history.py" in commands
     assert "python scripts/check_public_release.py" in commands
     assert "python scripts/check_base_image_identity.py --remote" in commands
-    assert commands.count("docker buildx build --no-cache --target production") == 2
+    assert commands.count("docker buildx build --no-cache --target production") == 3
+    assert commands.count("docker buildx build --target production") == 1
     assert "docker buildx build --target verification" in commands
-    assert commands.count("--file deploy/cloud-run/Dockerfile") == 3
+    assert commands.count("--file deploy/cloud-run/Dockerfile") == 5
     assert 'export SOURCE_DATE_EPOCH="${source_date_epoch}"' in commands
-    assert commands.count("--provenance=false") == 3
+    assert commands.count("--provenance=false") == 5
     assert "SOURCE_DATE_EPOCH=${source_date_epoch}" in commands
-    assert commands.count('--output "type=image,name=') == 3
-    assert 'type=docker,name=' not in commands
+    assert commands.count('--output "type=oci,dest=') == 2
+    assert commands.count('--output "type=image,name=') == 1
+    assert commands.count("--load --tag") == 2
     assert commands.count("rewrite-timestamp=true,compatibility-version=20") == 3
-    assert "test \"${rebuild_image_id}\" = \"${image_id}\"" in commands
-    assert "/tmp/ldfreq-image-evidence/production-image-inspect.json" in commands
-    assert "/tmp/ldfreq-image-evidence/rebuild-image-inspect.json" in commands
-    assert "production image ID: %s" in commands
+    assert 'test "${rebuild_image_config_digest}" = "${image_config_digest}"' in commands
+    assert 'test "${rebuild_image_manifest_digest}" = "${image_manifest_digest}"' in commands
+    assert 'test "${rebuild_image_layer_digests}" = "${image_layer_digests}"' in commands
+    assert "/tmp/ldfreq-image-evidence/production-oci-evidence.json" in commands
+    assert "/tmp/ldfreq-image-evidence/rebuild-oci-evidence.json" in commands
+    assert "/tmp/ldfreq-image-evidence/operational-image-inspect.json" in commands
+    assert "python scripts/build_oci_image_evidence.py" in commands
     assert "/verification/scripts/build_v1_golden_fixtures.py --check" in commands
     assert commands.count("--network none --read-only --cap-drop ALL") == 2
-    assert by_name["Scan image with a Critical-severity gate"]["with"] == {
-        "image": "${{ steps.build.outputs.production-ref }}",
+    assert by_name["Generate SPDX JSON SBOM from the exact OCI archive"]["with"][
+        "image"
+    ] == "oci-archive:/tmp/ldfreq-image-evidence/production.oci.tar"
+    assert by_name[
+        "Scan the exact OCI archive with a Critical-severity gate"
+    ]["with"] == {
+        "image": "oci-archive:/tmp/ldfreq-image-evidence/production.oci.tar",
         "fail-build": "true",
         "severity-cutoff": "critical",
         "only-fixed": "false",
@@ -454,15 +496,34 @@ def test_candidate_image_workflow_separates_verification_scan_push_and_release()
     assert by_name["Log in to GitHub Container Registry after scan success"]["if"] == (
         "steps.scan.outcome == 'success'"
     )
-    assert by_name["Push commit-addressed candidate and verify registry manifest"][
+    assert by_name["Publish the scanned manifest identity and verify the registry"][
         "if"
     ] == "steps.scan.outcome == 'success'"
     assert "candidate-${GITHUB_SHA}" in commands
+    assert "docker tag" not in commands
+    assert "docker push" not in commands
+    assert "push=true,oci-mediatypes=true" in commands
     assert "docker buildx imagetools inspect --raw" in commands
-    assert "config_digest" in commands
+    assert "pushed_manifest_digest" in commands
+    assert "pushed_config_digest" in commands
     assert "build_candidate_image_evidence.py" in commands
     assert "registry_candidate_is_release" not in text
     assert by_name["Upload SBOM, scan, manifest, and canonical evidence"]["if"] == (
         "always()"
     )
     assert by_name["Enforce scan and complete-evidence gates"]["if"] == "always()"
+    upload_path = by_name[
+        "Upload SBOM, scan, manifest, and canonical evidence"
+    ]["with"]["path"]
+    assert upload_path == (
+        "/tmp/ldfreq-image-evidence/*.json\n"
+        "/tmp/ldfreq-image-evidence/*.txt\n"
+    )
+    assert ".tar" not in upload_path
+    names = [step["name"] for step in steps]
+    assert names.index("Scan the exact OCI archive with a Critical-severity gate") < (
+        names.index("Log in to GitHub Container Registry after scan success")
+    )
+    assert names.index("Log in to GitHub Container Registry after scan success") < (
+        names.index("Publish the scanned manifest identity and verify the registry")
+    )

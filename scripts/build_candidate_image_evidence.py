@@ -34,12 +34,19 @@ EVIDENCE_PATHS = (
     Path("deploy/cloud-run/Dockerfile"),
     Path("deploy/cloud-run/base-image.json"),
     Path("deploy/cloud-run/requirements-prod-linux-x86_64.lock"),
+    Path("scripts/build_oci_image_evidence.py"),
     Path("data/resource_registry.json"),
     Path("tests/fixtures/v1_golden/manifest.json"),
 )
 EXPECTED_IMAGE_NAME = "ghcr.io/ryuya-dot-com/lexicaldiversity"
 EXPECTED_SYFT_VERSION = "1.49.0"
 EXPECTED_GRYPE_VERSION = "0.116.0"
+EXPECTED_BUILDX_VERSION = "0.35.0"
+EXPECTED_BUILDKIT_VERSION = "0.31.2"
+EXPECTED_BUILDKIT_IMAGE = (
+    "moby/buildkit:v0.31.2@"
+    "sha256:63db51c9b30208a7c2b1c40392c7ebb9ce2f85ba238a18a85420f8f5ea2d4684"
+)
 BUILDKIT_COMPATIBILITY_VERSION = 20
 
 
@@ -112,11 +119,66 @@ def _severity_counts(scan: dict[str, Any]) -> dict[str, int]:
     return {key: counts[key] for key in sorted(counts)}
 
 
+def _oci_evidence(
+    path: Path,
+    *,
+    label: str,
+    source_date_epoch: int,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    identity, document = json_identity(path)
+    if document.get("oci_image_evidence_schema_version") != 1:
+        raise CandidateImageEvidenceError(f"{label} OCI evidence schema is unsupported")
+    if document.get("status") != "validated-oci-image":
+        raise CandidateImageEvidenceError(f"{label} OCI evidence is not validated")
+    if document.get("platform") != "linux/amd64":
+        raise CandidateImageEvidenceError(f"{label} OCI platform must be linux/amd64")
+    if document.get("source_date_epoch") != source_date_epoch:
+        raise CandidateImageEvidenceError(
+            f"{label} OCI SOURCE_DATE_EPOCH differs from the workflow"
+        )
+    image = document.get("image")
+    if not isinstance(image, dict):
+        raise CandidateImageEvidenceError(f"{label} OCI evidence lacks image identity")
+    _validated_digest(
+        str(image.get("manifest_digest")),
+        label=f"{label} OCI manifest digest",
+    )
+    _validated_digest(
+        str(image.get("config_digest")),
+        label=f"{label} OCI config digest",
+    )
+    layers = image.get("layer_digests")
+    if not isinstance(layers, list) or not layers:
+        raise CandidateImageEvidenceError(f"{label} OCI layer digests are missing")
+    for index, digest in enumerate(layers):
+        _validated_digest(str(digest), label=f"{label} OCI layer {index} digest")
+    if image.get("layer_count") != len(layers):
+        raise CandidateImageEvidenceError(f"{label} OCI layer count is inconsistent")
+    return identity, document
+
+
+def _metadata_matches(
+    path: Path,
+    *,
+    label: str,
+    manifest_digest: str,
+    config_digest: str,
+) -> dict[str, Any]:
+    identity, document = json_identity(path)
+    if document.get("containerimage.digest") != manifest_digest:
+        raise CandidateImageEvidenceError(f"{label} manifest digest differs")
+    if document.get("containerimage.config.digest") != config_digest:
+        raise CandidateImageEvidenceError(f"{label} config digest differs")
+    return identity
+
+
 def build_evidence(
     identity: dict[str, Any],
     *,
-    image_id: str,
-    rebuild_image_id: str,
+    image_config_digest: str,
+    rebuild_image_config_digest: str,
+    image_manifest_digest: str,
+    rebuild_image_manifest_digest: str,
     image_name: str,
     registry_manifest_digest: str,
     registry_manifest: Path,
@@ -125,22 +187,40 @@ def build_evidence(
     syft_version: str,
     grype_version: str,
     buildx_version: str,
+    buildkit_version: str,
+    buildkit_image: str,
     source_date_epoch: str,
+    primary_oci_evidence: Path,
+    rebuild_oci_evidence: Path,
     primary_build_metadata: Path,
     rebuild_metadata: Path,
+    published_build_metadata: Path,
     repository: str,
     workflow_run_id: str,
     workflow_run_attempt: str,
     attestation_id: str,
     attestation_url: str,
 ) -> dict[str, Any]:
-    image_id = _validated_digest(image_id, label="local image ID")
-    rebuild_image_id = _validated_digest(
-        rebuild_image_id,
-        label="rebuild image ID",
+    image_config_digest = _validated_digest(
+        image_config_digest,
+        label="primary image config digest",
     )
-    if rebuild_image_id != image_id:
-        raise CandidateImageEvidenceError("two no-cache production image IDs differ")
+    rebuild_image_config_digest = _validated_digest(
+        rebuild_image_config_digest,
+        label="rebuild image config digest",
+    )
+    image_manifest_digest = _validated_digest(
+        image_manifest_digest,
+        label="primary image manifest digest",
+    )
+    rebuild_image_manifest_digest = _validated_digest(
+        rebuild_image_manifest_digest,
+        label="rebuild image manifest digest",
+    )
+    if rebuild_image_config_digest != image_config_digest:
+        raise CandidateImageEvidenceError("two no-cache image config digests differ")
+    if rebuild_image_manifest_digest != image_manifest_digest:
+        raise CandidateImageEvidenceError("two no-cache image manifest digests differ")
     registry_digest = _validated_digest(
         registry_manifest_digest,
         label="registry manifest digest",
@@ -163,23 +243,93 @@ def build_evidence(
         raise CandidateImageEvidenceError("Syft version differs from the reviewed pin")
     if grype_version != EXPECTED_GRYPE_VERSION:
         raise CandidateImageEvidenceError("Grype version differs from the reviewed pin")
+    buildx_version = _validated_version(
+        buildx_version,
+        label="Docker Buildx version",
+    )
+    buildkit_version = _validated_version(
+        buildkit_version,
+        label="BuildKit version",
+    )
+    if buildx_version != EXPECTED_BUILDX_VERSION:
+        raise CandidateImageEvidenceError("Buildx version differs from the reviewed pin")
+    if buildkit_version != EXPECTED_BUILDKIT_VERSION:
+        raise CandidateImageEvidenceError("BuildKit version differs from the reviewed pin")
+    if buildkit_image != EXPECTED_BUILDKIT_IMAGE:
+        raise CandidateImageEvidenceError("BuildKit image differs from the reviewed pin")
 
     manifest_identity, manifest_document = json_identity(registry_manifest)
     sbom_identity, sbom_document = json_identity(sbom)
     scan_identity, scan_document = json_identity(vulnerability_report)
-    primary_metadata_identity, _primary_metadata = json_identity(
-        primary_build_metadata
+    epoch = int(source_date_epoch)
+    primary_oci_identity, primary_oci = _oci_evidence(
+        primary_oci_evidence,
+        label="primary",
+        source_date_epoch=epoch,
     )
-    rebuild_metadata_identity, _rebuild_metadata = json_identity(rebuild_metadata)
+    rebuild_oci_identity, rebuild_oci = _oci_evidence(
+        rebuild_oci_evidence,
+        label="rebuild",
+        source_date_epoch=epoch,
+    )
+    primary_image = primary_oci["image"]
+    rebuild_image = rebuild_oci["image"]
+    if primary_image["config_digest"] != image_config_digest:
+        raise CandidateImageEvidenceError("primary OCI config digest differs")
+    if rebuild_image["config_digest"] != rebuild_image_config_digest:
+        raise CandidateImageEvidenceError("rebuild OCI config digest differs")
+    if primary_image["manifest_digest"] != image_manifest_digest:
+        raise CandidateImageEvidenceError("primary OCI manifest digest differs")
+    if rebuild_image["manifest_digest"] != rebuild_image_manifest_digest:
+        raise CandidateImageEvidenceError("rebuild OCI manifest digest differs")
+    if primary_image["layer_digests"] != rebuild_image["layer_digests"]:
+        raise CandidateImageEvidenceError("two no-cache OCI layer digest lists differ")
+    primary_metadata_identity = _metadata_matches(
+        primary_build_metadata,
+        label="primary BuildKit metadata",
+        manifest_digest=image_manifest_digest,
+        config_digest=image_config_digest,
+    )
+    rebuild_metadata_identity = _metadata_matches(
+        rebuild_metadata,
+        label="rebuild BuildKit metadata",
+        manifest_digest=rebuild_image_manifest_digest,
+        config_digest=rebuild_image_config_digest,
+    )
+    published_metadata_identity = _metadata_matches(
+        published_build_metadata,
+        label="published BuildKit metadata",
+        manifest_digest=image_manifest_digest,
+        config_digest=image_config_digest,
+    )
+    if primary_oci.get("build_metadata") != primary_metadata_identity:
+        raise CandidateImageEvidenceError(
+            "primary OCI evidence identifies different BuildKit metadata"
+        )
+    if rebuild_oci.get("build_metadata") != rebuild_metadata_identity:
+        raise CandidateImageEvidenceError(
+            "rebuild OCI evidence identifies different BuildKit metadata"
+        )
     if not (
         str(sbom_document.get("spdxVersion", "")).startswith("SPDX-")
         or str(sbom_document.get("bomFormat", "")).casefold() == "cyclonedx"
     ):
         raise CandidateImageEvidenceError("SBOM is not SPDX or CycloneDX JSON")
     manifest_config = manifest_document.get("config")
-    if not isinstance(manifest_config, dict) or manifest_config.get("digest") != image_id:
+    if (
+        not isinstance(manifest_config, dict)
+        or manifest_config.get("digest") != image_config_digest
+    ):
         raise CandidateImageEvidenceError(
-            "registry manifest config digest differs from the local image ID"
+            "registry manifest config digest differs from the OCI image config"
+        )
+    if f"sha256:{manifest_identity['sha256']}" != registry_digest:
+        raise CandidateImageEvidenceError(
+            "registry manifest bytes differ from the published digest"
+        )
+    if registry_digest != image_manifest_digest:
+        raise CandidateImageEvidenceError(
+            "registry manifest digest differs from the scanned OCI image"
         )
 
     base_image = json.loads(
@@ -188,7 +338,7 @@ def build_evidence(
         )
     )
     return {
-        "candidate_image_evidence_schema_version": 1,
+        "candidate_image_evidence_schema_version": 2,
         "status": "verified-candidate-not-release",
         "application_version": identity["application_version"],
         "output_schema_version": identity["output_schema_version"],
@@ -217,25 +367,31 @@ def build_evidence(
         },
         "reproducibility": {
             "independent_no_cache_production_builds": 2,
-            "local_image_ids_equal": True,
-            "source_date_epoch": int(source_date_epoch),
+            "image_manifest_digests_equal": True,
+            "image_config_digests_equal": True,
+            "image_layer_digests_equal": True,
+            "source_date_epoch": epoch,
             "rewrite_timestamp": True,
             "buildkit_compatibility_version": BUILDKIT_COMPATIBILITY_VERSION,
-            "docker_buildx_version": _validated_version(
-                buildx_version,
-                label="Docker Buildx version",
-            ),
+            "docker_buildx_version": buildx_version,
+            "buildkit_version": buildkit_version,
+            "buildkit_image": buildkit_image,
+            "primary_oci_image_evidence": primary_oci_identity,
+            "rebuild_oci_image_evidence": rebuild_oci_identity,
             "primary_build_metadata": primary_metadata_identity,
             "rebuild_metadata": rebuild_metadata_identity,
         },
         "application_image": {
             "name": image_name,
             "candidate_tag": f"candidate-{_git('rev-parse', 'HEAD')}",
-            "local_image_id": image_id,
+            "config_digest": image_config_digest,
+            "manifest_digest": image_manifest_digest,
+            "layer_digests": primary_image["layer_digests"],
             "registry_manifest_digest": registry_digest,
             "immutable_reference": f"{image_name}@{registry_digest}",
             "registry_manifest": manifest_identity,
             "registry_manifest_media_type": manifest_document.get("mediaType"),
+            "published_build_metadata": published_metadata_identity,
         },
         "sbom": {
             **sbom_identity,
@@ -294,8 +450,10 @@ def write_exclusive(path: Path, payload: bytes) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--image-id", required=True)
-    parser.add_argument("--rebuild-image-id", required=True)
+    parser.add_argument("--image-config-digest", required=True)
+    parser.add_argument("--rebuild-image-config-digest", required=True)
+    parser.add_argument("--image-manifest-digest", required=True)
+    parser.add_argument("--rebuild-image-manifest-digest", required=True)
     parser.add_argument("--image-name", required=True)
     parser.add_argument("--registry-manifest-digest", required=True)
     parser.add_argument("--registry-manifest", required=True, type=Path)
@@ -304,9 +462,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--syft-version", required=True)
     parser.add_argument("--grype-version", required=True)
     parser.add_argument("--buildx-version", required=True)
+    parser.add_argument("--buildkit-version", required=True)
+    parser.add_argument("--buildkit-image", required=True)
     parser.add_argument("--source-date-epoch", required=True)
+    parser.add_argument("--primary-oci-evidence", required=True, type=Path)
+    parser.add_argument("--rebuild-oci-evidence", required=True, type=Path)
     parser.add_argument("--primary-build-metadata", required=True, type=Path)
     parser.add_argument("--rebuild-metadata", required=True, type=Path)
+    parser.add_argument("--published-build-metadata", required=True, type=Path)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--workflow-run-id", required=True)
     parser.add_argument("--workflow-run-attempt", required=True)
@@ -323,8 +486,10 @@ def main(argv: list[str] | None = None) -> int:
             raise CandidateImageEvidenceError("source checkout is not clean")
         document = build_evidence(
             identity,
-            image_id=args.image_id,
-            rebuild_image_id=args.rebuild_image_id,
+            image_config_digest=args.image_config_digest,
+            rebuild_image_config_digest=args.rebuild_image_config_digest,
+            image_manifest_digest=args.image_manifest_digest,
+            rebuild_image_manifest_digest=args.rebuild_image_manifest_digest,
             image_name=args.image_name,
             registry_manifest_digest=args.registry_manifest_digest,
             registry_manifest=args.registry_manifest,
@@ -333,9 +498,14 @@ def main(argv: list[str] | None = None) -> int:
             syft_version=args.syft_version,
             grype_version=args.grype_version,
             buildx_version=args.buildx_version,
+            buildkit_version=args.buildkit_version,
+            buildkit_image=args.buildkit_image,
             source_date_epoch=args.source_date_epoch,
+            primary_oci_evidence=args.primary_oci_evidence,
+            rebuild_oci_evidence=args.rebuild_oci_evidence,
             primary_build_metadata=args.primary_build_metadata,
             rebuild_metadata=args.rebuild_metadata,
+            published_build_metadata=args.published_build_metadata,
             repository=args.repository,
             workflow_run_id=args.workflow_run_id,
             workflow_run_attempt=args.workflow_run_attempt,

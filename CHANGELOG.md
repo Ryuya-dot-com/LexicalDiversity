@@ -22,10 +22,12 @@ public output-schema version separately. The current development identity is
 - A clean public GitHub history whose root tree passed the hosted hash-locked CI;
   the legacy history is retained in a separate private repository.
 - A manual candidate-image workflow that performs two independent no-cache
-  production builds, offline runtime/golden checks, an SPDX SBOM, a
-  Critical-gated vulnerability scan, GHCR publication by commit, GitHub build
-  attestation, and canonical evidence without presenting the candidate as a
-  release.
+  OCI production builds with a digest-pinned BuildKit, compares their manifest,
+  config, and every layer digest, performs offline runtime/golden checks, scans
+  the exact OCI archive with an SPDX SBOM and Critical vulnerability gate, and
+  permits GHCR publication by commit only when the rebuilt registry manifest
+  has the scanned digest. GitHub attestation and canonical evidence do not
+  present the candidate as a release.
 
 ### Changed
 
