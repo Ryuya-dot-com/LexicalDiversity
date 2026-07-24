@@ -43,6 +43,11 @@ def test_docker_build_context_excludes_private_and_local_payloads():
     }
     assert required <= rules
     assert "!.streamlit/config.toml" in rules
+    assert {
+        "!tests/fixtures/v1_golden/**",
+        "!scripts/build_v1_golden_fixtures.py",
+        "!scripts/check_runtime_environment.py",
+    } <= rules
 
 
 def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
@@ -50,8 +55,15 @@ def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
 
     identity = __import__("json").loads(_read(DEPLOY / "base-image.json"))
     exact_image = f"python:{identity['tag']}@{identity['manifest_digest']}"
+    assert dockerfile.startswith(
+        "# syntax=docker/dockerfile:1.7@sha256:"
+        "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e\n"
+    )
+    assert "ARG SOURCE_DATE_EPOCH" in dockerfile
     assert f"ARG PYTHON_IMAGE={exact_image}" in dockerfile
-    assert "FROM --platform=linux/amd64 ${PYTHON_IMAGE}" in dockerfile
+    assert "FROM --platform=linux/amd64 ${PYTHON_IMAGE} AS application" in dockerfile
+    assert "FROM application AS verification" in dockerfile
+    assert dockerfile.rstrip().endswith("FROM application AS production")
     assert "@sha256:" in dockerfile
     assert "test \"${#ldfreq_base_digest}\" -eq 64" in dockerfile
     assert not re.search(r"(?m)^COPY(?:\s+--\S+)*\s+\.\s", dockerfile)
@@ -85,6 +97,15 @@ def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
         "benchmarks",
     ):
         assert forbidden_source not in copied
+
+    verification = dockerfile.split("FROM application AS verification", 1)[1].split(
+        "FROM application AS production", 1
+    )[0]
+    assert "tests/fixtures/v1_golden/" in verification
+    assert "scripts/build_v1_golden_fixtures.py" in verification
+    assert "scripts/check_runtime_environment.py" in verification
+    assert "ENV PYTHONPATH=/opt/ldfreq" in verification
+    assert "USER 10001:10001" in verification
 
     assert "USER 10001:10001" in dockerfile
     assert "--chown=0:0" in dockerfile

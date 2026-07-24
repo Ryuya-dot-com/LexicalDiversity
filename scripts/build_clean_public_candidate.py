@@ -27,6 +27,7 @@ EXECUTABLE_PATHS = {"deploy/cloud-run/entrypoint.sh"}
 REQUIRED_PATHS = {
     ".gitattributes",
     ".github/workflows/ci.yml",
+    ".github/workflows/image-candidate.yml",
     ".github/workflows/release.yml",
     ".gitignore",
     "CHANGELOG.md",
@@ -40,6 +41,7 @@ REQUIRED_PATHS = {
     "requirements-ci-linux-x86_64.lock",
     "scripts/check_git_history.py",
     "scripts/check_public_release.py",
+    "scripts/build_candidate_image_evidence.py",
     "scripts/check_staging_coherence.py",
     "tests/fixtures/v1_golden/manifest.json",
 }

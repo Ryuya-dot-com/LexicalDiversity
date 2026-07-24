@@ -64,7 +64,10 @@ jobs:
 
       - name: Build and smoke-test the immutable application image
         run: |
-          docker build --tag "ldfreq:${GITHUB_SHA}" .
+          ldfreq_source_date_epoch="$(git show -s --format=%ct HEAD)"
+          docker buildx build --target production --platform linux/amd64 \
+            --build-arg "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" \
+            --output "type=docker,name=ldfreq:${GITHUB_SHA},rewrite-timestamp=true,compatibility-version=20" .
           docker image inspect "ldfreq:${GITHUB_SHA}" --format '{{.Id}}'
           docker run --rm --network none --read-only \
             --entrypoint python "ldfreq:${GITHUB_SHA}" \

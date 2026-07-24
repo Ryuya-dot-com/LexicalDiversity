@@ -67,6 +67,15 @@ The [v1 golden fixture](tests/fixtures/v1_golden/README.md) uses two public CC0
 test texts and the actual NGSL, OEWN, and TUBELEX runtime resources to pin
 canonical JSON and Excel cell outputs without using learner data or an API.
 
+The manual `Candidate application image` workflow is the pre-release image
+gate. It accepts only protected `main`, builds the production stage twice from
+scratch with the commit timestamp and pinned Dockerfile frontend, requires both
+image IDs to match, and uses a separate non-deployable stage to recompute the
+golden outputs offline. Only a Critical-clean candidate is pushed to GHCR under
+its full commit, attested, and accompanied by an SPDX SBOM, Grype JSON report,
+raw registry manifest, and canonical evidence artifact. A candidate digest is
+not a Git tag, GitHub Release, stable image, or deployment approval.
+
 The [Synthetic pilot protocol](docs/synthetic-pilot-protocol.md) is also frozen,
 but has not been executed: no essays have been generated, no external API has
 been called, and no budget has been spent. Current priorities and explicit

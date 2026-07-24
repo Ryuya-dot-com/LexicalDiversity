@@ -106,6 +106,16 @@ The application is release-ready only when the source tag, dependency artifacts,
 base image, complete application image, resource identities, output schema, and
 golden evidence form one reviewable chain.
 
+Before changing the version to a release candidate, run the manual
+`Candidate application image` workflow from protected `main`. It builds the
+production stage twice without cache and requires identical local image IDs,
+reproduces golden outputs in a separate non-deployable stage, blocks on Critical
+findings, pushes a commit-addressed GHCR candidate, and emits an SBOM, scan,
+registry manifest, GitHub attestation, and canonical evidence. This preflight is
+not a substitute for the tag-triggered release workflow: candidate tags are not
+release tags, artifact retention is finite, and promotion requires a new
+versioned commit and immutable annotated Git tag.
+
 This repository is currently a source application, not a PyPI distribution; it
 therefore has no independent package-metadata version. If packaging is added,
 its metadata must read the same `ldfreq/release.json` authority rather than add

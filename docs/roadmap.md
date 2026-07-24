@@ -73,12 +73,17 @@ golden reproduction inside that image, and the v0.9 release-candidate package.
 Canonical golden fixtures, deterministic JSON/XLSX serialization, package
 hashes, and the exact production Python base-image manifest are implemented.
 An isolated local Python 3.12.10 environment already passes all 46 exact runtime
-pins, `pip check`, and the full public-data-independent suite (263 passed,
+pins, `pip check`, and the full public-data-independent suite (275 passed,
 2 skipped, 6 subtests). The same contracts and suite passed in hosted Linux CI
 from the clean public root.
 Package hashes and the exact production Python base-image digest are fixed as
 inputs, but the hosted Linux install and resulting application-image digest
 remain v0.9 gates; exact inputs alone are not an end-to-end reproduction claim.
+The manual candidate-image workflow now specifies two no-cache production
+builds, timestamp normalization, offline golden verification in a non-deployable
+stage, SBOM generation, a Critical vulnerability gate, commit-addressed GHCR
+publication, provenance attestation, and canonical evidence. It has not yet run,
+so no application-image candidate digest or scan result is claimed here.
 Until those gates pass, do not compute ELLIPSE rating associations, generate the
 Synthetic pilot, add metrics or corpora, or claim that the release is
 reproducible.

@@ -7,11 +7,13 @@ import pytest
 import yaml
 
 from scripts import check_runtime_environment as runtime_contract
+from scripts import build_candidate_image_evidence as image_evidence
 
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "ci.yml"
 RELEASE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "release.yml"
+IMAGE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "image-candidate.yml"
 CI_REQUIREMENTS = ROOT / "requirements-ci.txt"
 CI_WHEEL_LOCK = ROOT / "requirements-ci-linux-x86_64.lock"
 PRODUCTION_REQUIREMENTS = ROOT / "deploy" / "cloud-run" / "requirements-prod.txt"
@@ -24,6 +26,13 @@ CHECKOUT_ACTION = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_ACTION = (
     "actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548"
 )
+SBOM_ACTION = "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610"
+SCAN_ACTION = "anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2"
+LOGIN_ACTION = "docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c"
+ATTEST_ACTION = (
+    "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373"
+)
+UPLOAD_ACTION = "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 CI_ONLY_PINS = {
     "pytest": "9.0.3",
     "iniconfig": "2.3.0",
@@ -346,7 +355,9 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert "python -m pytest -p no:cacheprovider" in commands
     assert "python scripts/build_v1_golden_fixtures.py --check" in commands
     assert "python scripts/check_public_release.py" in commands
-    assert 'docker build --tag "ldfreq:${GITHUB_SHA}" .' in commands
+    assert "docker buildx build --target production --platform linux/amd64" in commands
+    assert "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" in commands
+    assert "rewrite-timestamp=true,compatibility-version=20" in commands
     assert 'docker image inspect "ldfreq:${GITHUB_SHA}"' in commands
     assert "docker run --rm --network none --read-only" in commands
     assert "python scripts/build_release_archive.py" in commands
@@ -360,3 +371,85 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert "git status --porcelain=v1 --untracked-files=all" in commands
     assert "upload-artifact" not in text.lower()
     assert "secrets." not in text.lower()
+
+
+def test_candidate_image_workflow_is_manual_least_privilege_and_sha_pinned():
+    text = IMAGE_WORKFLOW_PATH.read_text(encoding="utf-8")
+    workflow = yaml.load(text, Loader=yaml.BaseLoader)
+    job = workflow["jobs"]["build-scan-attest"]
+    steps = job["steps"]
+    action_steps = [step for step in steps if "uses" in step]
+
+    assert set(workflow["on"]) == {"workflow_dispatch"}
+    assert workflow["permissions"] == {
+        "contents": "read",
+        "packages": "write",
+        "id-token": "write",
+        "attestations": "write",
+    }
+    assert workflow["concurrency"]["cancel-in-progress"] == "false"
+    assert job["runs-on"] == "ubuntu-24.04"
+    assert job["timeout-minutes"] == "45"
+    assert job["env"]["IMAGE_NAME"] == "ghcr.io/ryuya-dot-com/lexicaldiversity"
+    assert job["env"]["SYFT_VERSION"] == "1.49.0"
+    assert job["env"]["GRYPE_VERSION"] == "0.116.0"
+    assert job["env"]["IMAGE_NAME"] == image_evidence.EXPECTED_IMAGE_NAME
+    assert job["env"]["SYFT_VERSION"] == image_evidence.EXPECTED_SYFT_VERSION
+    assert job["env"]["GRYPE_VERSION"] == image_evidence.EXPECTED_GRYPE_VERSION
+    assert image_evidence.BUILDKIT_COMPATIBILITY_VERSION == 20
+    assert [step["uses"] for step in action_steps] == [
+        CHECKOUT_ACTION,
+        SETUP_PYTHON_ACTION,
+        SBOM_ACTION,
+        SCAN_ACTION,
+        LOGIN_ACTION,
+        ATTEST_ACTION,
+        UPLOAD_ACTION,
+    ]
+    assert all(re.search(r"@[0-9a-f]{40}\Z", step["uses"]) for step in action_steps)
+    assert "secrets." not in text.lower()
+
+
+def test_candidate_image_workflow_separates_verification_scan_push_and_release():
+    text = IMAGE_WORKFLOW_PATH.read_text(encoding="utf-8")
+    workflow = yaml.load(text, Loader=yaml.BaseLoader)
+    steps = workflow["jobs"]["build-scan-attest"]["steps"]
+    commands = "\n".join(str(step.get("run", "")) for step in steps)
+    by_name = {step["name"]: step for step in steps}
+
+    assert 'test "${GITHUB_REF}" = "refs/heads/main"' in commands
+    assert "python scripts/check_git_history.py" in commands
+    assert "python scripts/check_public_release.py" in commands
+    assert "python scripts/check_base_image_identity.py --remote" in commands
+    assert commands.count("docker buildx build --no-cache --target production") == 2
+    assert "docker buildx build --target verification" in commands
+    assert "SOURCE_DATE_EPOCH=${source_date_epoch}" in commands
+    assert commands.count("rewrite-timestamp=true,compatibility-version=20") == 3
+    assert "test \"${rebuild_image_id}\" = \"${image_id}\"" in commands
+    assert "/verification/scripts/build_v1_golden_fixtures.py --check" in commands
+    assert commands.count("--network none --read-only --cap-drop ALL") == 2
+    assert by_name["Scan image with a Critical-severity gate"]["with"] == {
+        "image": "${{ steps.build.outputs.production-ref }}",
+        "fail-build": "true",
+        "severity-cutoff": "critical",
+        "only-fixed": "false",
+        "output-format": "json",
+        "output-file": "/tmp/ldfreq-image-evidence/grype.json",
+        "grype-version": "v${{ env.GRYPE_VERSION }}",
+        "cache-db": "false",
+    }
+    assert by_name["Log in to GitHub Container Registry after scan success"]["if"] == (
+        "steps.scan.outcome == 'success'"
+    )
+    assert by_name["Push commit-addressed candidate and verify registry manifest"][
+        "if"
+    ] == "steps.scan.outcome == 'success'"
+    assert "candidate-${GITHUB_SHA}" in commands
+    assert "docker buildx imagetools inspect --raw" in commands
+    assert "config_digest" in commands
+    assert "build_candidate_image_evidence.py" in commands
+    assert "registry_candidate_is_release" not in text
+    assert by_name["Upload SBOM, scan, manifest, and canonical evidence"]["if"] == (
+        "always()"
+    )
+    assert by_name["Enforce scan and complete-evidence gates"]["if"] == "always()"

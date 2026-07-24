@@ -21,6 +21,11 @@ public output-schema version separately. The current development identity is
   evidence manifest that derive from the reviewed worktree without `.git/`.
 - A clean public GitHub history whose root tree passed the hosted hash-locked CI;
   the legacy history is retained in a separate private repository.
+- A manual candidate-image workflow that performs two independent no-cache
+  production builds, offline runtime/golden checks, an SPDX SBOM, a
+  Critical-gated vulnerability scan, GHCR publication by commit, GitHub build
+  attestation, and canonical evidence without presenting the candidate as a
+  release.
 
 ### Changed
 
@@ -32,6 +37,8 @@ public output-schema version separately. The current development identity is
   release inventories; CSV byte identity is preserved as binary in Git.
 - Server-only UI integration is an explicit operator test, while the default
   rights-gate tests are independent of locally installed restricted resources.
+- The Dockerfile frontend is digest-pinned, build timestamps derive from the
+  source commit, and verification-only fixtures live in a non-deployable stage.
 
 ### Security and privacy
 
