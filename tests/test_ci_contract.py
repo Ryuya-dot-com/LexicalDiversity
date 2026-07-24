@@ -357,6 +357,8 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert "python scripts/check_public_release.py" in commands
     assert "docker buildx build --target production --platform linux/amd64" in commands
     assert "--file deploy/cloud-run/Dockerfile" in commands
+    assert 'export SOURCE_DATE_EPOCH="${ldfreq_source_date_epoch}"' in commands
+    assert commands.count("--provenance=false") == 1
     assert "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" in commands
     assert "rewrite-timestamp=true,compatibility-version=20" in commands
     assert 'docker image inspect "ldfreq:${GITHUB_SHA}"' in commands
@@ -425,9 +427,14 @@ def test_candidate_image_workflow_separates_verification_scan_push_and_release()
     assert commands.count("docker buildx build --no-cache --target production") == 2
     assert "docker buildx build --target verification" in commands
     assert commands.count("--file deploy/cloud-run/Dockerfile") == 3
+    assert 'export SOURCE_DATE_EPOCH="${source_date_epoch}"' in commands
+    assert commands.count("--provenance=false") == 3
     assert "SOURCE_DATE_EPOCH=${source_date_epoch}" in commands
     assert commands.count("rewrite-timestamp=true,compatibility-version=20") == 3
     assert "test \"${rebuild_image_id}\" = \"${image_id}\"" in commands
+    assert "/tmp/ldfreq-image-evidence/production-image-inspect.json" in commands
+    assert "/tmp/ldfreq-image-evidence/rebuild-image-inspect.json" in commands
+    assert "production image ID: %s" in commands
     assert "/verification/scripts/build_v1_golden_fixtures.py --check" in commands
     assert commands.count("--network none --read-only --cap-drop ALL") == 2
     assert by_name["Scan image with a Critical-severity gate"]["with"] == {
