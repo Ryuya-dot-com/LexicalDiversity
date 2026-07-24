@@ -1,11 +1,33 @@
 # Public Git history migration gate
 
-Status: **decision required before any release tag**
+Status: **completed for the public repository; legacy checkout retained privately**
 Audit date: 2026-07-24
+
+## Completion record
+
+The former 22-commit GitHub repository was made private and renamed
+`Ryuya-dot-com/LexicalDiversity-legacy-private`. It remains unarchived as the
+controlled legacy copy. The local broad, mixed-index checkout points to that
+private repository and is not a public-release commit source.
+
+A new repository was created at the canonical
+`Ryuya-dot-com/LexicalDiversity` location. Its reviewed root is
+`1cd75aac8749d7512a629415441ae0703246b38a`, with tree
+`5ede61e43d4230cd8307acd955855b0b390bd73b`, 131 files, and no parent. Every Git
+blob matched the clean-candidate evidence manifest by byte size and SHA-256.
+The deterministic bootstrap archive was 5,839,588 bytes with SHA-256
+`ef611c0e25782d7cc87a5cdb880d79d031090fd45b34a088342d0798034effe9`.
+
+GitHub Actions run `30072361920` reproduced the CPython 3.12.10 hash-locked
+environment and passed dependency, runtime, base-image, pytest, public-inventory,
+and checkout-cleanliness steps. Only after that success was the new repository
+made public. `main` now requires a pull request, the up-to-date hash-locked CI
+check, linear history, and resolved conversations; force pushes and deletion are
+disabled, including for administrators. No release tag was created.
 
 ## Why the current-tree gate is not enough
 
-The GitHub origin is already public. Its current `main` is commit `f369fae`,
+The legacy GitHub repository was public. Its audited `main` was commit `f369fae`,
 with 22 reachable commits. Removing a payload in a later commit prevents it
 from entering that later tree and its source archive, but does not remove the
 blob from earlier commits or from existing clones.
@@ -20,8 +42,8 @@ but now server-only or legacy paths. Those are product-boundary and repository-
 hygiene findings; their presence is not, by itself, a new claim that every one
 has the same rights status as the three yellow artifacts.
 
-The local index is also unsafe to commit as-is. It currently has 15 `AD`, 13
-`AM`, and 6 `MM` paths. In particular, `AD` means a file is staged for addition
+The legacy local index is also unsafe to commit as-is. At the final migration
+check it had 15 `AD`, 14 `AM`, and 7 `MM` paths. In particular, `AD` means a file is staged for addition
 but absent from the current worktree, so committing the index would resurrect
 deleted Quarto intermediate files. Run
 `python scripts/check_staging_coherence.py` before constructing any commit.
@@ -36,7 +58,7 @@ offline backup have been decided.
 
 ## Stop rules
 
-- Do not create a release tag from the current reachable history.
+- Do not create a release tag from the legacy reachable history.
 - Do not commit the current index while the staging-coherence gate is blocked.
 - Do not treat a deletion commit as removal from already published history.
 - Do not force-push rewritten history, delete the remote, change repository

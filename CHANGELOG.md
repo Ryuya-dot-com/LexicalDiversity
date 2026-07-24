@@ -19,6 +19,8 @@ public output-schema version separately. The current development identity is
 - Reachable-history and partial-staging gates for release and commit assembly.
 - A deterministic clean-history bootstrap archive and canonical per-file
   evidence manifest that derive from the reviewed worktree without `.git/`.
+- A clean public GitHub history whose root tree passed the hosted hash-locked CI;
+  the legacy history is retained in a separate private repository.
 
 ### Changed
 
