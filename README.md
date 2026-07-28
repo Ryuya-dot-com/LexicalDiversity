@@ -60,9 +60,13 @@ the multi-platform index; its registry evidence is recorded in
 metric/resource/output boundary is frozen
 in [the v1.0 scope contract](docs/v1-scope-freeze.md) and its
 [machine-readable schema](docs/v1-metric-scope.json).
-The remaining byte-reproducibility gate is to build the complete application
-image from a clean tracked checkout, record that resulting image digest and
-provenance, and reproduce the golden outputs inside it.
+The Alpine candidate gate passed from clean protected `main` at commit
+[`dfd25b7`](https://github.com/Ryuya-dot-com/LexicalDiversity/commit/dfd25b7179b08b684143f0c6956c5fef6ab0abab).
+[Run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970)
+reproduced the complete OCI manifest, config, and every layer across two
+no-cache builds, then reproduced the golden outputs inside the image. The
+verified candidate is
+`ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`.
 The [v1 golden fixture](tests/fixtures/v1_golden/README.md) uses two public CC0
 test texts and the actual NGSL, OEWN, and TUBELEX runtime resources to pin
 canonical JSON and Excel cell outputs without using learner data or an API.
@@ -78,9 +82,10 @@ the independently rebuilt GHCR manifest must retain the scanned digest. The
 commit-addressed candidate is attested and accompanied by an SPDX SBOM, Grype
 JSON report, raw registry manifest, and canonical evidence artifact. Critical
 findings must be zero: VEX, ignored findings, and `only-fixed` filtering are not
-accepted by the evidence contract. A
-candidate digest is not a Git tag, GitHub Release, stable image, or deployment
-approval.
+accepted by the evidence contract. The successful Alpine candidate had zero
+Critical and zero ignored findings and has
+[GitHub attestation 37463385](https://github.com/Ryuya-dot-com/LexicalDiversity/attestations/37463385).
+A candidate digest is not a Git tag, GitHub Release, stable image, or deployment approval.
 
 The [Synthetic pilot protocol](docs/synthetic-pilot-protocol.md) is also frozen,
 but has not been executed: no essays have been generated, no external API has

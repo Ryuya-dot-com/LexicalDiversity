@@ -315,10 +315,15 @@ dependency resolution or source builds. Watchdog's hash, purelib metadata,
 paths, native-artifact absence, and `RECORD` are verified before its explicit
 foreign-platform installation.
 
-This closes package and base-image *input* identity, but it does not yet prove a
-production release. The complete application image has not been built in a
-clean hosted Linux job, assigned its own resulting digest, scanned, or used to
-regenerate the golden outputs.
+This closes package and base-image *input* identity. A complete clean hosted
+build at commit `dfd25b7179b08b684143f0c6956c5fef6ab0abab` also passed two-build
+OCI equality, offline smoke, golden reproduction, SBOM, zero-Critical scan,
+registry digest verification, and attestation in
+[run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970).
+Its immutable candidate is
+`ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`.
+This is reproducible pre-release evidence, not production deployment approval
+or a stable release.
 
 Before production approval, the release build must:
 
