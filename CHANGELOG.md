@@ -44,6 +44,8 @@ public output-schema version separately. The current development identity is
 - The production image now uses the digest-pinned Python 3.12.13 Alpine 3.23
   linux/amd64 manifest and musllinux wheels; watchdog's reviewed pure-Python
   wheel is isolated and structurally validated before installation.
+- The watchdog foreign-platform install disables bytecode compilation so pip's
+  random staging path cannot make otherwise identical OCI layers differ.
 
 ### Security and privacy
 

@@ -83,6 +83,8 @@ def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
     assert "--require-hashes" in dockerfile
     assert "--platform manylinux2014_x86_64" in dockerfile
     assert "--target /usr/local/lib/python3.12/site-packages" in dockerfile
+    assert "--no-deps --no-compile" in dockerfile
+    assert "-name '*.pyc' -print -quit" in dockerfile
     assert "addgroup -S -g 10001 ldfreq" in dockerfile
     assert "adduser -S -D -H -u 10001" in dockerfile
     assert "groupadd" not in dockerfile

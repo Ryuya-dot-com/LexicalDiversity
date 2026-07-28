@@ -48,12 +48,15 @@ RUN install -d -m 0700 /tmp/ldfreq-watchdog-wheel \
     && python /opt/ldfreq/check_pure_watchdog_wheel.py \
          /tmp/ldfreq-watchdog-wheel/watchdog-6.0.0-py3-none-manylinux2014_x86_64.whl \
     && python -m pip install --isolated --disable-pip-version-check \
-         --no-index --no-cache-dir --no-deps --only-binary=:all: --require-hashes \
+         --no-index --no-cache-dir --no-deps --no-compile \
+         --only-binary=:all: --require-hashes \
          --platform manylinux2014_x86_64 --implementation cp \
          --python-version 3.12 --abi none \
          --target /usr/local/lib/python3.12/site-packages \
          --find-links /tmp/ldfreq-watchdog-wheel \
          --requirement /opt/ldfreq/requirements-watchdog-pure-linux-x86_64.lock \
+    && test -z "$(find /usr/local/lib/python3.12/site-packages/watchdog \
+         -type f -name '*.pyc' -print -quit)" \
     && rm -rf /tmp/ldfreq-watchdog-wheel
 
 RUN addgroup -S -g 10001 ldfreq \
