@@ -12,11 +12,25 @@ venv/
 
 # Local research inputs and working material never enter the public repository.
 /.research/
+/tmp/
 
 # Local legacy TAALES distribution and its bundled third-party resources.
 # Keep this only as a migration reference; do not commit it to the repository.
 /LexicalSophistication/
 /TAALED/
+
+# Quarantined legacy TAALES-COCA calibration. Keep the local evidence, but no
+# plan, wrapper, test, aggregate, figure, or fingerprint enters public source.
+/benchmarks/ellipse/taales-coca-convergence-plan.json
+/r-package/experiments/taales-coca-convergence/
+/scripts/analyze_taales_coca_convergence.R
+/scripts/prepare_ellipse_taales_convergence.py
+/scripts/run_taales_legacy_coca.py
+/tests/test_taales_coca_convergence.py
+
+# ELLIPSE aggregate outputs remain local until a result-specific provenance,
+# attribution, and disclosure-review manifest is approved.
+/r-package/experiments/ellipse-external-association/
 
 # ---------------------------------------------------------------------------
 # Word-list data
@@ -28,6 +42,8 @@ venv/
 *.tsv.xz
 *.xlsx
 *.xls
+# Project-authored CC0 loader attack fixtures are intentionally versioned.
+!r-package/experiments/resource-loader-prototype/fixtures/*.tsv
 NJ8.csv
 NationBNCCOCA/
 NGSL/

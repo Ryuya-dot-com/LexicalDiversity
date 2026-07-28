@@ -40,13 +40,27 @@ trusting the mixed staging area:
 
 ```bash
 python3 scripts/build_clean_public_candidate.py \
+  --selection-manifest /outside/repository/reviewed-selection.json \
   --output /tmp/ldfreq-clean-source.tar.gz \
   --evidence-output /tmp/ldfreq-clean-source-evidence.json
 ```
 
-The evidence file records every admitted path, byte size, SHA-256, normalized
-mode, source `HEAD`, and dirty-tree state. Outputs are created exclusively, so
-an earlier review artifact cannot be overwritten accidentally.
+The selection manifest is mandatory, must be stored outside the candidate
+source tree, and must carry an approved review with a reviewer role, date, and
+approval reference. It enumerates the exact path, byte size, SHA-256, and role
+of every admitted file, pins `data/resource_registry.json`, records each
+required zero-finding release scan, and records every quarantined
+derived-output family. The builder fails if the worktree has an extra, missing,
+renamed, case/Unicode-colliding, or byte-changed file; being tracked, staged,
+untracked, or non-ignored is not an admission decision.
+
+Candidate evidence schema v2 records the external selection identity and
+approval, registry identity, all admitted file identities, reviewed
+derived-result bundles, zero-finding scan attestations, and the excluded
+COCA/ELLIPSE output families. Outputs are created exclusively, so an earlier
+review artifact cannot be overwritten accidentally. The 2026-07-24 bootstrap
+evidence remains evidence for that historical root; every later candidate
+requires a newly approved selection and evidence record.
 
 `requirements.txt` is a developer convenience file, not the reproducible v1.0
 environment. Clean CI uses CPython 3.12.13 and one SHA-256-pinned Linux x86_64
@@ -86,6 +100,15 @@ accepted by the evidence contract. The successful Alpine candidate had zero
 Critical and zero ignored findings and has
 [GitHub attestation 37463385](https://github.com/Ryuya-dot-com/LexicalDiversity/attestations/37463385).
 A candidate digest is not a Git tag, GitHub Release, stable image, or deployment approval.
+
+Running a research comparison is not permission to publish it. The legacy
+TAALES 2.8.1–COCA comparison remains a blocked private calibration: its plan,
+wrappers, tests, aggregates, figures, coverage, and fingerprints are excluded
+from Git, build contexts, candidates, archives, and CI. The completed ELLIPSE
+human-rating run is also local-only at present. Its registry bundle is
+`review-required`, `public_build` is false, and no approved derived-result
+manifest exists. See the [resource policy](docs/resource-governance.md) and the
+[COCA publication gate](docs/coca-derived-output-publication-gate.md).
 
 The [Synthetic pilot protocol](docs/synthetic-pilot-protocol.md) is also frozen,
 but has not been executed: no essays have been generated, no external API has

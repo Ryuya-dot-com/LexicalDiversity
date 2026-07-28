@@ -17,6 +17,9 @@ A new repository was created at the canonical
 blob matched the clean-candidate evidence manifest by byte size and SHA-256.
 The deterministic bootstrap archive was 5,839,588 bytes with SHA-256
 `ef611c0e25782d7cc87a5cdb880d79d031090fd45b34a088342d0798034effe9`.
+That bootstrap record remains the evidence for this specific historical root.
+The current candidate builder now emits a stricter schema-v2 evidence record;
+it does not retroactively relabel the 2026-07-24 artifact.
 
 GitHub Actions run `30072361920` reproduced the CPython 3.12.10 hash-locked
 environment and passed dependency, runtime, base-image, pytest, public-inventory,
@@ -64,6 +67,10 @@ offline backup have been decided.
 - Do not force-push rewritten history, delete the remote, change repository
   visibility, or prune local objects without explicit authorization.
 - Do not copy `.git/` when constructing a clean public release repository.
+- Do not construct a new candidate without a separately approved selection
+  manifest stored outside the candidate source tree.
+- Do not infer publication permission from successful local execution,
+  aggregate-only output, or the absence of lexical rows and identifiers.
 
 ## Migration choices
 
@@ -93,19 +100,48 @@ root as the bootstrap source. Build a review artifact with:
 
 ```bash
 python3 scripts/build_clean_public_candidate.py \
+  --selection-manifest /outside/repository/reviewed-selection.json \
   --output /tmp/ldfreq-clean-source.tar.gz \
   --evidence-output /tmp/ldfreq-clean-source-evidence.json
 ```
 
-The builder starts from Git's cached-plus-untracked inventory, then applies the
-current ignore rules even to tracked or staged paths. It admits only existing
-regular files, rejects symlinks and unsafe paths, requires the release-contract
-files, and applies `check_public_release.py` before writing anything. The tar
-has a fixed prefix, sorted paths, zero timestamps and owner IDs, normalized
-modes, deterministic gzip bytes, and exclusive outputs. The canonical evidence
-records the source `HEAD`, whether the source worktree was dirty, all admitted
-file hashes and modes, and ignored/absent counts. A dirty source is therefore
-reviewable but must not be mistaken for an immutable commit.
+The builder discovers Git's cached-plus-untracked inventory but does not admit a
+file merely because it is tracked or non-ignored. Its mandatory external
+selection manifest must have an approved reviewer role, date, and approval
+reference; enumerate every selected path with byte size, SHA-256, and role; pin
+the exact resource registry; attest every required scan with pass status, zero
+findings, execution date, reviewer role, and evidence reference; and retain the complete
+quarantined-family inventory. The selected and discovered inventories must be
+identical. Extra, missing, renamed, byte-changed, unsafe, symlinked, and
+case/Unicode-colliding paths fail closed before archive creation.
+Both output paths must be outside the source tree.
+
+The tar has a fixed prefix, sorted paths, zero timestamps and owner IDs,
+normalized modes, deterministic gzip bytes, and exclusive outputs. Candidate
+evidence schema v2 records the source `HEAD` and dirty state, external selection
+identity and approval, registry identity, per-file role and hash, the externally
+attested zero-finding
+public-inventory/quarantine/derived-rights scans, reviewed derived-result
+bundles, and excluded output families. A dirty source is reviewable but must not
+be mistaken for an immutable commit.
+
+## 2026-07-27 Q0 hardening
+
+The history migration remains complete, and its release boundary has now been
+hardened. Exact deny rules and release/history checks quarantine the legacy
+TAALES–COCA plan, wrappers, test, result directory, figures, and fingerprints.
+The derived-result gate additionally rejects an undeclared or unapproved result
+even if it is renamed or aggregate-only. The ELLIPSE result bundle is currently
+`review-required` with `public_build: false`; the COCA bundle is `blocked`.
+Successful execution of either analysis is therefore not a publication
+decision, and both sets of result artifacts remain local-only.
+
+The implementation portion of Q0 is complete. Operational closeout remains
+candidate-specific: an approver must create the selection manifest outside the
+repository, review the exact current bytes and exclusions, run the builder, and
+accept the schema-v2 evidence before a new root, archive, or release candidate
+is authorized. No reusable approved selection manifest is committed to this
+repository by design.
 
 Extract into a new empty directory, initialize a new Git repository there, and
 verify before any remote write:
@@ -141,4 +177,5 @@ No push, visibility change, tag, or deletion of the old origin is implied by a
 successful local bootstrap verification.
 
 This migration is a release-integrity task, not a statistical-analysis task.
-Synthetic generation and ELLIPSE outcome analysis remain downstream.
+Synthetic generation remains downstream. The completed ELLIPSE outcome run is
+a separate local-only research track until its result-specific review passes.

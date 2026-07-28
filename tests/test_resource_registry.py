@@ -7,6 +7,7 @@ from ldfreq import wordlists
 from ldfreq import nation_bnc_coca
 from ldfreq import semantic_network
 from ldfreq import tubelex
+from scripts.check_public_release import AGGREGATE_PUBLICATION_REQUIREMENTS
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +36,138 @@ class ResourceRegistryTests(unittest.TestCase):
             self.assertIn(entry["status"]["level"], valid_statuses)
             identifiers.append(entry["id"])
         self.assertEqual(len(identifiers), len(set(identifiers)))
+
+    def test_schema_1_2_defines_the_complete_derived_result_contract(self):
+        self.assertEqual(self.registry["schema_version"], "1.2.0")
+        contract = self.registry["derived_result_contract"]
+        self.assertEqual(contract["manifest_schema_version"], "1.0.0")
+        self.assertEqual(contract["public_roots"], ["results/public/"])
+        self.assertEqual(
+            set(contract["required_registry_fields"]),
+            {
+                "id",
+                "root",
+                "public_build",
+                "manifest",
+                "manifest_bytes",
+                "manifest_sha256",
+                "expected_upstream_resource_ids",
+                "publication_status",
+            },
+        )
+        self.assertEqual(
+            set(contract["required_manifest_fields"]),
+            {
+                "schema_version",
+                "bundle",
+                "artifacts",
+                "upstream_resources",
+                "provenance",
+                "aggregation",
+                "attribution",
+                "publication_review",
+            },
+        )
+        self.assertEqual(
+            set(contract["artifact_classes"]),
+            {
+                "aggregate-table",
+                "aggregate-figure",
+                "aggregate-metadata",
+                "analysis-report",
+            },
+        )
+        self.assertEqual(
+            set(contract["publication_statuses"]),
+            {"approved", "review-required", "blocked"},
+        )
+
+    def test_derived_result_declarations_are_unique_resolved_and_fail_closed(self):
+        contract = self.registry["derived_result_contract"]
+        required = set(contract["required_registry_fields"])
+        valid_statuses = set(contract["publication_statuses"])
+        resource_ids = {entry["id"] for entry in self.registry["resources"]}
+        bundle_ids = []
+        roots = []
+
+        for bundle in self.registry["derived_result_bundles"]:
+            self.assertEqual(required - set(bundle), set(), bundle.get("id"))
+            self.assertIs(type(bundle["public_build"]), bool, bundle["id"])
+            self.assertIn(bundle["publication_status"], valid_statuses, bundle["id"])
+            self.assertFalse(Path(bundle["root"]).is_absolute(), bundle["id"])
+            self.assertNotIn("..", Path(bundle["root"]).parts, bundle["id"])
+            expected = bundle["expected_upstream_resource_ids"]
+            self.assertTrue(expected, bundle["id"])
+            self.assertEqual(len(expected), len(set(expected)), bundle["id"])
+            self.assertEqual(set(expected) - resource_ids, set(), bundle["id"])
+            if bundle["public_build"]:
+                self.assertEqual(bundle["publication_status"], "approved", bundle["id"])
+                self.assertIsInstance(bundle["manifest"], str, bundle["id"])
+                self.assertIs(type(bundle["manifest_bytes"]), int, bundle["id"])
+                self.assertRegex(bundle["manifest_sha256"], r"^[0-9a-f]{64}$")
+            else:
+                self.assertIn(
+                    bundle["publication_status"],
+                    {"review-required", "blocked"},
+                    bundle["id"],
+                )
+                self.assertIsNone(bundle["manifest"], bundle["id"])
+                self.assertIsNone(bundle["manifest_bytes"], bundle["id"])
+                self.assertIsNone(bundle["manifest_sha256"], bundle["id"])
+            bundle_ids.append(bundle["id"])
+            roots.append(bundle["root"].rstrip("/"))
+
+        self.assertEqual(len(bundle_ids), len(set(bundle_ids)))
+        self.assertEqual(len(roots), len(set(roots)))
+
+    def test_coca_and_pending_ellipse_declarations_are_exactly_quarantined(self):
+        bundles = {
+            entry["id"]: entry for entry in self.registry["derived_result_bundles"]
+        }
+        self.assertEqual(set(bundles), {
+            "ellipse-external-association",
+            "taales-coca-convergence",
+        })
+
+        ellipse = bundles["ellipse-external-association"]
+        self.assertFalse(ellipse["public_build"])
+        self.assertEqual(ellipse["publication_status"], "review-required")
+        self.assertEqual(
+            set(ellipse["expected_upstream_resource_ids"]),
+            {
+                "ellipse-corpus-dc3b8f0b-final",
+                "ngsl-1.2",
+                "open-english-wordnet-2025-metrics",
+                "tubelex-en-treebank-7cb5fb36-frequency-index",
+            },
+        )
+
+        coca = bundles["taales-coca-convergence"]
+        self.assertFalse(coca["public_build"])
+        self.assertEqual(coca["publication_status"], "blocked")
+        self.assertEqual(
+            set(coca["expected_upstream_resource_ids"]),
+            {
+                "ellipse-corpus-dc3b8f0b-final",
+                "taales-2.8.1-legacy-application",
+                "taales-legacy-coca-derived-tables",
+                "tubelex-en-treebank-7cb5fb36-frequency-index",
+            },
+        )
+
+    def test_aggregate_publication_decisions_use_a_closed_vocabulary(self):
+        allowed = set(AGGREGATE_PUBLICATION_REQUIREMENTS)
+        known = allowed | {"review-required"}
+        seen = set()
+        for resource in self.registry["resources"]:
+            decision = resource["web_use"]["aggregate_result_publication"]
+            seen.add(decision)
+            self.assertIn(decision, known, resource["id"])
+            if decision in allowed:
+                self.assertEqual(resource["status"]["level"], "green", resource["id"])
+                self.assertTrue(resource["license"]["verified"], resource["id"])
+
+        self.assertEqual(seen, known)
 
     def test_tier_and_provisioning_axes_are_explicit_and_fail_closed(self):
         valid_tiers = set(self.registry["tier_definitions"])

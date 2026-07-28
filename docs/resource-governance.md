@@ -177,23 +177,50 @@ as satisfying the public server-only gate.
 
 ## Research-only fetched evaluation benchmarks
 
-Fetched evaluation benchmarks are not runtime resources. Their public manifests,
-analysis plans, verification code, expected hashes, and aggregate findings may
-be versioned, but their row-level payloads must remain under the registry's
-ignored local root. They must not enter Git, package data, container layers,
-static assets, CI caches or artifacts, deployment synchronization, application
-state, server or client downloads, telemetry, logs, or external APIs.
+Fetched evaluation benchmarks are not runtime resources. Only their explicitly
+allowed governance metadata may be versioned. Row-level payloads and generated
+results remain under the registry's ignored local root by default. They must not
+enter Git, package data, container layers, static assets, CI caches or artifacts,
+deployment synchronization, application state, server or client downloads,
+telemetry, logs, or external APIs.
 
 ELLIPSE processing is limited to an access-controlled non-commercial local
 research environment. The fetch step must pin the upstream commit and archive,
 verify all recorded SHA-256 values before analysis, and extract encrypted
 members locally. Decryption credentials must not appear in a manifest, command
-log, test fixture, generated report, or application configuration. Only
-aggregate descriptive statistics, aggregate coefficients and uncertainty,
-prompt-aggregated validation performance, code, and provenance metadata may be
-published, with attribution and CC BY-NC-SA 4.0 obligations preserved. This
-workflow is outside the public application's startup and release gates, except
-that those gates must verify the payload remains absent.
+log, test fixture, generated report, or application configuration. Aggregation
+alone does not authorize publication. The completed ELLIPSE result bundle is
+currently `review-required`, has `public_build: false`, and has no approved
+result manifest, so its coefficients, performance tables, figures, QC output,
+and measurement record remain local-only. The public inventory may contain only
+the reviewed corpus manifest and frozen analysis plan until a result-specific
+review passes. This workflow is outside the public application's startup gate,
+but every source/archive candidate must verify that unapproved inputs and
+results remain absent.
+
+## Derived-result publication gate
+
+`data/resource_registry.json` now declares a fail-closed contract for published
+result bundles. A publishable bundle must be uniquely registered under the
+controlled `results/public/` root with `public_build: true`, registry status
+`approved`, and a byte- and SHA-256-pinned manifest. That manifest must inventory
+the bundle and every artifact class, all upstream resource IDs, plan and
+generator identities, runtime/environment identities, aggregation boundaries,
+attribution, and a dated publication review.
+
+The gate verifies that every upstream resource is `green`, its license evidence
+is verified, its `aggregate_result_publication` decision permits the requested
+artifact classes, and every citation, attribution, or disclosure-review
+condition is recorded as satisfied. It also requires exact agreement between
+the registered and selected files, rejects archives disguised with an allowed
+extension, and rejects row-level data, individual predictions, and fitted
+models. A result manifest cannot override an upstream registry decision.
+
+The present registry intentionally has no public result bundle. ELLIPSE is
+`review-required`; the legacy TAALES–COCA comparison is `blocked`. Running the
+COCA comparison, obtaining positive or negative correlations, or publishing
+only summaries does not alter that decision. Its plan, wrappers, test,
+aggregates, figures, coverage, and fingerprints remain quarantined.
 
 ### Red, local only
 
@@ -210,7 +237,10 @@ that those gates must verify the payload remains absent.
   and similar snapshots remain local only until reviewed as individual resources.
 
 The entire `LexicalSophistication/` tree must remain excluded from public source,
-build contexts, deployment uploads, and runtime synchronization.
+build contexts, deployment uploads, and runtime synchronization. The separately
+authored comparison wrappers and derived outputs are also blocked while the
+COCA result bundle remains `blocked`; excluding the source tables alone is not a
+publication clearance.
 
 ## Promotion procedure
 
@@ -235,8 +265,8 @@ entry stays conditional and the implementation must enforce that narrower mode.
 
 ## Build and release checks
 
-Phase 0 establishes the policy and registry. The deployment pipeline should next
-enforce these checks automatically:
+Phase 0 establishes the policy and registry. The current release gate enforces
+the following checks automatically:
 
 1. parse `data/resource_registry.json` and reject unknown fields/status values;
 2. verify every present `green` artifact before use, and every bundled `green`
@@ -246,17 +276,27 @@ enforce these checks automatically:
    record sets the relevant public payload flag to `false`, including `green`
    evaluation benchmarks;
 5. require local license/NOTICE files named by a bundled `green` entry;
-6. emit a deployment inventory containing resource ID, version, hash, status,
-   tier, provisioning mode, and
-   license—not the protected payload itself; and
-7. require explicit review when a URL, version, file, transformation, intended
-   use, or license term changes.
+6. require every public result bundle to pass the derived-result contract above;
+7. emit a deployment inventory containing resource ID, version, hash, status,
+   tier, provisioning mode, and license—not the protected payload itself; and
+8. require explicit review when a URL, version, file, transformation, intended
+   use, license term, result artifact class, or publication scope changes.
 
 Run `python3 scripts/check_public_release.py` against the exact Git inventory
 before creating a public archive or deployment. The gate deliberately fails
 while a blocked payload remains tracked or a required green artifact has not
 yet been added to the release inventory. `.gitignore` alone cannot remove an
 already tracked file.
+
+Clean-candidate construction has a second independent gate. The builder requires
+an approved selection manifest stored outside the repository and compares its
+exact path/byte/SHA-256/role inventory with the discovered worktree. Its schema-v2
+evidence records the selection and registry identities, required externally
+attested zero-finding
+scans, reviewed result bundles, and excluded output families. This Q0 machinery
+is implemented. An actual candidate is not approved until a reviewer creates
+that external manifest for the current bytes and accepts the resulting evidence;
+ELLIPSE result publication remains a separate unresolved review.
 
 This registry is an engineering control and evidence log, not a substitute for
 legal advice or rights-holder permission.

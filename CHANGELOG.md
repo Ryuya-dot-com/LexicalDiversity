@@ -21,6 +21,8 @@ public output-schema version separately. The current development identity is
   evidence manifest that derive from the reviewed worktree without `.git/`.
 - A clean public GitHub history whose root tree passed the hosted hash-locked CI;
   the legacy history is retained in a separate private repository.
+- A registry-backed derived-result publication contract and candidate evidence
+  schema v2 bound to an externally approved exact-byte selection manifest.
 - A manual candidate-image workflow that performs two independent no-cache
   OCI production builds with a digest-pinned BuildKit, compares their manifest,
   config, and every layer digest, performs offline runtime/golden checks, scans
@@ -41,6 +43,8 @@ public output-schema version separately. The current development identity is
   rights-gate tests are independent of locally installed restricted resources.
 - The Dockerfile frontend is digest-pinned, build timestamps derive from the
   source commit, and verification-only fixtures live in a non-deployable stage.
+- Legacy TAALES–COCA outputs and unapproved ELLIPSE result bundles are
+  fail-closed across Git, build contexts, source candidates, and release scans.
 - The production image now uses the digest-pinned Python 3.12.13 Alpine 3.23
   linux/amd64 manifest and musllinux wheels; watchdog's reviewed pure-Python
   wheel is isolated and structurally validated before installation.
