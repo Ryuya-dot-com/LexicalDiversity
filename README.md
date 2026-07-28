@@ -112,6 +112,9 @@ resolution are disabled. Alpine production uses musllinux wheels. The upstream
 watchdog 6.0.0 wheel is isolated because its filename is manylinux-tagged; its
 exact hash, purelib metadata, archive paths, absence of native payloads, and
 complete `RECORD` are checked before the reviewed foreign-tag installation.
+That install disables bytecode compilation because pip's temporary target path
+would otherwise make independent OCI builds differ; runtime bytecode writes are
+already disabled by the container environment.
 
 The complete Streamlit analysis path intentionally requires a POSIX host
 (Linux or macOS) because every submitted text is processed in a one-shot,
