@@ -92,25 +92,26 @@ before provenance attestation and canonical evidence are accepted.
 
 ### 2026-07-28 Alpine candidate evidence
 
-- Source: commit `dfd25b7179b08b684143f0c6956c5fef6ab0abab`, tree
-  `06629605a08f928eb0cdce09ef725008aa98ed87` on protected `main`.
-- Workflow: [Candidate run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970),
+- Source: commit `c5d778b49295cf81a739f49e82ab83e748882142`, tree
+  `af5bd2e9cf5bdb82ee0889f15be4da65f1a6b3ed` on protected `main`, including
+  registry schema v1.2 and the derived-result Q0 publication gate.
+- Workflow: [Candidate run 30340334941](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30340334941),
   successful in one attempt. Two independent no-cache builds produced equal
   OCI manifest, config, and all 23 layer digests; offline smoke and golden
   reproduction passed.
 - Candidate image:
-  `ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`;
+  `ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:053d8bc8fce905244c70ac81cac2133ba8f0141e1d297f45692a244793f28104`;
   config digest
-  `sha256:3cedd22b5929d470fdb6e5d0f28df1478ceb4ce00327fff32ae96457f808eaf1`.
+  `sha256:aaf127077b0775064b489d184bfc61584410fa19ee135645f2d021fdcba4f50c`.
 - Scan: Grype 0.116.0 with database v6.1.9 built 2026-07-27. Findings were
   Critical 0, High 41, Medium 30, Low 4, Negligible 1; ignored findings 0,
   `only-fixed: false`, exception policy `none`.
 - Provenance:
-  [GitHub attestation 37463385](https://github.com/Ryuya-dot-com/LexicalDiversity/attestations/37463385)
+  [GitHub attestation 37466081](https://github.com/Ryuya-dot-com/LexicalDiversity/attestations/37466081)
   was pushed for the registry manifest. The workflow artifact was
-  `candidate-image-evidence-dfd25b7179b08b684143f0c6956c5fef6ab0abab`
+  `candidate-image-evidence-c5d778b49295cf81a739f49e82ab83e748882142`
   with archive digest
-  `sha256:87fbe85a479049058f2a3809e89978fb09864ea7131a2e500c61df22d08ef58d`.
+  `sha256:984c7f225d4efa5a3ef44866bf442bc54ee2837e1fd70723fe088bda144c9253`.
 - Boundary: canonical status `verified-candidate-not-release`; no Git tag,
   GitHub Release, stable image promotion, deployment approval, or v1.0 claim.
 

@@ -316,12 +316,12 @@ paths, native-artifact absence, and `RECORD` are verified before its explicit
 foreign-platform installation.
 
 This closes package and base-image *input* identity. A complete clean hosted
-build at commit `dfd25b7179b08b684143f0c6956c5fef6ab0abab` also passed two-build
+build at commit `c5d778b49295cf81a739f49e82ab83e748882142` also passed two-build
 OCI equality, offline smoke, golden reproduction, SBOM, zero-Critical scan,
 registry digest verification, and attestation in
-[run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970).
+[run 30340334941](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30340334941).
 Its immutable candidate is
-`ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`.
+`ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:053d8bc8fce905244c70ac81cac2133ba8f0141e1d297f45692a244793f28104`.
 This is reproducible pre-release evidence, not production deployment approval
 or a stable release.
 
