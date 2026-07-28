@@ -44,14 +44,15 @@ The exact v1.0 metric/output boundary is frozen in
 rationale, including explicitly deferred work, is recorded in
 [`decision-log-2026-07-24.md`](decision-log-2026-07-24.md).
 
-## 2026-07-24 release checkpoint
+## 2026-07-28 release checkpoint
 
 The following contracts are implemented locally but do not by themselves mean
 that v1.0, a benchmark dataset, or a validation result has been released:
 
-- a CPython 3.12.10 clean-environment CI workflow, exact production/CI
+- a CPython 3.12.13 clean-environment CI workflow, exact production/CI
   dependency graphs with one Linux x86_64 wheel SHA-256 per package, an exact
-  linux/amd64 Python base-image manifest, and fail-closed identity checks;
+  Alpine 3.23 linux/amd64 Python base-image manifest, and fail-closed identity
+  checks;
 - a single `0.9.0-dev.0` application-version authority, independent `1.0.0`
   output-schema identity in every export, an Unreleased changelog, and a
   tag-only immutable-release gate;
@@ -72,10 +73,12 @@ is a clean application-image build, its resulting digest and provenance,
 golden reproduction inside that image, and the v0.9 release-candidate package.
 Canonical golden fixtures, deterministic JSON/XLSX serialization, package
 hashes, and the exact production Python base-image manifest are implemented.
-An isolated local Python 3.12.10 environment already passes all 46 exact runtime
-pins, `pip check`, and the full public-data-independent suite (275 passed,
-2 skipped, 6 subtests). The same contracts and suite passed in hosted Linux CI
-from the clean public root.
+The current local verification environment is CPython 3.12.13. The earlier
+CPython 3.12.10 contracts and suite passed in hosted Linux CI from the clean
+public root. The Alpine security refresh passes all 46 exact runtime pins,
+`pip check`, golden reproduction, and the public-data-independent suite locally
+(291 passed, 2 skipped); it must still pass the same hosted gates before its
+candidate result is claimed.
 Package hashes and the exact production Python base-image digest are fixed as
 inputs, but the hosted Linux install and resulting application-image digest
 remain v0.9 gates; exact inputs alone are not an end-to-end reproduction claim.
@@ -83,8 +86,9 @@ The manual candidate-image workflow now specifies two no-cache production
 OCI builds under digest-pinned BuildKit, timestamp normalization, manifest,
 config, and full layer-digest equality, and offline golden verification in a
 non-deployable stage. SBOM generation and the Critical vulnerability gate read
-the exact OCI archive. GHCR login follows the scan, and the independently
-rebuilt commit-addressed publication must have the scanned manifest digest
+the exact OCI archive. The gate allows no VEX, ignored finding, or `only-fixed`
+filter; active Critical findings must be zero. GHCR login follows the scan, and
+the independently rebuilt commit-addressed publication must have the scanned manifest digest
 before provenance attestation and canonical evidence are accepted. It has not
 yet passed this revised gate, so no application-image candidate digest or scan
 result is claimed here.

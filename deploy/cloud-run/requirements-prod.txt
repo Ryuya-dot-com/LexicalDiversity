@@ -1,6 +1,6 @@
 # Human-readable direct/transitive version graph. The release installation uses
-# requirements-prod-linux-x86_64.lock, which additionally fixes one wheel hash
-# per package; both files are checked for exact agreement.
+# the production Linux x86_64 lock set, which additionally fixes one wheel hash
+# per package; the graph and both lock files are checked for exact agreement.
 streamlit==1.55.0
 simplemma==1.2.0
 pandas==2.3.3

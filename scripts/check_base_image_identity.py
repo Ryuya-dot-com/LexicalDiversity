@@ -55,8 +55,8 @@ def read_identity(path: Path = IDENTITY_PATH) -> dict[str, Any]:
         raise BaseImageIdentityError("unsupported base image identity schema")
     if document.get("platform") != {"os": "linux", "architecture": "amd64"}:
         raise BaseImageIdentityError("release base image must target linux/amd64")
-    if document["python_version"] != "3.12.10":
-        raise BaseImageIdentityError("release base image must contain Python 3.12.10")
+    if document["python_version"] != "3.12.13":
+        raise BaseImageIdentityError("release base image must contain Python 3.12.13")
     return document
 
 

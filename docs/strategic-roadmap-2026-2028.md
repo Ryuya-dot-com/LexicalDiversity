@@ -176,7 +176,7 @@ request/response、原文と正規化文の hash、QC、ツール commit、資�
 
 | 時期 | マイルストーン |
 |---|---|
-| **M0–1** | clean-history public root、hosted CI、main保護、CPython 3.12.10、Linux x86_64 wheel hash、Python base-image manifest、runtime identity check、独立したapplication/output-schema版、tag release gate、北極星・非目標・not-a-detector、実資源を使うgolden fixtures、決定論的JSON/XLSX serializationまで完了。次はclean application imageのdigest・provenance・scanを固定する |
+| **M0–1** | clean-history public root、hosted CI、main保護、CPython 3.12.13、Alpine 3.23 Linux x86_64 wheel hash、Python base-image manifest、runtime identity check、独立したapplication/output-schema版、tag release gate、北極星・非目標・not-a-detector、実資源を使うgolden fixtures、決定論的JSON/XLSX serializationまで完了。次はclean application imageのdigest・provenance・scanを固定する |
 | **M1–2** | v1.0 指標・出力・非目標の機械可読scope、registry schema v1.1、監査済みELLIPSE hash・commit・license evidence、fetch/verify manifest、事前分析仕様を固定済み。新しい分散指標のproduction移植はv1.x以降の条件付き課題へ移す |
 | **M2–3** | v0.9 release candidate。clean buildから得たapplication-image digest・provenance・scan、全公開指標の方法・解釈カード、CLI/ローカル起動、公開例文を固定。v1.0を遅らせず全事前gateが通る場合だけSynthetic pilot 48本を別runで実行 |
 | **M3–4** | **v1.0 + CITATION.cff + Zenodo DOI 公開**。完全な公開インベントリ監査、再現手順をクリーン環境で検証 |
@@ -247,8 +247,8 @@ MASC/OANC/ANC、AntBNC許諾、完全な TAALES-open、新しい汎用dispersion
 ELLIPSE manifest・安全なfetch/verify adapter・分析仕様固定は前倒しで完了した。ここでは
 「関連分析を実行した」ことと「実行条件を固定した」ことを区別し、後者だけを完了とする。
 
-1. **完了:** clean-history rootを公開し、CPython 3.12.10とLinux x86_64 wheel hashの固定依存CIでpytest、release gate、benchmark
-   混入検査、checkout不変検査を実走した。mainは最新CIを必須とする。
+1. **完了・security refresh検証中:** clean-history rootを公開し、当初のCPython 3.12.10とLinux x86_64 wheel hashの固定依存CIでpytest、release gate、benchmark
+   混入検査、checkout不変検査を実走した。現在はCPython 3.12.13、Alpine 3.23、musllinux lock、Critical例外ゼロの契約へ更新し、mainの最新CIとCandidate gateで再検証する。
 2. **完了:** v1.0の指標・出力schema・解釈境界・非目標を機械可読に凍結する。
 3. **仕様完了・生成未実行:** Synthetic pilot のprotocol、全prompts、provenance schema、
    QC、retry、秘密情報境界、費用停止を固定する。

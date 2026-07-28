@@ -25,11 +25,13 @@ EVIDENCE_PATHS = (
     Path("CHANGELOG.md"),
     Path("requirements-ci-linux-x86_64.lock"),
     Path("deploy/cloud-run/requirements-prod-linux-x86_64.lock"),
+    Path("deploy/cloud-run/requirements-watchdog-pure-linux-x86_64.lock"),
     Path("deploy/cloud-run/base-image.json"),
     Path("deploy/cloud-run/Dockerfile"),
     Path("data/resource_registry.json"),
     Path("docs/v1-metric-scope.json"),
     Path("scripts/build_oci_image_evidence.py"),
+    Path("scripts/check_pure_watchdog_wheel.py"),
     Path("tests/fixtures/v1_golden/manifest.json"),
 )
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}\Z")

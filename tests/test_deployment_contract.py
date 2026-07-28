@@ -47,6 +47,7 @@ def test_docker_build_context_excludes_private_and_local_payloads():
         "!tests/fixtures/v1_golden/**",
         "!scripts/build_v1_golden_fixtures.py",
         "!scripts/check_runtime_environment.py",
+        "!scripts/check_pure_watchdog_wheel.py",
     } <= rules
 
 
@@ -76,8 +77,16 @@ def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
     assert "test \"${#ldfreq_base_digest}\" -eq 64" in dockerfile
     assert not re.search(r"(?m)^COPY(?:\s+--\S+)*\s+\.\s", dockerfile)
     assert "requirements-prod-linux-x86_64.lock" in dockerfile
+    assert "requirements-watchdog-pure-linux-x86_64.lock" in dockerfile
+    assert "check_pure_watchdog_wheel.py" in dockerfile
     assert "--no-deps --only-binary=:all:" in dockerfile
     assert "--require-hashes" in dockerfile
+    assert "--platform manylinux2014_x86_64" in dockerfile
+    assert "--target /usr/local/lib/python3.12/site-packages" in dockerfile
+    assert "addgroup -S -g 10001 ldfreq" in dockerfile
+    assert "adduser -S -D -H -u 10001" in dockerfile
+    assert "groupadd" not in dockerfile
+    assert "useradd" not in dockerfile
 
     copy_lines = [
         line.strip() for line in dockerfile.splitlines() if line.lstrip().startswith("COPY ")
@@ -151,6 +160,7 @@ def test_streamlit_hides_error_details_from_clients():
 
     assert 'showErrorDetails = "none"' in config
     assert "showErrorDetails = false" not in config
+    assert 'fileWatcherType = "none"' in config
 
 
 def test_production_requirements_pin_complete_runtime_dependency_graph():
@@ -225,8 +235,8 @@ def test_base_image_identity_is_platform_specific_and_offline_verifiable():
 
     identity = base_image.read_identity()
     assert identity["platform"] == {"os": "linux", "architecture": "amd64"}
-    assert identity["python_version"] == "3.12.10"
-    assert identity["tag"] == "3.12.10-slim-bookworm"
+    assert identity["python_version"] == "3.12.13"
+    assert identity["tag"] == "3.12.13-alpine3.23"
     assert identity["index_digest"] != identity["manifest_digest"]
     assert base_image.offline_violations(identity) == []
 

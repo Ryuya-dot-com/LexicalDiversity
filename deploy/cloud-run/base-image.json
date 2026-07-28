@@ -2,17 +2,17 @@
   "schema_version": 1,
   "registry": "registry-1.docker.io",
   "repository": "library/python",
-  "tag": "3.12.10-slim-bookworm",
-  "index_digest": "sha256:fd95fa221297a88e1cf49c55ec1828edd7c5a428187e67b5d1805692d11588db",
+  "tag": "3.12.13-alpine3.23",
+  "index_digest": "sha256:601d3d3797e90e2534782e69c85fafb7971b43f24c7b1b079b7e48dd435e458d",
   "platform": {
     "os": "linux",
     "architecture": "amd64"
   },
-  "manifest_digest": "sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4",
-  "config_digest": "sha256:acf8897bf01a3a0ea273a50a58fc10b6317a3e360bd29aa7c9246a54d7c63e88",
-  "python_version": "3.12.10",
-  "python_source_sha256": "07ab697474595e06f06647417d3c7fa97ded07afc1a7e4454c5639919b46eaea",
-  "created": "2025-05-08T22:27:23Z",
-  "verified_on": "2026-07-24",
+  "manifest_digest": "sha256:efc8538b7449b6d893de5d852c87a0dc2cffd0ec27b07dd98ba3e7edaadc26af",
+  "config_digest": "sha256:12399d42217a981db87615f1f87592c3aee6db7059357c7426ee255c9c2fd3a7",
+  "python_version": "3.12.13",
+  "python_source_sha256": "c08bc65a81971c1dd5783182826503369466c7e67374d1646519adf05207b684",
+  "created": "2026-06-22T20:07:13.303654862Z",
+  "verified_on": "2026-07-28",
   "source": "Docker Registry HTTP API V2"
 }

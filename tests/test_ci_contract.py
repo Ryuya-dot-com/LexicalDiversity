@@ -20,6 +20,12 @@ PRODUCTION_REQUIREMENTS = ROOT / "deploy" / "cloud-run" / "requirements-prod.txt
 PRODUCTION_WHEEL_LOCK = (
     ROOT / "deploy" / "cloud-run" / "requirements-prod-linux-x86_64.lock"
 )
+PRODUCTION_WATCHDOG_WHEEL_LOCK = (
+    ROOT
+    / "deploy"
+    / "cloud-run"
+    / "requirements-watchdog-pure-linux-x86_64.lock"
+)
 DOCKERFILE = ROOT / "deploy" / "cloud-run" / "Dockerfile"
 
 CHECKOUT_ACTION = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
@@ -91,11 +97,11 @@ def test_ci_actions_are_sha_pinned_and_python_series_is_fixed():
     ]
     assert action_steps[0]["with"]["persist-credentials"] == "false"
     assert action_steps[0]["with"]["fetch-depth"] == "1"
-    assert action_steps[1]["with"]["python-version"] == "3.12.10"
+    assert action_steps[1]["with"]["python-version"] == "3.12.13"
     assert action_steps[1]["with"]["check-latest"] == "false"
     assert runtime_contract.EXPECTED_PYTHON_SERIES == (3, 12)
-    assert runtime_contract.EXPECTED_PYTHON_VERSION == (3, 12, 10)
-    assert "python:3.12.10-slim-bookworm@sha256:" in DOCKERFILE.read_text(
+    assert runtime_contract.EXPECTED_PYTHON_VERSION == (3, 12, 13)
+    assert "python:3.12.13-alpine3.23@sha256:" in DOCKERFILE.read_text(
         encoding="utf-8"
     )
 
@@ -182,10 +188,20 @@ def test_ci_requirements_extend_production_lock_with_exact_test_graph():
 
 def test_linux_wheel_locks_match_flat_graphs_and_allow_one_artifact_each():
     production = runtime_contract.read_exact_pins(PRODUCTION_REQUIREMENTS)
-    production_artifacts = runtime_contract.read_hashed_lock(PRODUCTION_WHEEL_LOCK)
+    main_artifacts = runtime_contract.read_hashed_lock(PRODUCTION_WHEEL_LOCK)
+    watchdog_artifacts = runtime_contract.read_hashed_lock(
+        PRODUCTION_WATCHDOG_WHEEL_LOCK
+    )
+    production_artifacts = runtime_contract.read_hashed_locks(
+        (PRODUCTION_WHEEL_LOCK, PRODUCTION_WATCHDOG_WHEEL_LOCK)
+    )
     ci_artifacts = runtime_contract.read_hashed_lock(CI_WHEEL_LOCK)
 
-    assert {name: version for name, (version, _hash) in production_artifacts.items()} == production
+    assert "watchdog" not in main_artifacts
+    assert set(watchdog_artifacts) == {"watchdog"}
+    assert {
+        name: version for name, (version, _hash) in production_artifacts.items()
+    } == production
     expected_ci = {**production, **CI_ONLY_PINS}
     assert {name: version for name, (version, _hash) in ci_artifacts.items()} == expected_ci
     assert all(re.fullmatch(r"[0-9a-f]{64}", digest) for _, digest in ci_artifacts.values())
@@ -195,20 +211,31 @@ def test_linux_wheel_locks_match_flat_graphs_and_allow_one_artifact_each():
 def test_wheel_selection_recipe_fixes_interpreter_pip_platforms_and_abis(tmp_path: Path):
     from scripts import download_linux_wheels as recipe
 
-    assert recipe.EXPECTED_PYTHON == (3, 12, 10)
+    assert recipe.EXPECTED_PYTHON == (3, 12, 13)
     assert recipe.EXPECTED_PIP == "25.0.1"
-    assert recipe.PLATFORMS[0] == "manylinux_2_36_x86_64"
-    assert "manylinux_2_28_x86_64" in recipe.PLATFORMS
-    assert "manylinux_2_17_x86_64" in recipe.PLATFORMS
-    assert "manylinux2014_x86_64" in recipe.PLATFORMS
+    assert recipe.CI_PLATFORMS[0] == "manylinux_2_39_x86_64"
+    assert "manylinux_2_28_x86_64" in recipe.CI_PLATFORMS
+    assert "manylinux_2_17_x86_64" in recipe.CI_PLATFORMS
+    assert "manylinux2014_x86_64" in recipe.CI_PLATFORMS
+    assert recipe.PRODUCTION_PLATFORM == "musllinux_1_2_x86_64"
+    assert recipe.WATCHDOG_PLATFORM == "manylinux2014_x86_64"
     assert recipe.ABIS == ("cp312", "abi3", "none")
 
-    command = recipe.download_command(tmp_path)
-    assert command[:4] == [recipe.sys.executable, "-m", "pip", "download"]
-    assert command.count("--platform") == len(recipe.PLATFORMS)
-    assert command.count("--abi") == len(recipe.ABIS)
-    assert "--no-deps" in command
-    assert "--only-binary=:all:" in command
+    ci_commands = recipe.download_commands(tmp_path, profile="ci")
+    production_commands = recipe.download_commands(tmp_path, profile="production")
+    assert len(ci_commands) == 1
+    assert len(production_commands) == 2
+    assert ci_commands[0][:4] == [recipe.sys.executable, "-m", "pip", "download"]
+    assert ci_commands[0].count("--platform") == len(recipe.CI_PLATFORMS)
+    assert production_commands[0].count("--platform") == 1
+    assert recipe.PRODUCTION_PLATFORM in production_commands[0]
+    assert "watchdog==6.0.0" not in production_commands[0]
+    assert recipe.WATCHDOG_PLATFORM in production_commands[1]
+    assert production_commands[1][-1] == "watchdog==6.0.0"
+    for command in (*ci_commands, *production_commands):
+        assert command.count("--abi") == len(recipe.ABIS)
+        assert "--no-deps" in command
+        assert "--only-binary=:all:" in command
 
 
 def test_production_lock_and_developer_nltk_pin_match_runtime_code():
@@ -221,6 +248,14 @@ def test_production_lock_and_developer_nltk_pin_match_runtime_code():
     assert development_specs == ["==3.10.0"]
     assert runtime_contract.PRODUCTION_REQUIREMENTS == PRODUCTION_REQUIREMENTS
     assert runtime_contract.PRODUCTION_WHEEL_LOCK == PRODUCTION_WHEEL_LOCK
+    assert (
+        runtime_contract.PRODUCTION_WATCHDOG_WHEEL_LOCK
+        == PRODUCTION_WATCHDOG_WHEEL_LOCK
+    )
+    assert runtime_contract.PRODUCTION_WHEEL_LOCKS == (
+        PRODUCTION_WHEEL_LOCK,
+        PRODUCTION_WATCHDOG_WHEEL_LOCK,
+    )
 
     from ldfreq import tubelex
 
@@ -252,7 +287,7 @@ def test_runtime_lock_parser_rejects_nonexact_or_ambiguous_inputs(
 def test_runtime_python_contract_fails_closed_on_wrong_series_or_prerelease():
     assert runtime_contract.python_contract_violations(
         implementation="cpython",
-        version=(3, 12, 10),
+        version=(3, 12, 13),
         releaselevel="final",
     ) == []
 
@@ -263,7 +298,7 @@ def test_runtime_python_contract_fails_closed_on_wrong_series_or_prerelease():
     )
     assert len(violations) == 3
     assert any("implementation" in violation for violation in violations)
-    assert any("expected exactly 3.12.10" in violation for violation in violations)
+    assert any("expected exactly 3.12.13" in violation for violation in violations)
     assert any("final release" in violation for violation in violations)
 
 
@@ -350,7 +385,7 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
         "fetch-depth": "0",
         "persist-credentials": "false",
     }
-    assert action_steps[1]["with"]["python-version"] == "3.12.10"
+    assert action_steps[1]["with"]["python-version"] == "3.12.13"
     assert action_steps[2]["with"] == {
         "version": "v${{ env.BUILDX_VERSION }}",
         "driver": "docker-container",
@@ -524,6 +559,9 @@ def test_candidate_image_workflow_separates_verification_scan_push_and_release()
     assert "pushed_manifest_digest" in commands
     assert "pushed_config_digest" in commands
     assert "build_candidate_image_evidence.py" in commands
+    assert "build_candidate_vex.py" not in commands
+    assert "candidate-vex.json" not in text
+    assert "vex:" not in text
     assert "registry_candidate_is_release" not in text
     assert by_name["Upload SBOM, scan, manifest, and canonical evidence"]["if"] == (
         "always()"

@@ -25,7 +25,7 @@ def test_golden_fixture_inventory_is_self_consistent_and_public_only():
     assert manifest["license"] == "CC0-1.0"
     assert manifest["human_or_learner_writing"] is False
     assert manifest["external_api_calls"] == 0
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == 3
     assert manifest["release_identity"]["application_version"] == __version__
     assert manifest["release_identity"]["output_schema_version"] == (
         OUTPUT_SCHEMA_VERSION
