@@ -381,6 +381,15 @@ def test_tagged_release_workflow_is_read_only_and_rebuilds_all_evidence():
     assert "--metadata-file /tmp/ldfreq-release-build.json" in commands
     assert "--output /tmp/ldfreq-release-oci-evidence.json" in commands
     assert "docker run --rm --network none --read-only" in commands
+    assert "--cap-drop ALL" in commands
+    assert "--security-opt no-new-privileges" in commands
+    runtime_tmpfs = (
+        "--tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,"
+        "uid=10001,gid=10001,mode=0700"
+    )
+    assert runtime_tmpfs in commands
+    assert '--entrypoint' not in commands
+    assert '"ldfreq:${GITHUB_SHA}" \\\n  python -c' in commands
     assert "python scripts/build_release_archive.py" in commands
     assert "--output /tmp/ldfreq-source.tar.gz" in commands
     assert "python scripts/build_release_evidence.py" in commands
@@ -478,6 +487,14 @@ def test_candidate_image_workflow_separates_verification_scan_push_and_release()
     assert "python scripts/build_oci_image_evidence.py" in commands
     assert "/verification/scripts/build_v1_golden_fixtures.py --check" in commands
     assert commands.count("--network none --read-only --cap-drop ALL") == 2
+    runtime_tmpfs = (
+        "--tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,"
+        "uid=10001,gid=10001,mode=0700"
+    )
+    assert commands.count(runtime_tmpfs) == 2
+    assert "--entrypoint" not in commands
+    assert '"${{ steps.build.outputs.production-ref }}" \\\n  python -c' in commands
+    assert '"${{ steps.build.outputs.verification-ref }}" \\\n  python /verification/scripts/build_v1_golden_fixtures.py --check' in commands
     assert by_name["Generate SPDX JSON SBOM from the exact OCI archive"]["with"][
         "image"
     ] == "oci-archive:/tmp/ldfreq-image-evidence/production.oci.tar"

@@ -134,6 +134,11 @@ def test_entrypoint_keeps_temporary_data_private_and_binds_port_8080():
     assert "${XDG_CACHE_HOME:=/tmp/ldfreq/cache}" in entrypoint
     assert "${XDG_CONFIG_HOME:=/tmp/ldfreq/config}" in entrypoint
     assert 'test -d "${ldfreq_runtime_dir}" && test -w "${ldfreq_runtime_dir}"' in entrypoint
+    assert 'if [ "$#" -gt 0 ]; then' in entrypoint
+    assert 'exec "$@"' in entrypoint
+    assert entrypoint.index('test -d "${ldfreq_runtime_dir}"') < entrypoint.index(
+        'exec "$@"'
+    )
     assert "exec python -m streamlit run app.py" in entrypoint
     assert "--server.address=0.0.0.0" in entrypoint
     assert "--server.port=8080" in entrypoint
