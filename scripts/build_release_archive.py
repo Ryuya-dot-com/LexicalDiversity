@@ -32,6 +32,8 @@ REQUIRED_ARCHIVE_FILES = {
     "requirements-ci-linux-x86_64.lock",
     "deploy/cloud-run/base-image.json",
     "deploy/cloud-run/requirements-prod-linux-x86_64.lock",
+    "deploy/cloud-run/requirements-watchdog-pure-linux-x86_64.lock",
+    "scripts/check_pure_watchdog_wheel.py",
     "docs/v1-metric-scope.json",
     "tests/fixtures/v1_golden/manifest.json",
 }

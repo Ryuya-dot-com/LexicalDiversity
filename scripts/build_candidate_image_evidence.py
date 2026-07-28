@@ -34,6 +34,8 @@ EVIDENCE_PATHS = (
     Path("deploy/cloud-run/Dockerfile"),
     Path("deploy/cloud-run/base-image.json"),
     Path("deploy/cloud-run/requirements-prod-linux-x86_64.lock"),
+    Path("deploy/cloud-run/requirements-watchdog-pure-linux-x86_64.lock"),
+    Path("scripts/check_pure_watchdog_wheel.py"),
     Path("scripts/build_oci_image_evidence.py"),
     Path("data/resource_registry.json"),
     Path("tests/fixtures/v1_golden/manifest.json"),
@@ -117,6 +119,26 @@ def _severity_counts(scan: dict[str, Any]) -> dict[str, int]:
         severity = str(vulnerability.get("severity", "Unknown")).strip().lower()
         counts[severity or "unknown"] = counts.get(severity or "unknown", 0) + 1
     return {key: counts[key] for key in sorted(counts)}
+
+
+def _validated_scan_gate(scan: dict[str, Any]) -> dict[str, int]:
+    counts = _severity_counts(scan)
+    if counts.get("critical", 0):
+        raise CandidateImageEvidenceError(
+            "Grype report contains an active Critical finding"
+        )
+    ignored_matches = scan.get("ignoredMatches", [])
+    if ignored_matches is None:
+        ignored_matches = []
+    if not isinstance(ignored_matches, list):
+        raise CandidateImageEvidenceError(
+            "Grype report ignoredMatches must be an array when present"
+        )
+    if ignored_matches:
+        raise CandidateImageEvidenceError(
+            "Grype report contains ignored findings; candidate policy permits none"
+        )
+    return counts
 
 
 def _oci_evidence(
@@ -262,6 +284,7 @@ def build_evidence(
     sbom_identity, sbom_document = json_identity(sbom)
     scan_identity, scan_document = json_identity(vulnerability_report)
     epoch = int(source_date_epoch)
+    finding_counts = _validated_scan_gate(scan_document)
     primary_oci_identity, primary_oci = _oci_evidence(
         primary_oci_evidence,
         label="primary",
@@ -338,7 +361,7 @@ def build_evidence(
         )
     )
     return {
-        "candidate_image_evidence_schema_version": 2,
+        "candidate_image_evidence_schema_version": 3,
         "status": "verified-candidate-not-release",
         "application_version": identity["application_version"],
         "output_schema_version": identity["output_schema_version"],
@@ -407,7 +430,9 @@ def build_evidence(
             "severity_gate": "critical",
             "only_fixed": False,
             "gate_passed": True,
-            "finding_counts_by_severity": _severity_counts(scan_document),
+            "finding_counts_by_severity": finding_counts,
+            "ignored_finding_count": 0,
+            "exception_policy": "none",
             "database": (scan_document.get("descriptor") or {}).get("db"),
         },
         "provenance": {

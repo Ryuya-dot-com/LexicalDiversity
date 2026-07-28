@@ -39,6 +39,7 @@ from ldfreq.isolated import (
 )
 from scripts.check_runtime_environment import (
     PRODUCTION_REQUIREMENTS,
+    PRODUCTION_WATCHDOG_WHEEL_LOCK,
     PRODUCTION_WHEEL_LOCK,
     read_exact_pins,
     runtime_environment_violations,
@@ -163,6 +164,9 @@ def build_artifacts() -> tuple[dict[str, bytes], dict[str, Any]]:
         "platform": platform.platform(),
         "production_version_graph_sha256": sha256_file(PRODUCTION_REQUIREMENTS),
         "production_wheel_lock_sha256": sha256_file(PRODUCTION_WHEEL_LOCK),
+        "production_watchdog_wheel_lock_sha256": sha256_file(
+            PRODUCTION_WATCHDOG_WHEEL_LOCK
+        ),
         "base_image_identity_sha256": sha256_file(BASE_IMAGE_IDENTITY_PATH),
         "installed_versions": {
             name: metadata.version(name) for name in sorted(pins)
@@ -170,7 +174,7 @@ def build_artifacts() -> tuple[dict[str, bytes], dict[str, Any]]:
     }
     manifest = {
         "fixture_id": "ldfreq-public-v1-golden",
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "canonical-pre-v1",
         "license": "CC0-1.0",
         "human_or_learner_writing": False,

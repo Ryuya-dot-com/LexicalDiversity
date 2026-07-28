@@ -7,7 +7,7 @@ not as a reproducible environment. Runtime versions come from the exact pins in
 single-hash Linux wheel lock. CI installs the corresponding hash-locked graph
 with dependency resolution disabled, then runs this check and ``pip check``.
 
-The release contract is exactly CPython 3.12.10. Security upgrades are explicit
+The release contract is exactly CPython 3.12.13. Security upgrades are explicit
 reviewed lock migrations, not silent patch drift. The production container also
 pins its exact linux/amd64 child manifest digest.
 """
@@ -27,6 +27,16 @@ PRODUCTION_REQUIREMENTS = PROJECT_ROOT / "deploy" / "cloud-run" / "requirements-
 PRODUCTION_WHEEL_LOCK = (
     PROJECT_ROOT / "deploy" / "cloud-run" / "requirements-prod-linux-x86_64.lock"
 )
+PRODUCTION_WATCHDOG_WHEEL_LOCK = (
+    PROJECT_ROOT
+    / "deploy"
+    / "cloud-run"
+    / "requirements-watchdog-pure-linux-x86_64.lock"
+)
+PRODUCTION_WHEEL_LOCKS = (
+    PRODUCTION_WHEEL_LOCK,
+    PRODUCTION_WATCHDOG_WHEEL_LOCK,
+)
 DEVELOPMENT_REQUIREMENTS = PROJECT_ROOT / "requirements.txt"
 if str(PROJECT_ROOT) not in sys.path:
     # Direct execution sets sys.path[0] to scripts/.  Import the reviewed local
@@ -35,7 +45,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 EXPECTED_IMPLEMENTATION = "cpython"
-EXPECTED_PYTHON_VERSION = (3, 12, 10)
+EXPECTED_PYTHON_VERSION = (3, 12, 13)
 EXPECTED_PYTHON_SERIES = EXPECTED_PYTHON_VERSION[:2]
 AUDITED_NLTK_VERSION = "3.10.0"
 
@@ -147,6 +157,24 @@ def read_hashed_lock(path: Path) -> dict[str, tuple[str, str]]:
     if not artifacts:
         raise RuntimeContractError(f"required wheel lock has no artifacts: {path}")
     return artifacts
+
+
+def read_hashed_locks(paths: Iterable[Path]) -> dict[str, tuple[str, str]]:
+    """Merge disjoint artifact locks and reject cross-file duplicates."""
+
+    merged: dict[str, tuple[str, str]] = {}
+    for path in paths:
+        artifacts = read_hashed_lock(path)
+        overlap = sorted(set(merged) & set(artifacts))
+        if overlap:
+            raise RuntimeContractError(
+                "production wheel locks duplicate distributions: "
+                + ", ".join(overlap)
+            )
+        merged.update(artifacts)
+    if not merged:
+        raise RuntimeContractError("production wheel lock set has no artifacts")
+    return merged
 
 
 def declared_specifiers(path: Path, package: str) -> list[str]:
@@ -300,7 +328,7 @@ def runtime_environment_violations() -> tuple[list[str], dict[str, str]]:
         return violations, {}
 
     try:
-        wheel_artifacts = read_hashed_lock(PRODUCTION_WHEEL_LOCK)
+        wheel_artifacts = read_hashed_locks(PRODUCTION_WHEEL_LOCKS)
     except RuntimeContractError as exc:
         violations.append(str(exc))
     else:
@@ -309,7 +337,7 @@ def runtime_environment_violations() -> tuple[list[str], dict[str, str]]:
         }
         if wheel_pins != pins:
             violations.append(
-                "production wheel lock pins differ from requirements-prod.txt"
+                "production wheel lock-set pins differ from requirements-prod.txt"
             )
 
     if pins.get("nltk") != AUDITED_NLTK_VERSION:

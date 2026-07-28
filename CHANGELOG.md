@@ -11,7 +11,7 @@ public output-schema version separately. The current development identity is
 - A frozen v1 metric, interpretation, privacy, and JSON/XLSX output contract.
 - Canonical public golden fixtures using the reviewed NGSL, Open English
   WordNet, and TUBELEX runtime resources.
-- Exact CPython 3.12.10 Linux x86_64 wheel locks and a platform-specific Python
+- Exact CPython 3.12.13 Linux x86_64 wheel locks and a platform-specific Python
   base-image manifest identity.
 - Reproducible Synthetic-pilot and ELLIPSE-analysis protocols without executing
   either outcome analysis.
@@ -45,11 +45,18 @@ public output-schema version separately. The current development identity is
   source commit, and verification-only fixtures live in a non-deployable stage.
 - Legacy TAALES–COCA outputs and unapproved ELLIPSE result bundles are
   fail-closed across Git, build contexts, source candidates, and release scans.
+- The production image now uses the digest-pinned Python 3.12.13 Alpine 3.23
+  linux/amd64 manifest and musllinux wheels; watchdog's reviewed pure-Python
+  wheel is isolated and structurally validated before installation.
+- The watchdog foreign-platform install disables bytecode compilation so pip's
+  random staging path cannot make otherwise identical OCI layers differ.
 
 ### Security and privacy
 
 - Release inventory, runtime identity, query containment, upload limits, and
   non-persistence boundaries now fail closed under automated tests.
+- Candidate scans require zero active Critical findings and reject VEX or any
+  ignored finding as evidence of a passing gate.
 
 Release entries are added only when an immutable annotated tag is created. An
 already published entry or tag must never be rewritten.

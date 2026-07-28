@@ -303,18 +303,27 @@ documents this platform behavior.
 ## 11. Reproducible build and immutable release gate
 
 The repository now has a pilot scaffold in `deploy/cloud-run/`: the Dockerfile
-pins the official Python 3.12.10 slim-bookworm `linux/amd64` child manifest,
+pins the official Python 3.12.13 Alpine 3.23 `linux/amd64` child manifest,
 forces that platform, rejects a non-digest-shaped override, runs as non-root,
 and keeps application files root-owned. `base-image.json` separately records
 the tag index, selected child manifest, image config, Python version/source
-hash, and verification date. The 46-package production graph and 51-package CI
-graph each permit exactly one reviewed wheel SHA-256 per package and install
-with `--no-deps`, `--only-binary=:all:`, and `--require-hashes`.
+hash, and verification date. The 46-package production graph uses 45
+musllinux/pure wheels plus the separately reviewed watchdog pure-Python wheel;
+the 51-package CI graph targets Ubuntu 24.04. Both graphs permit one reviewed wheel SHA-256 per package and
+install with `--no-deps`, `--only-binary=:all:`, and `--require-hashes`, without
+dependency resolution or source builds. Watchdog's hash, purelib metadata,
+paths, native-artifact absence, and `RECORD` are verified before its explicit
+foreign-platform installation.
 
-This closes package and base-image *input* identity, but it does not yet prove a
-production release. The complete application image has not been built in a
-clean hosted Linux job, assigned its own resulting digest, scanned, or used to
-regenerate the golden outputs.
+This closes package and base-image *input* identity. A complete clean hosted
+build at commit `dfd25b7179b08b684143f0c6956c5fef6ab0abab` also passed two-build
+OCI equality, offline smoke, golden reproduction, SBOM, zero-Critical scan,
+registry digest verification, and attestation in
+[run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970).
+Its immutable candidate is
+`ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`.
+This is reproducible pre-release evidence, not production deployment approval
+or a stable release.
 
 Before production approval, the release build must:
 

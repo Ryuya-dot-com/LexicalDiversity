@@ -35,7 +35,7 @@ jobs:
       - name: Set up evidence Python
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
-          python-version: "3.12.10"
+          python-version: "3.12.13"
           check-latest: false
           architecture: x64
 
@@ -144,8 +144,8 @@ jobs:
           docker run --rm --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges \
             --tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,uid=10001,gid=10001,mode=0700 \
-            --entrypoint python "${{ steps.build.outputs.production-ref }}" \
-            -c 'import ldfreq; print(ldfreq.__version__, ldfreq.OUTPUT_SCHEMA_VERSION)'
+            "${{ steps.build.outputs.production-ref }}" \
+            python -c 'import ldfreq; print(ldfreq.__version__, ldfreq.OUTPUT_SCHEMA_VERSION)'
 
       - name: Reproduce canonical golden outputs inside the image
         shell: bash
@@ -154,8 +154,8 @@ jobs:
           docker run --rm --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges \
             --tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,uid=10001,gid=10001,mode=0700 \
-            --entrypoint python "${{ steps.build.outputs.verification-ref }}" \
-            /verification/scripts/build_v1_golden_fixtures.py --check
+            "${{ steps.build.outputs.verification-ref }}" \
+            python /verification/scripts/build_v1_golden_fixtures.py --check
 
       - name: Generate SPDX JSON SBOM from the exact OCI archive
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0

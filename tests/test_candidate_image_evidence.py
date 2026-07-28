@@ -53,6 +53,7 @@ def _reports(tmp_path: Path) -> tuple[dict[str, str], dict[str, Path]]:
                     {"vulnerability": {"id": "CVE-TEST-2", "severity": "Low"}},
                     {"vulnerability": {"id": "CVE-TEST-3", "severity": "High"}},
                 ],
+                "ignoredMatches": [],
                 "descriptor": {
                     "db": {"built": "2026-07-24T00:00:00Z", "schemaVersion": 6}
                 },
@@ -162,7 +163,7 @@ def test_candidate_evidence_is_canonical_and_keeps_release_boundary(
 
     assert first == second
     assert first.endswith(b"\n")
-    assert document["candidate_image_evidence_schema_version"] == 2
+    assert document["candidate_image_evidence_schema_version"] == 3
     assert document["status"] == "verified-candidate-not-release"
     assert document["source"]["commit"] == commit
     assert document["source"]["tree"] == tree
@@ -179,6 +180,8 @@ def test_candidate_evidence_is_canonical_and_keeps_release_boundary(
         "low": 1,
     }
     assert document["vulnerability_scan"]["gate_passed"] is True
+    assert document["vulnerability_scan"]["ignored_finding_count"] == 0
+    assert document["vulnerability_scan"]["exception_policy"] == "none"
     reproducibility = document["reproducibility"]
     assert reproducibility["independent_no_cache_production_builds"] == 2
     assert reproducibility["image_manifest_digests_equal"] is True
@@ -270,6 +273,44 @@ def test_candidate_evidence_rejects_non_sbom_json(
     monkeypatch.setattr(evidence, "_git", lambda *args: "c" * 40)
 
     with pytest.raises(evidence.CandidateImageEvidenceError, match="SBOM"):
+        evidence.build_evidence(_identity(), **arguments)
+
+
+def test_candidate_evidence_rejects_active_critical_finding(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+):
+    _digests, arguments = _arguments(tmp_path)
+    scan_path = arguments["vulnerability_report"]
+    scan = json.loads(scan_path.read_text(encoding="utf-8"))
+    scan["matches"].append(
+        {"vulnerability": {"id": "CVE-UNREVIEWED", "severity": "Critical"}}
+    )
+    scan_path.write_text(json.dumps(scan), encoding="utf-8")
+    monkeypatch.setattr(evidence, "_git", lambda *args: "c" * 40)
+
+    with pytest.raises(evidence.CandidateImageEvidenceError, match="active Critical"):
+        evidence.build_evidence(_identity(), **arguments)
+
+
+def test_candidate_evidence_rejects_any_ignored_match(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+):
+    _digests, arguments = _arguments(tmp_path)
+    scan_path = arguments["vulnerability_report"]
+    scan = json.loads(scan_path.read_text(encoding="utf-8"))
+    scan["ignoredMatches"].append(
+        {
+            "vulnerability": {"id": "CVE-IGNORED", "severity": "Low"},
+            "artifact": {"name": "ignored-package"},
+            "appliedIgnoreRules": [{"reason": "unreviewed"}],
+        }
+    )
+    scan_path.write_text(json.dumps(scan), encoding="utf-8")
+    monkeypatch.setattr(evidence, "_git", lambda *args: "c" * 40)
+
+    with pytest.raises(evidence.CandidateImageEvidenceError, match="permits none"):
         evidence.build_evidence(_identity(), **arguments)
 
 

@@ -82,4 +82,5 @@ scripts/**
 !scripts/
 !scripts/build_v1_golden_fixtures.py
 !scripts/check_runtime_environment.py
+!scripts/check_pure_watchdog_wheel.py
 *.log

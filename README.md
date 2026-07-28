@@ -63,20 +63,24 @@ evidence remains evidence for that historical root; every later candidate
 requires a newly approved selection and evidence record.
 
 `requirements.txt` is a developer convenience file, not the reproducible v1.0
-environment. Clean CI uses CPython 3.12.10 and one SHA-256-pinned Linux x86_64
+environment. Clean CI uses CPython 3.12.13 and one SHA-256-pinned Linux x86_64
 wheel per production/CI dependency, then runs
 `scripts/check_runtime_environment.py`, the complete test suite, and the
 public-inventory gate. The production Dockerfile pins the reviewed
-`3.12.10-slim-bookworm` linux/amd64 child manifest rather than a mutable tag or
+`3.12.13-alpine3.23` linux/amd64 child manifest rather than a mutable tag or
 the multi-platform index; its registry evidence is recorded in
 `deploy/cloud-run/base-image.json` and can be rechecked with
 `python scripts/check_base_image_identity.py --remote`. The candidate
 metric/resource/output boundary is frozen
 in [the v1.0 scope contract](docs/v1-scope-freeze.md) and its
 [machine-readable schema](docs/v1-metric-scope.json).
-The remaining byte-reproducibility gate is to build the complete application
-image from a clean tracked checkout, record that resulting image digest and
-provenance, and reproduce the golden outputs inside it.
+The Alpine candidate gate passed from clean protected `main` at commit
+[`dfd25b7`](https://github.com/Ryuya-dot-com/LexicalDiversity/commit/dfd25b7179b08b684143f0c6956c5fef6ab0abab).
+[Run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970)
+reproduced the complete OCI manifest, config, and every layer across two
+no-cache builds, then reproduced the golden outputs inside the image. The
+verified candidate is
+`ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`.
 The [v1 golden fixture](tests/fixtures/v1_golden/README.md) uses two public CC0
 test texts and the actual NGSL, OEWN, and TUBELEX runtime resources to pin
 canonical JSON and Excel cell outputs without using learner data or an API.
@@ -90,9 +94,12 @@ offline smoke and golden checks. Syft and Grype inspect the exact primary OCI
 archive. Registry login and publication occur only after the Critical gate, and
 the independently rebuilt GHCR manifest must retain the scanned digest. The
 commit-addressed candidate is attested and accompanied by an SPDX SBOM, Grype
-JSON report, raw registry manifest, and canonical evidence artifact. A
-candidate digest is not a Git tag, GitHub Release, stable image, or deployment
-approval.
+JSON report, raw registry manifest, and canonical evidence artifact. Critical
+findings must be zero: VEX, ignored findings, and `only-fixed` filtering are not
+accepted by the evidence contract. The successful Alpine candidate had zero
+Critical and zero ignored findings and has
+[GitHub attestation 37463385](https://github.com/Ryuya-dot-com/LexicalDiversity/attestations/37463385).
+A candidate digest is not a Git tag, GitHub Release, stable image, or deployment approval.
 
 Running a research comparison is not permission to publish it. The legacy
 TAALES 2.8.1–COCA comparison remains a blocked private calibration: its plan,
@@ -110,21 +117,32 @@ deferments are tracked in the
 [2026–2028 strategic roadmap](docs/strategic-roadmap-2026-2028.md) and the
 [2026-07-24 decision log](docs/decision-log-2026-07-24.md).
 
-The wheel choice is reproducible and fail-closed. With CPython 3.12.10 and pip
-25.0.1, download the reviewed platform set to an empty temporary directory,
-then compare it byte-for-byte with both committed locks:
+The wheel choice is reproducible and fail-closed. With CPython 3.12.13 and pip
+25.0.1, download each reviewed platform set to a separate empty temporary
+directory, then compare it byte-for-byte with the committed locks:
 
 ```bash
-python3.12 scripts/download_linux_wheels.py --dest /tmp/ldfreq-linux-wheels
+python3.12 scripts/download_linux_wheels.py \
+  --profile production --dest /tmp/ldfreq-production-wheels
 python3.12 scripts/build_linux_wheel_locks.py \
-  --wheel-dir /tmp/ldfreq-linux-wheels --check
+  --profile production --wheel-dir /tmp/ldfreq-production-wheels --check
+python3.12 scripts/download_linux_wheels.py \
+  --profile ci --dest /tmp/ldfreq-ci-wheels
+python3.12 scripts/build_linux_wheel_locks.py \
+  --profile ci --wheel-dir /tmp/ldfreq-ci-wheels --check
 ```
 
 For an intentional dependency migration, add `--allow-lock-change` to the
 download step, inspect the retained wheel set, then use `--write` instead of
 `--check`. The normal developer install remains platform-native; the strict
 Linux locks define CI and production, where silent source builds and dependency
-resolution are disabled.
+resolution are disabled. Alpine production uses musllinux wheels. The upstream
+watchdog 6.0.0 wheel is isolated because its filename is manylinux-tagged; its
+exact hash, purelib metadata, archive paths, absence of native payloads, and
+complete `RECORD` are checked before the reviewed foreign-tag installation.
+That install disables bytecode compilation because pip's temporary target path
+would otherwise make independent OCI builds differ; runtime bytecode writes are
+already disabled by the container environment.
 
 The complete Streamlit analysis path intentionally requires a POSIX host
 (Linux or macOS) because every submitted text is processed in a one-shot,
