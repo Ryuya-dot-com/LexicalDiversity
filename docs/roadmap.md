@@ -68,20 +68,19 @@ The public-history migration is complete under
 commit `1cd75aac8749d7512a629415441ae0703246b38a` has one reachable commit and 131
 files; its hosted CPython 3.12.10 hash-locked CI run passed every step. The old
 22-commit history is retained separately as a private, unarchived legacy
-repository and is not the source of public releases. The next release evidence
-is a clean application-image build, its resulting digest and provenance,
-golden reproduction inside that image, and the v0.9 release-candidate package.
+repository and is not the source of public releases. The clean application-image
+build, resulting digest and provenance, and golden reproduction inside that
+image are now recorded below. The v0.9 release-candidate package remains later.
 Canonical golden fixtures, deterministic JSON/XLSX serialization, package
 hashes, and the exact production Python base-image manifest are implemented.
 The current local verification environment is CPython 3.12.13. The earlier
 CPython 3.12.10 contracts and suite passed in hosted Linux CI from the clean
 public root. The Alpine security refresh passes all 46 exact runtime pins,
 `pip check`, golden reproduction, and the public-data-independent suite locally
-(291 passed, 2 skipped); it must still pass the same hosted gates before its
-candidate result is claimed.
+(291 passed, 2 skipped), and passed the hosted CI and Candidate gates.
 Package hashes and the exact production Python base-image digest are fixed as
-inputs, but the hosted Linux install and resulting application-image digest
-remain v0.9 gates; exact inputs alone are not an end-to-end reproduction claim.
+inputs. The successful hosted build below adds end-to-end candidate-image
+evidence but is not a stable release claim.
 The manual candidate-image workflow now specifies two no-cache production
 OCI builds under digest-pinned BuildKit, timestamp normalization, manifest,
 config, and full layer-digest equality, and offline golden verification in a
@@ -89,12 +88,38 @@ non-deployable stage. SBOM generation and the Critical vulnerability gate read
 the exact OCI archive. The gate allows no VEX, ignored finding, or `only-fixed`
 filter; active Critical findings must be zero. GHCR login follows the scan, and
 the independently rebuilt commit-addressed publication must have the scanned manifest digest
-before provenance attestation and canonical evidence are accepted. It has not
-yet passed this revised gate, so no application-image candidate digest or scan
-result is claimed here.
-Until those gates pass, do not compute ELLIPSE rating associations, generate the
-Synthetic pilot, add metrics or corpora, or claim that the release is
-reproducible.
+before provenance attestation and canonical evidence are accepted.
+
+### 2026-07-28 Alpine candidate evidence
+
+- Source: commit `dfd25b7179b08b684143f0c6956c5fef6ab0abab`, tree
+  `06629605a08f928eb0cdce09ef725008aa98ed87` on protected `main`.
+- Workflow: [Candidate run 30339125970](https://github.com/Ryuya-dot-com/LexicalDiversity/actions/runs/30339125970),
+  successful in one attempt. Two independent no-cache builds produced equal
+  OCI manifest, config, and all 23 layer digests; offline smoke and golden
+  reproduction passed.
+- Candidate image:
+  `ghcr.io/ryuya-dot-com/lexicaldiversity@sha256:e5c7d3bf11075dce9531d986b2bc3381126e2aaff7432e5ec72029325760c93a`;
+  config digest
+  `sha256:3cedd22b5929d470fdb6e5d0f28df1478ceb4ce00327fff32ae96457f808eaf1`.
+- Scan: Grype 0.116.0 with database v6.1.9 built 2026-07-27. Findings were
+  Critical 0, High 41, Medium 30, Low 4, Negligible 1; ignored findings 0,
+  `only-fixed: false`, exception policy `none`.
+- Provenance:
+  [GitHub attestation 37463385](https://github.com/Ryuya-dot-com/LexicalDiversity/attestations/37463385)
+  was pushed for the registry manifest. The workflow artifact was
+  `candidate-image-evidence-dfd25b7179b08b684143f0c6956c5fef6ab0abab`
+  with archive digest
+  `sha256:87fbe85a479049058f2a3809e89978fb09864ea7131a2e500c61df22d08ef58d`.
+- Boundary: canonical status `verified-candidate-not-release`; no Git tag,
+  GitHub Release, stable image promotion, deployment approval, or v1.0 claim.
+
+The first Alpine run exposed nondeterministic watchdog bytecode generated from
+pip's random staging path. PR
+[#11](https://github.com/Ryuya-dot-com/LexicalDiversity/pull/11) disabled that
+install-time compilation and made the independent layers equal. Do not compute
+ELLIPSE rating associations, generate the Synthetic pilot, or add metrics or
+corpora merely because the application-image gate is now green.
 
 ## Current baseline
 
