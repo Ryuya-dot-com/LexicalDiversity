@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.1.0",
-  "last_reviewed": "2026-07-23",
+  "schema_version": "1.2.0",
+  "last_reviewed": "2026-07-27",
   "policy_document": "docs/resource-governance.md",
   "required_entry_fields": [
     "id",
@@ -59,6 +59,75 @@
       "meaning": "A pre-existing local payload is retained outside public source and deployment artifacts."
     }
   },
+  "derived_result_contract": {
+    "manifest_schema_version": "1.0.0",
+    "public_roots": [
+      "results/public/"
+    ],
+    "required_registry_fields": [
+      "id",
+      "root",
+      "public_build",
+      "manifest",
+      "manifest_bytes",
+      "manifest_sha256",
+      "expected_upstream_resource_ids",
+      "publication_status"
+    ],
+    "required_manifest_fields": [
+      "schema_version",
+      "bundle",
+      "artifacts",
+      "upstream_resources",
+      "provenance",
+      "aggregation",
+      "attribution",
+      "publication_review"
+    ],
+    "artifact_classes": [
+      "aggregate-table",
+      "aggregate-figure",
+      "aggregate-metadata",
+      "analysis-report"
+    ],
+    "publication_statuses": [
+      "approved",
+      "review-required",
+      "blocked"
+    ]
+  },
+  "derived_result_bundles": [
+    {
+      "id": "ellipse-external-association",
+      "root": "r-package/experiments/ellipse-external-association/",
+      "public_build": false,
+      "manifest": null,
+      "manifest_bytes": null,
+      "manifest_sha256": null,
+      "expected_upstream_resource_ids": [
+        "ellipse-corpus-dc3b8f0b-final",
+        "ngsl-1.2",
+        "open-english-wordnet-2025-metrics",
+        "tubelex-en-treebank-7cb5fb36-frequency-index"
+      ],
+      "publication_status": "review-required"
+    },
+    {
+      "id": "taales-coca-convergence",
+      "root": "r-package/experiments/taales-coca-convergence/",
+      "public_build": false,
+      "manifest": null,
+      "manifest_bytes": null,
+      "manifest_sha256": null,
+      "expected_upstream_resource_ids": [
+        "ellipse-corpus-dc3b8f0b-final",
+        "taales-2.8.1-legacy-application",
+        "taales-legacy-coca-derived-tables",
+        "tubelex-en-treebank-7cb5fb36-frequency-index"
+      ],
+      "publication_status": "blocked"
+    }
+  ],
   "resources": [
     {
       "id": "nj8",

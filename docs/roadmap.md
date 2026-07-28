@@ -1,6 +1,6 @@
 # Web lexical-sophistication roadmap
 
-Last updated: 2026-07-24
+Last updated: 2026-07-28
 
 This roadmap replaces a direct Web wrapper around legacy TAALES with a Python 3
 analysis service built only from cleared, versioned, reproducible resources.
@@ -88,8 +88,17 @@ rebuilt commit-addressed publication must have the scanned manifest digest
 before provenance attestation and canonical evidence are accepted. It has not
 yet passed this revised gate, so no application-image candidate digest or scan
 result is claimed here.
-Until those gates pass, do not compute ELLIPSE rating associations, generate the
-Synthetic pilot, add metrics or corpora, or claim that the release is
+
+Derived-result Q0 enforcement is now implemented. The registry schema v1.2
+requires upstream resource identities, exact result manifests, artifact-class
+decisions, aggregation and disclosure review, and a dated publication approval.
+The external exact-byte selection manifest and evidence schema v2 bind those
+decisions to each candidate. The legacy TAALES–COCA family is blocked and the
+completed internal ELLIPSE result family remains `review-required` with
+`public_build: false`; neither result family is public evidence.
+
+Until the image gates pass, do not publish the ELLIPSE result bundle, generate
+the Synthetic pilot, add metrics or corpora, or claim that the release is
 reproducible.
 
 ## Current baseline
@@ -116,7 +125,8 @@ reproducible.
 
 ## Phase 0 — governance gate
 
-Status: **implemented; clean public-history boundary verified**
+Status: **implemented; clean public-history boundary and Q0 derived-result
+enforcement verified; candidate-specific approval pending**
 
 - Maintain the machine-readable resource registry and verified hashes.
 - Admit only `green` payloads to public builds.
@@ -129,9 +139,16 @@ Status: **implemented; clean public-history boundary verified**
 - Require `scripts/check_git_history.py` to pass before any release tag. The
   clean public root passes. The separate private legacy checkout still fails by
   design because excluded resources remain reachable in its earlier commits.
-- Registry schema v1.1 now separates rights `status`, intended `tier`, and
+- Registry schema v1.2 separates rights `status`, intended `tier`, and
   `provisioning.mode`. ELLIPSE is therefore rights-reviewed `green` while still
   being a non-runtime `evaluation-benchmark` with every payload flag disabled.
+- Derived results are separately fail-closed: no aggregate, figure, model,
+  coefficient, coverage table, or fingerprint is publishable merely because
+  the upstream corpus is registered or the output omits row-level text.
+- The clean-candidate builder requires an externally stored, approved
+  exact-byte selection manifest and records the registry, three zero-finding
+  scans, reviewed result bundles, and excluded output families in evidence
+  schema v2.
 - `.research/` and all non-metadata benchmark files are blocked by Git,
   container-context, and public-release checks. Only the reviewed ELLIPSE
   manifest and analysis plan may enter the public inventory.
