@@ -17,6 +17,10 @@ for ldfreq_runtime_dir in "${TMPDIR}" "${XDG_CACHE_HOME}" "${XDG_CONFIG_HOME}"; 
 done
 
 cd /opt/ldfreq
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
+
 exec python -m streamlit run app.py \
   --server.address=0.0.0.0 \
   --server.port=8080 \

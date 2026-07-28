@@ -102,9 +102,11 @@ jobs:
             --provenance=false \
             --build-arg "SOURCE_DATE_EPOCH=${ldfreq_source_date_epoch}" \
             --load --tag "ldfreq:${GITHUB_SHA}" .
-          docker run --rm --network none --read-only \
-            --entrypoint python "ldfreq:${GITHUB_SHA}" \
-            -c 'import ldfreq; print(ldfreq.__version__, ldfreq.OUTPUT_SCHEMA_VERSION)'
+          docker run --rm --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --tmpfs /tmp/ldfreq:rw,noexec,nosuid,nodev,size=67108864,uid=10001,gid=10001,mode=0700 \
+            "ldfreq:${GITHUB_SHA}" \
+            python -c 'import ldfreq; print(ldfreq.__version__, ldfreq.OUTPUT_SCHEMA_VERSION)'
           python scripts/build_release_archive.py \
             --output /tmp/ldfreq-source.tar.gz
           python scripts/build_release_evidence.py \
