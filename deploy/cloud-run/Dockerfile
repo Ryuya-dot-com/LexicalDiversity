@@ -7,6 +7,9 @@ ARG SOURCE_DATE_EPOCH
 ARG PYTHON_IMAGE=python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
 FROM --platform=linux/amd64 ${PYTHON_IMAGE} AS application
 
+# The global argument drives BuildKit's exporter. Redeclare it in the stage so
+# pip's bytecode compiler uses deterministic hash-based invalidation as well.
+ARG SOURCE_DATE_EPOCH
 ARG PYTHON_IMAGE
 RUN set -eu; \
     case "${PYTHON_IMAGE}" in \
