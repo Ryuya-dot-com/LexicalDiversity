@@ -5,6 +5,7 @@ gatherUsageStats = false
 showErrorDetails = "none"
 
 [server]
+fileWatcherType = "none"
 enableCORS = true
 enableXsrfProtection = true
 enableStaticServing = false

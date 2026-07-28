@@ -4,7 +4,7 @@
 # multi-platform index.  An override remains fail-closed and is an explicit
 # release-contract change.
 ARG SOURCE_DATE_EPOCH
-ARG PYTHON_IMAGE=python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
+ARG PYTHON_IMAGE=python:3.12.13-alpine3.23@sha256:efc8538b7449b6d893de5d852c87a0dc2cffd0ec27b07dd98ba3e7edaadc26af
 FROM --platform=linux/amd64 ${PYTHON_IMAGE} AS application
 
 # The global argument drives BuildKit's exporter. Redeclare it in the stage so
@@ -34,12 +34,31 @@ WORKDIR /opt/ldfreq
 
 COPY --chown=0:0 deploy/cloud-run/requirements-prod.txt /opt/ldfreq/requirements-prod.txt
 COPY --chown=0:0 deploy/cloud-run/requirements-prod-linux-x86_64.lock /opt/ldfreq/requirements-prod-linux-x86_64.lock
+COPY --chown=0:0 deploy/cloud-run/requirements-watchdog-pure-linux-x86_64.lock /opt/ldfreq/requirements-watchdog-pure-linux-x86_64.lock
+COPY --chown=0:0 scripts/check_pure_watchdog_wheel.py /opt/ldfreq/check_pure_watchdog_wheel.py
 RUN python -m pip install --no-cache-dir --no-deps --only-binary=:all: \
       --require-hashes --requirement /opt/ldfreq/requirements-prod-linux-x86_64.lock
+RUN install -d -m 0700 /tmp/ldfreq-watchdog-wheel \
+    && python -m pip download --isolated --disable-pip-version-check \
+         --no-cache-dir --no-deps --only-binary=:all: --require-hashes \
+         --platform manylinux2014_x86_64 --implementation cp \
+         --python-version 3.12 --abi none \
+         --dest /tmp/ldfreq-watchdog-wheel \
+         --requirement /opt/ldfreq/requirements-watchdog-pure-linux-x86_64.lock \
+    && python /opt/ldfreq/check_pure_watchdog_wheel.py \
+         /tmp/ldfreq-watchdog-wheel/watchdog-6.0.0-py3-none-manylinux2014_x86_64.whl \
+    && python -m pip install --isolated --disable-pip-version-check \
+         --no-index --no-cache-dir --no-deps --only-binary=:all: --require-hashes \
+         --platform manylinux2014_x86_64 --implementation cp \
+         --python-version 3.12 --abi none \
+         --target /usr/local/lib/python3.12/site-packages \
+         --find-links /tmp/ldfreq-watchdog-wheel \
+         --requirement /opt/ldfreq/requirements-watchdog-pure-linux-x86_64.lock \
+    && rm -rf /tmp/ldfreq-watchdog-wheel
 
-RUN groupadd --gid 10001 ldfreq \
-    && useradd --uid 10001 --gid 10001 --no-create-home \
-         --home-dir /nonexistent --shell /usr/sbin/nologin ldfreq \
+RUN addgroup -S -g 10001 ldfreq \
+    && adduser -S -D -H -u 10001 -G ldfreq \
+         -h /nonexistent -s /sbin/nologin ldfreq \
     && install -d -o 10001 -g 10001 -m 0700 \
          /tmp/ldfreq /tmp/ldfreq/tmp /tmp/ldfreq/cache /tmp/ldfreq/config \
     && chmod 0555 /tmp /var/tmp
@@ -72,6 +91,7 @@ COPY --chown=0:0 requirements.txt /verification/requirements.txt
 COPY --chown=0:0 \
     deploy/cloud-run/requirements-prod.txt \
     deploy/cloud-run/requirements-prod-linux-x86_64.lock \
+    deploy/cloud-run/requirements-watchdog-pure-linux-x86_64.lock \
     deploy/cloud-run/base-image.json \
     /verification/deploy/cloud-run/
 COPY --chown=0:0 \

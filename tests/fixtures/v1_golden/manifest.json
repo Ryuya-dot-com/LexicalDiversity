@@ -1,6 +1,6 @@
 {
   "fixture_id": "ldfreq-public-v1-golden",
-  "schema_version": 2,
+  "schema_version": 3,
   "status": "canonical-pre-v1",
   "license": "CC0-1.0",
   "human_or_learner_writing": false,
@@ -82,12 +82,13 @@
     }
   },
   "generator": {
-    "python": "3.12.10",
+    "python": "3.12.13",
     "implementation": "CPython",
     "platform": "macOS-26.5.2-arm64-arm-64bit",
     "production_version_graph_sha256": "43aca90091bb41c087590b17f9c0adaaa133718dbe9e3428095a3101de0eedf1",
-    "production_wheel_lock_sha256": "db9d30561ec4ef4fb22b7c1217a96bb18b19bf462bf96de609303c15714388aa",
-    "base_image_identity_sha256": "ab6bd98a84b6583f00bc4f212837c979a9311cdde50022cc7063611f6dfd4fb3",
+    "production_wheel_lock_sha256": "9a892bc9dcabf68a3b803a0f9a9481e8968901fb74f2a667dfb4778779ec2871",
+    "production_watchdog_wheel_lock_sha256": "b283227b22a36f85459abbaa87bda16ec1328250d4e97120c7bffb5e989891b6",
+    "base_image_identity_sha256": "5253a9b4fda5ff536faf08c4bf688d9e0d2d0b5f1400299d35544d10660fa16a",
     "installed_versions": {
       "altair": "6.0.0",
       "attrs": "25.4.0",

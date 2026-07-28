@@ -303,13 +303,17 @@ documents this platform behavior.
 ## 11. Reproducible build and immutable release gate
 
 The repository now has a pilot scaffold in `deploy/cloud-run/`: the Dockerfile
-pins the official Python 3.12.10 slim-bookworm `linux/amd64` child manifest,
+pins the official Python 3.12.13 Alpine 3.23 `linux/amd64` child manifest,
 forces that platform, rejects a non-digest-shaped override, runs as non-root,
 and keeps application files root-owned. `base-image.json` separately records
 the tag index, selected child manifest, image config, Python version/source
-hash, and verification date. The 46-package production graph and 51-package CI
-graph each permit exactly one reviewed wheel SHA-256 per package and install
-with `--no-deps`, `--only-binary=:all:`, and `--require-hashes`.
+hash, and verification date. The 46-package production graph uses 45
+musllinux/pure wheels plus the separately reviewed watchdog pure-Python wheel;
+the 51-package CI graph targets Ubuntu 24.04. Both graphs permit one reviewed wheel SHA-256 per package and
+install with `--no-deps`, `--only-binary=:all:`, and `--require-hashes`, without
+dependency resolution or source builds. Watchdog's hash, purelib metadata,
+paths, native-artifact absence, and `RECORD` are verified before its explicit
+foreign-platform installation.
 
 This closes package and base-image *input* identity, but it does not yet prove a
 production release. The complete application image has not been built in a
