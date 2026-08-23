@@ -3,6 +3,12 @@
 凍結日: 2026-07-24
 対象: `1.x` release line
 機械可読契約: [`v1-metric-scope.json`](v1-metric-scope.json)
+トークナイザ契約: [`tokenizer-contract.json`](tokenizer-contract.json)
+
+注: 指標集合は引き続き application v1.0 候補の scope だが、短文時の silent parameter
+reduction と出力既定値を是正したため、公開出力契約は SemVer MAJOR の `2.0.0` である。
+既存リンクを壊さないため `v1-metric-scope.json` という歴史的ファイル名は今回維持し、
+ファイル名の整理は別課題とする。
 
 ## 1. この文書の役割
 
@@ -20,8 +26,11 @@
 
 ### Panel A: 語彙多様性・反復
 
-Panel A は参照語彙表を使わず、英字トークナイザで得た小文字化 surface token 列を
-対象にする。12個の公開 key と順序を次に固定する。
+Panel A は参照語彙表を使わず、既定の `english_unicode_v1` で得た小文字化
+surface token 列を対象にする。この方針は NFC、Unicode letter と後続 mark、一般的な
+typographic apostrophe の ASCII `'` への正規化を固定し、hyphen/dash と数字は token を
+分割し、数字だけの列は除外する。旧 ASCII 正規表現は `ascii_legacy_v1` を明示した場合
+だけ使える。12個の公開 key と順序を次に固定する。
 
 | key | 表示名 | 多様性との表示上の向き |
 |---|---|---|
@@ -38,17 +47,39 @@ Panel A は参照語彙表を使わず、英字トークナイザで得た小文
 | `yule_k` | Yule's K | **低いほど多様** |
 | `yule_i` | Yule's I | 高いほど多様 |
 
-最小 token 数は、値の有効性を保証する cut score ではなく、表示上の注意喚起と
-計算条件である。実効値は segment/window/sample 設定により変わりうる。短文でも式が
-計算可能なら値を残すが、警告なしを信頼性・妥当性の証明としては扱わない。
+各 metric は従来の scalar 値に加え、`panel_a_records` で `value`, `status`,
+`missing_reason`, `method_id`, `requested_parameters`, `effective_parameters`,
+`advisory_quality_floor_tokens`, `advisory_quality_status` を返す。標準 method ID の
+MSTTR/MATTR/HD-D/vocd-D は、短文に合わせて segment/window/sample/range を縮小しない。
+指定した計算 domain を満たさなければ標準値は `null` となり、必要なら明示的な
+`*_adaptive` API variant を別 key・別 method ID として利用する。missing record の
+`effective_parameters` は空 map とし、実値を適用したと誤認させない。available record
+だけが実際に適用した parameter を記録する。
+
+公開 metric API の token 入力は、空でないUTF-8文字列だけを要素に持つ pre-tokenized
+materialized sequence に限定する。要素内の空白を再tokenizeはしない。bare string/bytes、
+generator、非文字列要素、空文字、UTF-8へencodeできない文字列は計算前に拒否し、boolean option は exact `bool`、
+整数 parameter は `bool` や float から暗黙変換しない。固定 method ID を持つ record API の
+MTLD minimum factor length は10であり、別値は method identity と矛盾するため拒否する。
+
+project minimum token 数は値の有効性を保証する cut score ではなく、計算 domain から
+独立した表示上の注意喚起である。したがって Yule 指標などは advisory floor 未満でも
+式が定義されれば計算し、警告なしを信頼性・妥当性の証明としては扱わない。Python MTLD
+は factor 長10以上で TTR が threshold **以下**（`<=`）になった時に factor を閉じる
+双方向平均 variant として固有 method ID を持ち、strict `<` の R variant との数値同等性を
+主張しない。10 token 未満は計算 domain 外として `null` にする。
 
 ### Panel B: 選択語彙表との一致
 
-Panel B は選択した参照語彙表と fallback normalizer に依存する。公開 top-level key は
-次の8個である。
+Panel B は選択した参照語彙表と fallback normalizer に依存する。現行の
+`surface_first_rank_lookup_normalized_fallback_v1` は、小文字化した surface をまず
+語彙表 key に照合し、不一致の場合だけ normalizer 出力を再照合する hybrid
+方式である。direct hit は再 normalization しないため、pure flemma/lemma pipeline ではなく、
+LexTutor との数値的同等性も主張しない。公開 top-level key は次の9個である。
 
 | key | 内容 |
 |---|---|
+| `mapping_diagnostics` | hybrid mapping path の token 数/率と surface/mapped unit type の集計 |
 | `lfp` | band 別 token/type 数、coverage、累積 coverage |
 | `coverage_threshold` | 90/95/98% 等へ最初に到達する選択語彙表 band |
 | `advanced_guiraud` | advanced type 数を `sqrt(N)` で割った値 |
@@ -58,7 +89,10 @@ Panel B は選択した参照語彙表と fallback normalizer に依存する。
 | `s_index` | 選択語彙表 rank に対する coverage curve fit |
 | `band_wise` | band ごとの token/type 数と MTLD/MATTR/HD-D |
 
-`_mapped` のような一時的な token-to-head 対応は公開 payload に含めない。P_Lex は
+`mapping_diagnostics` は直接 hit、normalized fallback hit、normalized off-list、identity
+fallback の相互排他な集計と type 圧縮数だけを含む。入力語、normalizer 出力語、
+head/rank 列は含めない。`_mapped` のような一時的な token-to-head 対応も公開 payload に
+含めない。P_Lex は
 完全な10語 segment がない場合、S は50語 sample を満たさない場合に短文用の
 `null`/note schema を返す。これらの条件分岐も JSON 契約の一部である。
 
@@ -91,20 +125,36 @@ TUBELEX は専用 Treebank adapter で token 化し、次を token/type 加重�
 
 採用条件は、`data/resource_registry.json` で `tier=runtime-resource`、
 `status.level=green`、`license.verified=true` であり、public SaaS 処理が許可されたことと
-する。v1.0 の resource ID は次の6個に固定する。
+する。公開 v1.0 の resource ID は次の5個に固定する。
 
 | registry ID | runtime selector | 配置 | v1.0 での扱い |
 |---|---|---|---|
-| `nj8` | `nj8` | bundled | 標準公開 inventory |
 | `ngsl-1.2` | `ngsl` | bundled | 標準公開 inventory、`open_flemma` の根拠にも使用 |
-| `nation-bnc-coca-headwords-10000` | `bnc_coca` | server-injected | operator の allow-list と権利 attestation がある場合だけ |
-| `nation-bnc-coca-families-25000` | `nation_bnc_coca_families` | server-injected | operator の allow-list と権利 attestation がある場合だけ |
+| `nation-bnc-coca-headwords-10000` | `bnc_coca` | server-injected | 完全な public server-only gate が通った場合だけ |
+| `nation-bnc-coca-families-25000` | `nation_bnc_coca_families` | server-injected | 完全な public server-only gate が通った場合だけ |
 | `tubelex-en-treebank-7cb5fb36-frequency-index` | なし | bundled | TUBELEX 指標 |
 | `open-english-wordnet-2025-metrics` | なし | bundled | semantic 指標と `open_flemma` の語彙根拠 |
 
+NJ8 はこの公開 inventory に含めない。project owner の2026-07-22 attestation は証拠として
+保持するが、original permission record、grantor authority、公開利用の全 scope、独立 review
+が未確認であるため `yellow` / `review-pending` とする。CSV は current/future Git tree、release、
+package、container、CI、公開 UI から除外し、`LDFREQ_SERVING_MODE=local` と
+`LDFREQ_ALLOW_LOCAL_RESTRICTED=1` を同時に指定した operator-supplied local copy のみ扱う。
+local runtime の `parenthetical_variant_expansion_v1` と
+`surface_first_rank_lookup_normalized_fallback_v1` も permission review の transformation scope
+に含める。
+
 Nation 2資源が `green` であることは、raw list を Git、package、container、client へ
 同梱してよいという意味ではない。これらは product policy により server-only とし、
-既定では非表示にする。NJ8/NGSL と server-only Nation を同じ「標準同梱」と表現しない。
+既定では非表示にする。NGSL と server-only Nation を同じ「標準同梱」と表現しない。
+
+完全な gate は、eligible ID の allow-list、権利 acknowledgement、固定 profile
+`shared-abuse-controls-v1`、短い不透明な外部 evidence ID の4条件を要求する。evidence ID
+は外部に保管した control review record への参照にすぎず、URL、file path、secret、
+placeholder を入れてはならない。runtime は宣言値と ID の形だけを検査し、共有 rate
+limiter、account quota、content-free audit、anomaly detection、extraction-resistance test
+の存在や合格を検証しない。どれかが欠ける場合は、resource を表示、materialize、isolated
+worker へ転送しない。
 
 公開 UI の normalizer は `open_flemma`（既定）と `simplemma`（比較用）である。
 AntBNC、legacy EAPFoundation、legacy TAALES data、利用者が持ち込む Range data はこの
@@ -118,12 +168,15 @@ AntBNC、legacy EAPFoundation、legacy TAALES data、利用者が持ち込む Ra
 
 ```text
 ldfreq_version, output_schema_version, document, settings, method_notes, privacy,
-n_tokens, n_types, panel_a, panel_b, semantic_network, tubelex
+n_tokens, n_types, panel_a, panel_a_records, panel_b, semantic_network, tubelex
 ```
 
 `document.name` は入力ファイル名ではなく `Document 001` のような疑似ラベルである。
-`settings` は normalizer/list の ID・版・lookup unit、tokenizer policy、threshold、
-segment/window/sample、seed、cutoff を記録する。Panel B、OEWN、TUBELEX が明示的に
+`panel_a` は既存 consumer のための scalar 投影、`panel_a_records` は計算状態・欠測理由・
+method ID・要求/実効 parameter・独立した advisory quality 状態を持つ構造化正本である。
+`settings` は normalizer/list の ID・版・lookup unit、Panel B mapping method ID、登録済み tokenizer policy ID、
+threshold、segment/window/sample、seed、cutoff を記録する。tokenizer policy に自由記述
+は許さず、記録した ID が実際の tokenization を駆動する。Panel B、OEWN、TUBELEX が明示的に
 無効または利用不能なら、該当 section は `null` になりうるが key 自体は残す。
 
 複数文書では `ldfreq_version`, `output_schema_version`, `batch`,
@@ -172,7 +225,8 @@ canonical入力、JSON期待値、Excel semantic snapshot、各hashは
 
 ## 5. 解釈契約
 
-許される主張は、「記録された tokenizer、normalizer、参照資源、lookup unit、parameter
+許される主張は、「記録された tokenizer、Panel B mapping method、normalizer、参照資源、
+lookup unit、parameter
 の下で測った、その提出テキストの記述的特徴」である。次の主張は禁止する。
 
 - 評点、essay score、CEFR level の推定
@@ -180,7 +234,8 @@ canonical入力、JSON期待値、Excel semantic snapshot、各hashは
 - writing quality の予測
 - AI 生成・人間執筆の判定
 
-テキスト間比較では、少なくとも tokenizer、normalizer、資源 ID/版、lookup unit、
+テキスト間比較では、少なくとも tokenizer policy ID、Panel B mapping method ID、normalizer、
+資源 ID/版、lookup unit、
 parameter を一致させる。可能な限り、長さ、prompt、topic、genre、register、sampling
 condition も揃える。高い/低い値は自動的に良い/悪いを意味しない。
 

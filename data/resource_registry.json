@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.2.0",
-  "last_reviewed": "2026-07-27",
+  "schema_version": "1.3.0",
+  "last_reviewed": "2026-08-24",
   "policy_document": "docs/resource-governance.md",
   "required_entry_fields": [
     "id",
@@ -58,6 +58,47 @@
     "local-snapshot": {
       "meaning": "A pre-existing local payload is retained outside public source and deployment artifacts."
     }
+  },
+  "permission_assurance_contract": {
+    "schema_version": "1.0.0",
+    "custom_permission_marker": "custom-permission",
+    "known_custom_permission_resource_ids": [
+      "nj8"
+    ],
+    "statuses": [
+      "review-pending",
+      "independently-reviewed"
+    ],
+    "required_public_scopes": [
+      "github-repository-redistribution",
+      "downstream-fork-redistribution",
+      "release-archive-distribution",
+      "container-image-distribution",
+      "public-saas-processing",
+      "transformation-and-derived-results",
+      "commercial-use",
+      "noncommercial-use",
+      "revocation-or-expiry-terms"
+    ],
+    "required_external_record_fields": [
+      "record_id",
+      "record_sha256",
+      "record_editor",
+      "grantor",
+      "grantor_authority",
+      "granted_on",
+      "scopes",
+      "artifact_bindings",
+      "revocation_or_expiry_terms"
+    ],
+    "required_independent_review_fields": [
+      "status",
+      "reviewer",
+      "reviewer_role",
+      "reviewed_on",
+      "decision_reference",
+      "verified_scopes"
+    ]
   },
   "derived_result_contract": {
     "manifest_schema_version": "1.0.0",
@@ -135,13 +176,13 @@
       "category": "ranked-word-list",
       "tier": "runtime-resource",
       "provisioning": {
-        "mode": "bundled",
+        "mode": "local-snapshot",
         "spec": "data/NJ8/manifest.json",
         "default_local_root": "data/NJ8",
-        "git_payload": true,
-        "package_payload": true,
-        "container_payload": true,
-        "ci_payload": true
+        "git_payload": false,
+        "package_payload": false,
+        "container_payload": false,
+        "ci_payload": false
       },
       "source": {
         "creator_or_rights_holder": "Japan Association of College English Teachers (JACET), Basic Word Revision Committee",
@@ -151,12 +192,13 @@
         "origin": "NJ8 ranked list supplied to the project as a 2023 CSV snapshot."
       },
       "license": {
-        "name": "JACET copyright; redistribution permission confirmed by the project owner",
+        "name": "JACET copyright; project-owner attestation recorded, independent permission review pending",
         "spdx": null,
         "url": null,
         "local_notice": "data/NJ8/manifest.json",
-        "scope": "Permission applies to this NJ8 snapshot and does not generalize to other JACET works.",
-        "verified": true
+        "scope": "The project owner attested to redistribution and public-Web use for this snapshot, but no independently reviewable original permission record currently establishes the complete public-release scope.",
+        "verified": false,
+        "permission_model": "custom-permission"
       },
       "evidence": [
         {
@@ -166,7 +208,8 @@
             "repository-redistribution",
             "public-web-use"
           ],
-          "verified_on": "2026-07-22"
+          "verified_on": "2026-07-22",
+          "assurance_limit": "Owner attestation only; not an independent review or the original permission record."
         },
         {
           "type": "local-manifest",
@@ -185,10 +228,10 @@
       },
       "hash": {
         "algorithm": "SHA-256",
-        "scope": "all deployable artifacts",
-        "state": "per-artifact",
-        "value": null,
-        "verified_on": "2026-07-22"
+        "scope": "identity of the exact locally held snapshot named by the owner attestation; not mirror equivalence",
+        "state": "nonpublic-artifact-binding",
+        "value": "1433dcd94135f86cfdbcbf5bafc209661678f1104f5062041b737834e99d3cf8",
+        "verified_on": "2026-08-24"
       },
       "artifacts": [
         {
@@ -196,49 +239,84 @@
           "type": "file",
           "bytes": 112171,
           "sha256": "1433dcd94135f86cfdbcbf5bafc209661678f1104f5062041b737834e99d3cf8",
-          "public_build": true
+          "public_build": false
         }
       ],
       "redistribution": {
-        "repository_bundle": "allowed",
-        "server_copy": "allowed",
-        "client_download": "allowed-with-attribution",
+        "repository_bundle": "blocked-pending-independent-review",
+        "server_copy": "blocked-pending-independent-review",
+        "client_download": "blocked-pending-independent-review",
         "derived_bulk_data": "review-required",
         "conditions": [
-          "Preserve JACET ownership and the JACET 2016 citation.",
-          "Do not extend this decision to other JACET datasets."
+          "Do not place the NJ8 payload in Git, release archives, packages, containers, CI artifacts, or the public UI.",
+          "Local use requires an operator-supplied copy, LDFREQ_SERVING_MODE=local, and LDFREQ_ALLOW_LOCAL_RESTRICTED=1.",
+          "Do not generalize the owner's attestation to other JACET datasets or unreviewed uses."
         ]
       },
       "web_use": {
-        "public_saas_processing": "allowed",
-        "private_server_processing": "allowed",
-        "private_local_processing": "allowed",
-        "aggregate_result_publication": "allowed-with-citation",
-        "notes": "Approval is grounded in explicit project-owner confirmation."
+        "public_saas_processing": "blocked-pending-independent-review",
+        "private_server_processing": "blocked-pending-independent-review",
+        "private_local_processing": "operator-authorized-local-only",
+        "aggregate_result_publication": "review-required",
+        "notes": "The project-owner attestation is retained as evidence, but it is insufficient for a new public release or deployment without the original permission record and independent review."
       },
       "build_provenance": {
         "upstream_inputs": [
           "NJ8 CSV supplied to the project"
         ],
         "transformations": [
-          "No build transformation is recorded for the bundled CSV."
+          "The locally held CSV is a direct snapshot at rest and is not a public build input.",
+          "At authorized local runtime, parenthetical_variant_expansion_v1 expands listed parenthetical spelling variants to the head entry's rank in memory.",
+          "Panel B then applies surface_first_rank_lookup_normalized_fallback_v1: direct ranked-spelling lookup first, selected-normalizer fallback only after a miss."
         ],
         "build_script": null,
         "reproducible": false,
-        "method": "direct-snapshot"
+        "method": "direct-snapshot-at-rest-with-runtime-in-memory-expansion-and-hybrid-lookup"
       },
       "status": {
-        "level": "green",
-        "reason": "The project owner explicitly confirmed redistribution permission for NJ8.",
-        "effective_on": "2026-07-22"
+        "level": "yellow",
+        "reason": "The project owner attested to permission, but the original grant, grantor authority, complete use scopes, and an independent review are not recorded in audit-grade form.",
+        "effective_on": "2026-08-24"
       },
       "review": {
-        "authority": "project-owner",
-        "last_reviewed": "2026-07-22",
-        "next_review_trigger": "Any change in NJ8 file, intended distribution mode, or JACET terms",
+        "authority": "project-owner-attestation-only",
+        "last_reviewed": "2026-08-24",
+        "next_review_trigger": "Receipt of the original permission record and completion of an independent scope review",
         "open_questions": [
-          "Record the original acquisition date and a stable primary distribution URL if available.",
-          "Preserve a written permission artifact outside conversational history if available."
+          "Identify the original permission record, grantor, grantor authority, and grant date.",
+          "Verify repository, fork, release, container, SaaS, transformation, commercial/noncommercial, and revocation/expiry scopes.",
+          "Identify the permission-record editor and complete a rights review by someone different from both that editor and the project owner."
+        ]
+      },
+      "permission_assurance": {
+        "schema_version": "1.0.0",
+        "status": "review-pending",
+        "release_eligible": false,
+        "owner_attestation": {
+          "attestor": "project-owner",
+          "attested_on": "2026-07-22",
+          "reference": "User confirmation in the project conversation on 2026-07-22",
+          "asserted_scopes": [
+            "repository-redistribution",
+            "public-web-use"
+          ]
+        },
+        "external_permission_record": null,
+        "independent_review": {
+          "status": "pending",
+          "reviewer": null,
+          "reviewer_role": null,
+          "reviewed_on": null,
+          "decision_reference": null,
+          "verified_scopes": []
+        },
+        "blocking_reasons": [
+          "original-permission-record-absent",
+          "record-editor-unassigned",
+          "grantor-authority-unverified",
+          "complete-public-use-scope-unverified",
+          "editor-reviewer-separation-unverified",
+          "independent-review-pending"
         ]
       }
     },
@@ -648,7 +726,9 @@
           "Payloads must be operator-injected and must not enter Git, static assets, packages, images, CI artifacts, or client downloads.",
           "Display Paul Nation, the source URL, CC BY-SA 4.0, and modification information.",
           "Return aggregate analysis only; do not expose token-to-rank or bulk lookup output.",
-          "Reject documents below 100 lexical tokens or 20 distinct types, and apply deployment-level query budgets and rate controls."
+          "Reject documents below 100 lexical tokens or 20 distinct types, and apply deployment-level query budgets and rate controls.",
+          "For public server-only activation, require the eligible allowlist, rights acknowledgement, fixed shared-abuse-controls-v1 profile, and a valid short external evidence-record ID; missing or invalid declarations must prevent listing, materialization, and isolated-worker forwarding.",
+          "Treat the evidence ID only as a non-secret opaque reference to an external control record; runtime acceptance does not verify the shared limiter, account quota, audit, anomaly, or extraction-resistance controls."
         ]
       },
       "web_use": {
@@ -763,7 +843,9 @@
           "Build only from the pinned official source and admit only basewrd1-25.",
           "Store artifact, manifest, and NOTICE outside static assets on an operator-controlled server.",
           "Return aggregate measures and resource metadata only; never return list rows or token mappings.",
-          "Reject documents below 100 lexical tokens or 20 distinct types, and apply deployment-level query budgets and rate controls."
+          "Reject documents below 100 lexical tokens or 20 distinct types, and apply deployment-level query budgets and rate controls.",
+          "For public server-only activation, require the eligible allowlist, rights acknowledgement, fixed shared-abuse-controls-v1 profile, and a valid short external evidence-record ID; missing or invalid declarations must prevent listing, materialization, and isolated-worker forwarding.",
+          "Treat the evidence ID only as a non-secret opaque reference to an external control record; runtime acceptance does not verify the shared limiter, account quota, audit, anomaly, or extraction-resistance controls."
         ]
       },
       "web_use": {

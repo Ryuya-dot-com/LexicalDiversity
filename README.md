@@ -21,7 +21,8 @@ python3 -m streamlit run app.py
 
 ## Reproducible release contracts
 
-The current source identity is `0.9.0-dev.0`; it is not a published release.
+The current source identity is `0.10.0-dev.0` with output schema `2.0.0`; it is
+not a published release.
 Application SemVer and the independent public output-schema version have one
 machine-readable authority in [`ldfreq/release.json`](ldfreq/release.json).
 Every JSON export and XLSX metadata sheet records both identities. The
@@ -33,8 +34,10 @@ The public repository now starts from a reviewed clean-history root. The former
 22-commit repository, whose reachable history contains legacy resource paths,
 was renamed and made private; the local legacy checkout remains attached to it.
 The [public-history migration record](docs/public-history-migration.md) preserves
-the audit and bootstrap evidence. Release tags remain blocked until the later
-version, image, citation, and archive gates pass.
+the audit and bootstrap evidence. A later commit included NJ8 under the now-
+superseded owner-only rights decision, so the reachable-history gate currently
+blocks release tags in addition to the version, image, citation, and archive
+gates below.
 Build the reviewed, deterministic bootstrap archive without copying `.git/` or
 trusting the mixed staging area:
 
@@ -167,18 +170,46 @@ Streamlit integration test explicitly with
 
 `↓` = *lower* means more diverse (Maas, Yule's K). Formula-based indices are
 implemented directly, while stochastic or procedure-dependent measures
-(MTLD, vocd-D, P_Lex, S) record their parameters for reproducibility. Each index
-has a project screening or computational minimum-token floor; below it the value
-is still shown where computable, with a warning column for interpretation (cf.
-Kyle et al. 2024; Kojima & Yamashita 2014). These floors are transparent
-pragmatic flags, not validated reliability cutoffs: meeting a floor does not by
-itself make an estimate stable, reliable, or comparable.
+(MTLD, vocd-D, P_Lex, S) record their parameters for reproducibility. Every
+Panel A metric also reports `value`, computation `status`, `missing_reason`,
+`method_id`, requested/effective parameters, and a separate advisory-quality
+status. Standard MSTTR, MATTR, HD-D, and vocd-D method IDs never reduce a
+requested segment, window, sample, or sampling range to fit a short text; they
+are missing when that actual computational domain is not met, and a missing
+record has empty `effective_parameters` rather than claiming parameters were
+applied. The optional
+legacy adaptive API variants have distinct `*_adaptive` keys and method IDs.
+Public metric calls require a materialized sequence containing only non-empty,
+UTF-8-encodable, pre-tokenized strings (whitespace inside an element is not
+split);
+bare strings/bytes, generators, mixed elements, implicit float-to-integer
+coercion, and non-boolean values for boolean switches are rejected before
+computation. The record API fixes MTLD's minimum factor length at 10 to keep
+its method ID truthful.
+
+The project screening floors are transparent pragmatic flags, not computation
+switches or validated reliability cutoffs: a formula-domain value such as
+Yule's K or Python MTLD can be reported below its advisory floor, and meeting a
+floor does not itself establish stability, reliability, or comparability.
+Python MTLD is explicitly identified as the bidirectional `<=`-boundary,
+minimum-factor-length-10 variant; no numerical equivalence to an R `<`-boundary
+variant is claimed.
+
+This hardening is an output-schema 2.0 change: the scalar `panel_a` projection
+remains for migration, but short-text values that were previously produced by
+silent parameter reduction are now `null`, and structured `panel_a_records`
+plus appended Excel columns are authoritative. The historical
+`v1-metric-scope.json` filename is retained for this pre-1.0 transition; a file
+rename is deferred so links do not obscure the substantive contract change.
 
 ## Panel B — Frequency-based richness (selected reference list)
 
 - **Lexical Frequency Profile**: token coverage per frequency band + off-list, cumulative.
 - **Privacy-preserving lookup**: aggregate bands and coverage are retained;
   token-, word-, and observed-surface-form rows are intentionally discarded.
+- **Truthful mapping diagnostics**: aggregate-only counts and rates distinguish
+  direct surface-key hits, normalized fallback hits, and off-list fallback paths;
+  no submitted terms or token-to-head rows are returned.
 - **Coverage thresholds**: smallest selected-list band reaching **90 / 95 / 98 %**
   matched text coverage. Proper nouns, marginal words, acronyms, and other
   potentially known items are not automatically credited unless matched by the
@@ -199,8 +230,8 @@ itself make an estimate stable, reliable, or comparable.
   profile scores to show the shape of a text's diversity, repetition,
   sophistication, and in-list coverage. Use raw values for reporting.
 - **Band-wise diversity**: per-band type/token counts plus MTLD/MATTR/HD-D where
-  computable. Low-frequency bands below the recommended floor are still reported
-  with a warning column.
+  their requested computational domains are met. Advisory floors remain a
+  separate warning column and never shrink a window or sample.
 - **Batch workflow**: upload one or more `.txt` files or a `.zip` archive of
   `.txt` files. Public hard ceilings are 5 MB per text, 20 MB total extracted
   text, and 200 documents; defaults are 2 MB, 10 MB, and 100 documents. ZIP
@@ -278,14 +309,30 @@ text, video/channel identifier, title, or source document name is bundled.
 
 - **Counting unit**: `token` only. Panel A uses lower-cased surface tokens; no
   lemmatization is applied to Panel A diversity indices.
+- **General tokenizer**: new analyses use the fixed `english_unicode_v1`
+  policy. It applies NFC (not NFKC), recognizes Unicode-category letters plus
+  following combining marks, maps common curly/modifier apostrophes to ASCII
+  `'`, and retains apostrophes only inside letter components. Hyphens/dashes
+  and digits split tokens; numeric-only runs are excluded, so `well-known`
+  becomes `well`, `known` and `abc123def` becomes `abc`, `def`. Python
+  `str.lower()` is used rather than case-folding. The exported
+  `settings.tokenizer_policy` is a validated policy ID, not caller-supplied
+  prose. The exact contract is [`docs/tokenizer-contract.json`](docs/tokenizer-contract.json).
+- **Legacy tokenizer**: `ascii_legacy_v1` is an explicit opt-in for reproducing
+  the former `[A-Za-z]+(?:'[A-Za-z]+)?` behavior. Existing derived MASC
+  aggregates remain pinned to that policy; it is not the default for new text.
 - **TUBELEX lookup unit**: a separate NFKC/typographic-apostrophe/lower
   Treebank-tokenizer adapter is applied directly to the submitted text. It is
-  independent of Panel B
-  flemma/headword lookup and requires no Punkt runtime model.
-- **Panel B lookup**: maps each token to the selected frequency list's lookup
-  unit. NJ8/NGSL/headword lists use flemma/head-style lookup; the BNC/COCA word
-  family list maps related forms to family heads before assigning a band.
-  User-supplied AntWordProfiler/Range baseword lists are also supported.
+  independent of Panel B hybrid selected-list lookup and requires no Punkt
+  runtime model.
+- **Panel B lookup**: the current method is explicitly hybrid. It first looks
+  up each lower-cased surface form as a key in the selected list; only a miss is
+  passed through the selected normalizer and looked up again. NJ8 natively ranks
+  POS-less spelling entries (plus listed variants), NGSL supplies lemma ranks and
+  inflected-form aliases, and the Nation headword files contain headwords only.
+  Rich family lists map their direct form keys to family heads. Direct hits are
+  never re-normalized, so this is not a pure flemma/lemma pipeline. User-supplied
+  AntWordProfiler/Range baseword lists are also supported.
 - **Panel B normalizer** (pluggable, recorded in metadata): used as a fallback
   when the raw token is not directly present in the selected list. True
   POS-distinguished *lemma* is not offered for NJ8 because the list carries no POS.
@@ -309,9 +356,10 @@ text, video/channel identifier, title, or source document name is bundled.
     matching tokenization, off-list/variant policy, and the exact list version — so
     use the preset, and never label output "identical".
 
-Panel B coverage will not necessarily match LexTutor/VocabProfile unless the same
+Panel B values are not claimed to be numerically comparable to
+LexTutor/VocabProfile. Any comparison would require the same hybrid lookup order,
 frequency-list version, word-family expansion, tokenizer, proper-noun/number
-policy, and flemma/lemma normalization are used. Public BNC/COCA analysis uses
+policy, and normalizer. Public BNC/COCA analysis uses
 only the verified official Paul Nation 10,000-headword or 25,000-family
 server-side resources. **Nation BNC/COCA** is the name of a pedagogical
 headword/family list; selecting it does not load a COCA corpus dataset or produce
@@ -328,8 +376,8 @@ new baseword family and indented words as family members of the current baseword
 Every analysis records, in the on-screen metadata banner and the exported JSON:
 list name + version, **lemmatizer name + version** (e.g.
 `open_flemma open-flemma-1.0.0+…`),
-unit, thresholds, and all index parameters (`mtld_threshold`, `vocd_seed`, …).
-Pin these to reproduce or compare results.
+lookup unit, Panel B mapping method ID, thresholds, and all index parameters
+(`mtld_threshold`, `vocd_seed`, …). Pin these to reproduce or compare results.
 
 Exports are available in two formats:
 
@@ -348,11 +396,18 @@ Exports are available in two formats:
   The TUBELEX-EN runtime index is derived solely from the project's published
   frequency aggregate under BSD-3-Clause and retains its attribution and
   transformation notice; the underlying subtitles are not included.
-- **Reference lists**: New JACET8000 is approved for redistribution in this
-  project. Paul Nation's official 10,000 BNC/COCA headwords are CC BY-SA 4.0
-  and admitted for aggregate-only server use, but are not bundled or delivered
-  to clients. The EAPFoundation XLSX/PDF remain `permission-pending` for public
-  SaaS and are being replaced by an official Nation-derived family index.
+- **Reference lists**: New JACET8000 (NJ8) is `review-pending`. The project
+  owner's 2026-07-22 permission attestation is retained, but the original grant,
+  complete public-use scope, and a rights review separated from the permission-
+  record editor and owner-attestor are not recorded in audit-grade form. Its
+  CSV is therefore absent from Git, releases, packages,
+  containers, CI, and the public UI; an authorized operator may supply it only
+  in explicit local mode. Removing it from the current/future tree does not
+  retract older public commits or third-party copies; the history release gate
+  remains blocking until that boundary is separately resolved. Paul Nation's
+  official BNC/COCA resources are CC BY-SA 4.0 and admitted for aggregate-only
+  server use, but are not bundled or delivered to clients. The EAPFoundation
+  XLSX/PDF remain `permission-pending` for public SaaS.
 - **Server-only lemmatizer data**: AntBNC is not bundled and remains
   `permission-pending` for public-SaaS use. It is excluded from the public
   server-only eligible set; only an independently authorized private deployment
@@ -374,11 +429,12 @@ The UI displays a synthetic/public-text-only banner unless
 release configuration after all institutional and infrastructure gates pass.
 It is a display fail-safe, not approval by itself.
 
-The default public application is wired for NGSL, New JACET8000, and the
-TUBELEX-EN aggregate axis. The exact 4,572,297-byte TUBELEX artifact has passed
-byte-for-byte rebuild checks, the full test suite, and the public-inventory
-gate. AntBNC and BNC/COCA
-payloads are excluded from Git. Only the green official Nation
+The default public application is wired for NGSL and the TUBELEX-EN aggregate
+axis; NJ8 is not a public selector. The exact 4,572,297-byte TUBELEX artifact
+has passed byte-for-byte rebuild checks, the full test suite, and the
+public-inventory gate. NJ8, AntBNC, and BNC/COCA payloads are excluded from the
+current Git tree.
+Only the green official Nation
 resources may be enabled in the server-only public gate; AntBNC and the legacy
 EAPFoundation snapshot remain unavailable there. On Cloud Run, the Nation
 resource is supplied only through a `read_only=true` mount of a dedicated
@@ -393,9 +449,28 @@ Enable only the required runtime IDs:
 ```bash
 LDFREQ_SERVER_ONLY_RESOURCE_IDS=bnc_coca,nation_bnc_coca_families
 LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED=1
+LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION=shared-abuse-controls-v1
+LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID="${EXTERNAL_CONTROL_RECORD_ID:?required}"
 ```
 
-The second setting is an operator attestation, not a substitute for permission.
+All four settings are required. The checked-in Cloud Run template leaves the
+allowlist and both control fields empty and keeps the rights acknowledgement at
+`0`. Missing, misspelled, or invalid values leave the resources unlisted,
+unmaterialized, and unavailable to the isolated worker. An empty allowlist or
+one containing any ID outside the fixed eligible set is rejected as a whole.
+The evidence ID must be
+a short opaque identifier for an externally retained review record; it must not
+contain a URL, filesystem path, secret, or placeholder. Accepting that ID proves
+only that the deployment supplied the declaration. The application does not
+inspect or verify a shared limiter, authenticated account quota, audit log,
+anomaly detection, or extraction-resistance test evidence.
+The accepted ID is 8–64 ASCII characters, matches
+`[A-Z][A-Z0-9]{1,11}(?:-[A-Z0-9]{2,16}){1,5}`, and rejects common
+secret, hash, test, and placeholder markers.
+
+The rights setting is an operator acknowledgement, not a substitute for
+permission. The fixed control-profile declaration and evidence reference are
+also not evidence that the named controls exist or work.
 `antbnc` and the legacy `bnc_coca_families` EAPFoundation snapshot are not
 eligible IDs and cannot be activated by this switch.
 The app never offers the payloads as downloads; exports contain aggregate
@@ -442,7 +517,9 @@ python3 scripts/make_streamlit_secrets.py --only nation-family > streamlit-secre
 ```
 
 Paste the generated `[ldfreq]` block into the secrets configuration of an
-authorized private self-hosted deployment. Do not commit the generated TOML.
+authorized private self-hosted deployment. This local-only override does not
+pass, imply, or replace the public server-only activation gate. Do not commit
+the generated TOML.
 The supported secret keys are:
 
 - `LDFREQ_NJ8_CSV_B64`
@@ -451,11 +528,12 @@ The supported secret keys are:
 - `LDFREQ_RANGE_ZIP_B64`
 - `LDFREQ_NATION_BNCCOCA_RUNTIME_ZIP_B64` (server artifact + manifest + NOTICE)
 
-The AntBNC and Range keys are honored only in an authorized private deployment
+The NJ8, AntBNC, and Range keys are honored only in an authorized private deployment
 with both `LDFREQ_SERVING_MODE=local` and
 `LDFREQ_ALLOW_LOCAL_RESTRICTED=1`; the public gate materializes only its
-explicitly enabled Nation resource IDs. Deployments can alternatively set file paths with `LDFREQ_NJ8_PATH`,
-`LDFREQ_BNCCOCA_PATH`, `LDFREQ_BNCCOCA_FAMILIES_PATH`, `LDFREQ_RANGE_PATH`, and
+explicitly enabled Nation resource IDs. Authorized deployments can
+alternatively set file paths with `LDFREQ_NJ8_PATH`, `LDFREQ_BNCCOCA_PATH`,
+`LDFREQ_BNCCOCA_FAMILIES_PATH`, `LDFREQ_RANGE_PATH`, and
 `LDFREQ_ANTBNC_PATH`. The official Nation family index uses either
 `LDFREQ_NATION_BNCCOCA_INDEX_PATH` or `LDFREQ_NATION_BNCCOCA_INDEX_DIR`.
 
@@ -492,7 +570,7 @@ ldfreq/
 scripts/                deployment and reproducible resource-build helpers
 docs/                   resource governance and privacy specifications
 data/open/              cleared, reproducibly derived open resources
-data/NJ8/               bundled New JACET8000 data + manifest
+data/NJ8/               New JACET8000 governance manifest; CSV is ignored/local-only
 data/antbnc/            governance manifest; local AntBNC payload is ignored
 data/bnc_coca/          governance manifest; local BNC/COCA payloads are ignored
 data/ngsl/               bundled NGSL data + manifest (CC BY-SA 4.0)

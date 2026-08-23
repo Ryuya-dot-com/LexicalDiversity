@@ -178,10 +178,23 @@ analysis succeeds without any network call containing learner content.
 
 These values are inputs for review, not a command to deploy:
 
-The checked-in template deliberately sets
-`LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED=0`. The operator may change it to `1`
-only alongside the recorded rights decision for the exact resource version;
-the enabled-ID list alone is insufficient.
+The checked-in template deliberately leaves
+`LDFREQ_SERVER_ONLY_RESOURCE_IDS`,
+`LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION`, and
+`LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID` empty and sets
+`LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED=0`. Public server-only activation
+requires an eligible allowlist, a rights decision for the exact resource
+version, the literal profile `shared-abuse-controls-v1`, and a valid short
+opaque external evidence-record ID. The ID must not contain a URL, filesystem
+path, secret, or placeholder.
+
+The application checks only those literal declarations and the ID shape. It
+does not retrieve the external record or verify the shared limiter,
+authenticated account quota, content-free audit trail, anomaly detection, or
+extraction-resistance tests. Missing or invalid values keep the resource
+unlisted and unmaterialized and prevent forwarding it to the isolated worker;
+a syntactically valid declaration is not proof of the controls or deployment
+approval.
 
 It likewise keeps `LDFREQ_REAL_WRITING_APPROVED=0`, which leaves the
 synthetic/already-public-text-only banner visible. Changing that display gate is
@@ -203,6 +216,7 @@ institutional approvals in this document.
 | Maximum instances | `3`; load-test and cost-review before any increase |
 | Request timeout | `1800` seconds; WebSocket/connection ceiling only, never treated as cancellation or deletion |
 | Analysis deadline | `120` seconds by default (`LDFREQ_ANALYSIS_DEADLINE_SECONDS`); one-shot worker is killed and reaped |
+| Public server-only resources | Disabled by default; activate only with all four declarations and independently reviewed external evidence |
 | Temporary storage | Size-limited in-memory volume mounted at the single approved temp path |
 | CDN/cache | CDN off; dynamic responses `Cache-Control: no-store` |
 
@@ -243,7 +257,9 @@ Consequences for this Streamlit application:
   strict authenticated account quota; and
 - a durable account-wide budget plus anomaly policy remains a future production
   task. The limited IAP pilot can proceed only with an approved small cohort and
-  monitored conservative limits; expansion cannot.
+  monitored conservative limits; expansion cannot. Such a pilot uses open
+  lexical resources only unless the exact deployment has the separately
+  reviewed control record required by the fail-closed server-only gate.
 
 ## 9. Timeout and cancellation gate
 
@@ -400,6 +416,9 @@ that the Tokyo/IAP/log-retention/privacy design has been deployed.
 - Verify region, IAP, direct-URL blocking, no-store, IAM, no-NAT egress, lexical
   reads, denied writes/out-of-perimeter access, disabled load-balancer logging,
   zero runtime-log destinations, nonpersistence, and cleanup.
+- Keep all server-only activation variables at their checked-in fail-closed
+  defaults unless this stage is explicitly producing the external control
+  evidence for a separately reviewed candidate.
 
 ### Stage 3 — limited real-writing pilot, only after release blockers pass
 
@@ -408,6 +427,9 @@ that the Tokyo/IAP/log-retention/privacy design has been deployed.
   disconnect/delete cancellation, container cleanup, and cross-session tests.
 - Monitor only aggregate platform health metrics and use conservative instance/
   input limits.
+- Use open resources only unless an external record binds this exact deployment
+  and resource version to passing shared abuse-control evidence and the four
+  activation declarations are independently reviewed.
 - Stop immediately on any source/derived-content canary outside the originating
   session.
 
@@ -415,6 +437,10 @@ that the Tokyo/IAP/log-retention/privacy design has been deployed.
 
 - Implement and test a deployment-wide authenticated account quota that survives
   new sessions and multiple workers.
+- Before any public server-only activation, record the shared limiter, account
+  quota, content-free audit, anomaly, and extraction-resistance evidence under
+  a non-secret opaque ID; do not treat application acceptance of that ID as
+  infrastructure verification.
 - Complete load, availability, accessibility, security, deletion, and incident
   exercises and repeat institutional approval.
 - Reassess provider terms, product behavior, regions, subprocessors, and all
@@ -433,6 +459,9 @@ Retain content-free evidence for review:
 - VPC Service Controls inventory and tests showing out-of-perimeter Google API
   resources are unreachable;
 - tests showing IAP is required, `run.app` is disabled, and direct ingress fails;
+- the external server-only control record, its short opaque reference ID, and
+  evidence that it covers the exact deployment/resource versions (when any
+  server-only resource is proposed);
 - institutional acceptance of the default-URL feature's current launch stage,
   or evidence for an approved equivalent that cannot bypass IAP;
 - browser/header evidence for `Cache-Control: no-store` and CDN disabled;

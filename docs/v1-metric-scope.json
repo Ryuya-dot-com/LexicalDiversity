@@ -1,6 +1,6 @@
 {
   "contract_id": "ldfreq-public-v1-metric-scope",
-  "contract_version": "1.0.0",
+  "contract_version": "2.0.0",
   "target_application_release": "1.0.0",
   "release_line": "1.x",
   "status": "frozen",
@@ -15,6 +15,17 @@
     "covered_by_automated_tests": true,
     "runtime_resources_must_be_green_and_license_verified": true,
     "research_benchmarks_are_runtime_resources": false
+  },
+  "tokenizer_contract": {
+    "contract_path": "docs/tokenizer-contract.json",
+    "default_policy_id": "english_unicode_v1",
+    "allowed_policy_ids": [
+      "english_unicode_v1",
+      "ascii_legacy_v1"
+    ],
+    "provenance_field": "settings.tokenizer_policy",
+    "free_text_policy_values_allowed": false,
+    "masc_derived_aggregates_policy_id": "ascii_legacy_v1"
   },
   "metrics": {
     "panel_a": {
@@ -62,13 +73,87 @@
         "vocd": 50,
         "yule_k": 100,
         "yule_i": 100
+      },
+      "computational_minimum_tokens_at_default_parameters": {
+        "ttr": 1,
+        "rttr": 1,
+        "cttr": 1,
+        "herdan": 2,
+        "maas": 2,
+        "msttr": 50,
+        "mattr": 50,
+        "mtld": 10,
+        "hdd": 42,
+        "vocd": 50,
+        "yule_k": 1,
+        "yule_i": 1
+      },
+      "method_ids": {
+        "ttr": "ttr_v_over_n_v1",
+        "rttr": "rttr_guiraud_v_over_sqrt_n_v1",
+        "cttr": "cttr_v_over_sqrt_2n_v1",
+        "herdan": "herdan_c_logv_over_logn_v1",
+        "maas": "maas_a2_ln_v1",
+        "msttr": "msttr_nonoverlap_complete_drop_v1",
+        "mattr": "mattr_sliding_step1_v1",
+        "mtld": "mtld_bidir_mean_leq_min10_python_v1",
+        "hdd": "hdd_expected_ttr_scaled_v1",
+        "vocd": "vocd_d_monte_carlo_python_v1",
+        "yule_k": "yule_k_m2_tokens_v1",
+        "yule_i": "yule_i_types_v2_over_m2_minus_v_v1"
+      },
+      "record_keys": [
+        "value",
+        "status",
+        "missing_reason",
+        "method_id",
+        "requested_parameters",
+        "effective_parameters",
+        "advisory_quality_floor_tokens",
+        "advisory_quality_status"
+      ],
+      "status_values": [
+        "available",
+        "missing"
+      ],
+      "missing_reason_values": [
+        "empty_input",
+        "insufficient_tokens_for_formula",
+        "too_short_for_requested_parameter",
+        "no_convergence",
+        "zero_denominator",
+        "no_factor",
+        "undefined_for_text"
+      ],
+      "parameter_policy": {
+        "standard_method_ids_never_shrink_requested_parameters": true,
+        "missing_result_effective_parameters": {},
+        "available_standard_result_effective_parameters_equal_requested": true,
+        "advisory_quality_floor_controls_computation": false,
+        "adaptive_variants_are_public_defaults": false,
+        "public_boolean_parameters_require_exact_bool": true,
+        "public_token_input": "materialized_sequence_of_nonempty_utf8_strings",
+        "bare_string_bytes_generators_and_non_string_items_rejected": true,
+        "invalid_parameters_raise": "ValueError_or_TypeError_before_computation",
+        "retained_adaptive_api_keys": [
+          "msttr_adaptive",
+          "mattr_adaptive",
+          "hdd_adaptive",
+          "vocd_adaptive"
+        ],
+        "mtld_python_factor_boundary_comparator": "<=",
+        "mtld_python_minimum_factor_length": 10,
+        "record_api_mtld_minimum_factor_length_is_fixed": true,
+        "mtld_cross_language_numerical_equivalence_claim": false
       }
     },
     "panel_b": {
-      "construct": "match to ranks, bands, or families in the selected frequency list",
+      "construct": "selected-list rank, band, and family matches under a hybrid surface-first lookup with normalizer fallback",
       "reference_list_required": true,
-      "lookup_unit": "resource-specific flemma, headword, or word-family head",
+      "lookup_unit": "resource-specific direct listed spelling/form-to-head entry; configured normalizer fallback only after a direct-key miss",
+      "mapping_method_id": "surface_first_rank_lookup_normalized_fallback_v1",
       "keys": [
+        "mapping_diagnostics",
         "lfp",
         "coverage_threshold",
         "advanced_guiraud",
@@ -79,6 +164,21 @@
         "band_wise"
       ],
       "nested_keys": {
+        "mapping_diagnostics": [
+          "method_id",
+          "input_tokens",
+          "input_surface_types",
+          "mapped_unit_types",
+          "collapsed_surface_types",
+          "surface_hit_tokens",
+          "surface_hit_rate",
+          "normalized_fallback_hit_tokens",
+          "normalized_fallback_hit_rate",
+          "normalized_off_list_tokens",
+          "normalized_off_list_rate",
+          "identity_fallback_tokens",
+          "identity_fallback_rate"
+        ],
         "lfp_row": [
           "level",
           "tokens",
@@ -224,13 +324,6 @@
     "admission_rule": "registry tier runtime-resource, status green, verified license, and an allowed public-SaaS processing mode",
     "runtime": [
       {
-        "registry_id": "nj8",
-        "runtime_selector_id": "nj8",
-        "component": "panel_b_reference_list",
-        "provisioning": "bundled",
-        "availability": "public-default-inventory"
-      },
-      {
         "registry_id": "ngsl-1.2",
         "runtime_selector_id": "ngsl",
         "component": "panel_b_reference_list_and_open_flemma_evidence",
@@ -239,17 +332,17 @@
       },
       {
         "registry_id": "nation-bnc-coca-headwords-10000",
-        "runtime_selector_id": "bnc_coca",
-        "component": "panel_b_reference_list",
-        "provisioning": "server-injected",
-        "availability": "conditional-server-only-with-operator-attestation"
+                "runtime_selector_id": "bnc_coca",
+                "component": "panel_b_reference_list",
+                "provisioning": "server-injected",
+                "availability": "disabled-unless-complete-public-server-only-gate-passes"
       },
       {
         "registry_id": "nation-bnc-coca-families-25000",
-        "runtime_selector_id": "nation_bnc_coca_families",
-        "component": "panel_b_reference_list",
-        "provisioning": "server-injected",
-        "availability": "conditional-server-only-with-operator-attestation"
+                "runtime_selector_id": "nation_bnc_coca_families",
+                "component": "panel_b_reference_list",
+                "provisioning": "server-injected",
+                "availability": "disabled-unless-complete-public-server-only-gate-passes"
       },
       {
         "registry_id": "tubelex-en-treebank-7cb5fb36-frequency-index",
@@ -266,8 +359,38 @@
         "availability": "public-default-inventory"
       }
     ],
-    "public_panel_b_runtime_selector_ids": [
-      "nj8",
+    "local_review_pending": [
+      {
+        "registry_id": "nj8",
+        "runtime_selector_id": "nj8",
+        "component": "panel_b_reference_list",
+        "provisioning": "operator-supplied-local-snapshot",
+        "availability": "requires-local-mode-and-local-restricted-override",
+        "permission_assurance_status": "review-pending",
+        "public_payload": false,
+        "public_ui": false
+      }
+    ],
+        "server_only_activation": {
+            "default_enabled_ids": [],
+            "eligible_runtime_selector_ids": [
+                "bnc_coca",
+                "nation_bnc_coca_families"
+            ],
+            "eligible_allowlist_required": true,
+            "allowlist_with_unknown_id_rejected_as_a_whole": true,
+            "rights_acknowledgement_required": true,
+            "control_attestation_profile": "shared-abuse-controls-v1",
+            "external_evidence_id_required": true,
+            "external_evidence_id_is_reference_only": true,
+            "runtime_verifies_external_controls": false,
+            "invalid_or_missing_gate_behavior": [
+                "not-listed",
+                "not-materialized",
+                "not-forwarded-to-isolated-worker"
+            ]
+        },
+        "public_panel_b_runtime_selector_ids": [
       "ngsl",
       "bnc_coca",
       "nation_bnc_coca_families"
@@ -324,6 +447,7 @@
         "n_tokens",
         "n_types",
         "panel_a",
+        "panel_a_records",
         "panel_b",
         "semantic_network",
         "tubelex"
@@ -350,6 +474,7 @@
         "list_entries",
         "list_levels",
         "list_lookup_unit",
+        "panel_b_mapping_method_id",
         "tokenizer_policy",
         "thresholds",
         "min_tokens",
@@ -410,7 +535,13 @@
           "n_tokens",
           "required_tokens",
           "value",
-          "note"
+          "note",
+          "missing_reason",
+          "method_id",
+          "requested_parameters",
+          "effective_parameters",
+          "advisory_quality_floor_tokens",
+          "advisory_quality_status"
         ],
         "overlap_matrix": [
           "document_a",
@@ -536,7 +667,14 @@
           "index_key",
           "index",
           "value",
-          "direction"
+          "direction",
+          "status",
+          "missing_reason",
+          "method_id",
+          "requested_parameters",
+          "effective_parameters",
+          "advisory_quality_floor_tokens",
+          "advisory_quality_status"
         ],
         "lfp": [
           "document",
@@ -587,7 +725,7 @@
     }
   },
   "interpretation_boundary": {
-    "allowed_claim": "descriptive properties of a submitted text under recorded tokenizer, normalizer, resource versions, lookup units, and parameters",
+    "allowed_claim": "descriptive properties of a submitted text under recorded tokenizer, Panel B mapping method, normalizer, resource versions, lookup units, and parameters",
     "prohibited_claims": [
       "grade or essay score",
       "CEFR level",
@@ -597,7 +735,7 @@
       "AI authorship detection"
     ],
     "comparison_requirements": [
-      "identical tokenizer, normalizer, resource versions, lookup units, and parameters",
+      "identical tokenizer, Panel B mapping method ID, normalizer, resource versions, lookup units, and parameters",
       "prefer comparable text length, prompt, topic, genre, register, and sampling conditions",
       "report coverage and missingness with conditional means"
     ],

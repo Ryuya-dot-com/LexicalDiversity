@@ -2,11 +2,16 @@
 
 ## Current status
 
-The current application identity is `0.9.0-dev.0`; it is development work, not
+The current application identity is `0.10.0-dev.0`; it is development work, not
 a published release. The public output contract is independently versioned as
-`1.0.0`. There are no Git version tags, complete application-image digest, or
-archive DOI. The clean public-history root and hosted CI are complete, but a
-release must not be claimed until the remaining gates below pass. The former
+`2.0.0`. There are no Git version tags, complete application-image digest, or
+archive DOI. The original clean public-history root and its hosted CI run were
+complete, but a subsequent public commit included NJ8 under an owner-attested
+decision that is now `review-pending`. Its removal from the current/future tree
+does not remove it from reachable commits, clones, or caches, so
+`check_git_history.py` now
+correctly blocks a release tag pending a reviewed history-boundary decision.
+Current-tree hosted CI is a separate claim and does not clear that blocker. The former
 22-commit history containing excluded paths is retained in a separate private
 legacy repository; see
 [`public-history-migration.md`](public-history-migration.md).
@@ -28,6 +33,10 @@ times, the branch name, or an uncommitted checkout.
 | Dependency/build inputs | wheel locks and `deploy/cloud-run/base-image.json` | Exact artifact SHA-256 and platform identity |
 | Synthetic or human benchmark | Its own manifest and DOI | Never reuse the application version as a dataset version |
 
+The current isolated-worker wire protocol is `2`. It makes `index_records` and
+`panel_a_records` mandatory in the result envelope; a protocol-1 parent or
+worker must fail closed rather than accepting the incompatible shape.
+
 Every public JSON document and XLSX metadata sheet records both
 `ldfreq_version` and `output_schema_version`. This lets a PATCH application
 release retain the same output contract and lets consumers reject an unsupported
@@ -35,10 +44,10 @@ schema without guessing from the application number.
 
 ## Application progression
 
-- Development: `0.9.0-dev.0`, `0.9.0-dev.1`, and so on. These must not be tagged.
-- Release candidate: `0.9.0-rc.1`, then `rc.2` if evidence changes. An annotated
+- Development: `0.10.0-dev.0`, `0.10.0-dev.1`, and so on. These must not be tagged.
+- Release candidate: `0.10.0-rc.1`, then `rc.2` if evidence changes. An annotated
   tag may be made only after the release-candidate gates pass.
-- Stable: `0.9.0` or `1.0.0`. No prerelease identifier is allowed.
+- Stable: `0.10.0` or `1.0.0`. No prerelease identifier is allowed.
 - Published tags and release assets are immutable. A correction receives a new
   PATCH version; force-updating a tag or replacing an archive is prohibited.
 
@@ -107,6 +116,16 @@ not proven by files in this repository.
 The application is release-ready only when the source tag, dependency artifacts,
 base image, complete application image, resource identities, output schema, and
 golden evidence form one reviewable chain.
+
+That source/image release decision does not authorize a public server-only
+resource deployment. `scripts/check_public_release.py` separately rejects a
+tracked Cloud Run template unless the server-only allowlist and control fields
+are empty and the rights acknowledgement is `0`. A deployment may change those
+defaults only after an external record covers the exact deployment/resource
+versions under the fixed `shared-abuse-controls-v1` profile and supplies a
+valid non-secret opaque evidence ID. Runtime acceptance of that ID verifies only
+the declaration shape; it is not proof that the shared limiter, account quota,
+audit, anomaly, or extraction-resistance controls exist or pass.
 
 Before changing the version to a release candidate, run the manual
 `Candidate application image` workflow from protected `main`. It builds the

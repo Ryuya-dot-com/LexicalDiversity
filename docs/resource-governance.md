@@ -83,14 +83,29 @@ An entry is not build-eligible merely because every key exists. For `green`, the
 license/evidence must support the exact distribution and web-use flags, deployable
 artifacts must have verified hashes, and all required notices must be present.
 
+### Custom-permission assurance
+
+Registry schema 1.3 adds `permission_assurance_contract`. A resource relying on
+a bespoke permission rather than a standard license cannot become public from
+project-owner testimony alone. Public GitHub distribution and downstream forks,
+release archives, container images, public SaaS processing, transformations and
+derived results, commercial and non-commercial use, and revocation/expiry terms
+must all be covered by an original external permission record. The record must
+identify the grantor, the grantor's authority, and the record editor. Its named
+rights reviewer must be different from both that editor and the owner-attestor.
+
+The registry may retain a private permission record's SHA-256 and exact resource
+artifact bindings so a review decision cannot silently drift to different
+evidence or payload bytes. These hashes bind that evidence and artifact only;
+they are not used to claim byte equality between mirrors. The automated gate
+checks the completeness and internal consistency of the recorded contract. It
+does not retrieve the private record or prove that its assertions are true, so
+the human independent review remains substantive rather than ceremonial.
+
 ## Current decisions
 
 ### Green
 
-- **New JACET8000 (NJ8).** Redistribution is approved based on the project
-  owner's explicit confirmation on 2026-07-22. The confirmation is recorded as
-  project evidence; it does not change JACET ownership. Preserve the citation
-  and do not generalize this approval to other JACET materials.
 - **New General Service List (NGSL) 1.2.** The upstream project states CC BY-SA
   4.0. Preserve attribution, the license link, and ShareAlike obligations for
   distributed copies and adaptations.
@@ -118,6 +133,20 @@ artifacts must have verified hashes, and all required notices must be present.
 
 ### Yellow
 
+- **New JACET8000 (NJ8).** The project owner's 2026-07-22 attestation to
+  redistribution and public-Web use is retained as evidence, but it is not the
+  original grant and has not received an independent complete-scope review.
+  NJ8 is therefore `review-pending`: its CSV is absent from the current Git
+  tree, releases, packages, container build context/image, CI payloads, and the
+  public UI. An operator may supply the exact recorded snapshot only in local
+  mode with both `LDFREQ_SERVING_MODE=local` and
+  `LDFREQ_ALLOW_LOCAL_RESTRICTED=1`. The loader's
+  `parenthetical_variant_expansion_v1` and Panel B's
+  `surface_first_rank_lookup_normalized_fallback_v1` are transformations/uses
+  that the eventual permission review must cover. This future-tree removal does
+  not retract older commits, clones, caches, or third-party copies; the
+  reachable-history gate remains a release blocker until that boundary is
+  resolved.
 - **AntBNC Lemma List 004.** The official download and creator are known, but the
   local bundle has no explicit data-license text or URL establishing third-party
   repository redistribution and public SaaS use.
@@ -155,14 +184,32 @@ public-SaaS processing rights. The following controls are mandatory:
   is intentionally session-scoped and cannot prevent evasion through new
   sessions or coordinate a budget across multiple workers; aggregate metrics
   are not a formal guarantee against every differential-inference attack;
-- require an explicit resource allow-list and a separate operator rights
-  attestation before loading a non-public resource; and
+- require an explicit eligible-resource allow-list, a separate operator rights
+  acknowledgement, the exact fixed control profile
+  `shared-abuse-controls-v1`, and a valid short external evidence-record ID
+  before listing, materializing, or forwarding a public server-only resource;
+  and
 - keep the registry's repository, server-copy, public-SaaS, client-download,
   and derived-data decisions independent.
 
-The runtime implements this as `LDFREQ_SERVER_ONLY_RESOURCE_IDS` plus
-`LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED=1`. The attestation is a fail-closed
-deployment switch, not legal evidence. AntBNC remains `yellow` until written
+The runtime implements this as all four of
+`LDFREQ_SERVER_ONLY_RESOURCE_IDS`,
+`LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED=1`,
+`LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION=shared-abuse-controls-v1`, and
+`LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID=<opaque-record-id>`. The checked-in
+deployment template leaves the allowlist and control fields empty and rights at
+`0`. The evidence ID must be a bounded opaque identifier, not a URL, path,
+secret, or placeholder. Its external record should bind the exact deployment
+and resource versions to review evidence for a shared limiter, authenticated
+account quota, content-free audit trail, anomaly detection, and
+extraction-resistance testing.
+
+The runtime verifies only that the declarations have the required literal
+values and ID shape. It does not retrieve that record, validate legal rights,
+or test any shared control. Therefore a syntactically accepted declaration is
+not deployment approval or proof that the infrastructure exists. Missing or
+invalid declarations leave the resources unlisted, unmaterialized, and absent
+from isolated-worker forwarding. AntBNC remains `yellow` until written
 permission covers the intended server-side use and is therefore not in the
 public server-only eligible set. The official Paul Nation
 10,000-headword and 25,000-family resources are `green` under CC BY-SA 4.0,
@@ -260,6 +307,14 @@ must include:
    cleared derivative; and
 8. reviewer identity, decision date, and a future review trigger.
 
+For a custom permission, the evidence must additionally identify the original
+record, record editor, grantor and grantor authority, grant date, complete
+machine-readable public-use scopes, revocation/expiry terms, and the exact
+artifact binding. The independent reviewer must be different from both the
+owner-attestor and the permission-record editor and must record a separate
+decision reference. Until then, owner attestation remains evidence but cannot
+set `release_eligible=true`.
+
 If permission is narrow—for example, server-side lookup but no file download—the
 entry stays conditional and the implementation must enforce that narrower mode.
 
@@ -276,10 +331,17 @@ the following checks automatically:
    record sets the relevant public payload flag to `false`, including `green`
    evaluation benchmarks;
 5. require local license/NOTICE files named by a bundled `green` entry;
-6. require every public result bundle to pass the derived-result contract above;
-7. emit a deployment inventory containing resource ID, version, hash, status,
-   tier, provisioning mode, and license—not the protected payload itself; and
-8. require explicit review when a URL, version, file, transformation, intended
+6. require a complete independently reviewed permission-assurance record before
+   any custom-permission resource claims a public payload or public use, and
+   reject any NJ8 payload reintroduced under `data/NJ8/` beside its manifest or
+   the exact attestation-bound artifact bytes under any tracked filename;
+7. require every public result bundle to pass the derived-result contract above;
+8. emit a deployment inventory containing resource ID, version, hash, status,
+   tier, provisioning mode, and license—not the protected payload itself;
+9. reject a checked-in Cloud Run template unless its public server-only
+   allowlist/control fields are empty and its rights acknowledgement is `0`;
+   and
+10. require explicit review when a URL, version, file, transformation, intended
    use, license term, result artifact class, or publication scope changes.
 
 Run `python3 scripts/check_public_release.py` against the exact Git inventory

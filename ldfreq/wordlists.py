@@ -4,8 +4,9 @@ Each entry is metadata + a loader. A list is *available* only if its data file i
 actually present on disk (paths are deployment config via env vars), so the UI can
 show installed lists in the selector and not-installed ones with a source link.
 
-Bundled list data and manifests live under ``data/``. AntBNC can still be
-materialized at runtime from Streamlit/env configuration or a local path.
+Reviewed bundled data and governance manifests live under ``data/``. NJ8 and
+AntBNC payloads can be materialized only in explicit local restricted mode from
+Streamlit/env configuration or a local path.
 """
 from __future__ import annotations
 
@@ -30,6 +31,12 @@ from .nation_bnc_coca import (
     load_nation_bnc_coca_index,
     sha256_file,
 )
+from .server_only_gate import (
+    SERVER_ONLY_ELIGIBLE_IDS,
+    SERVER_ONLY_RESOURCE_IDS_ENV,
+    SERVER_ONLY_RIGHTS_ACK_ENV,
+    configured_server_only_ids,
+)
 
 # Project root (one level above this package), used to resolve default data paths.
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,25 +58,10 @@ NATION_HEADWORD_FILES = {
     "headwords 9th 1000.txt": (9192, "54955a9a9b53f399276e08044e1b1b977b9307b776b5748aafc4766f67fdc936"),
     "headwords 10th 1000.txt": (9324, "5cefefc18fb4ee4ce7df2bb8a9c9c5cded50a56e8843a9f2b867e294d7179412"),
 }
-SERVER_ONLY_RESOURCE_IDS_ENV = "LDFREQ_SERVER_ONLY_RESOURCE_IDS"
-SERVER_ONLY_RIGHTS_ACK_ENV = "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED"
-SERVER_ONLY_ELIGIBLE_IDS = frozenset({
-    "bnc_coca",
-    "nation_bnc_coca_families",
-})
-
-
 def _configured_server_only_ids() -> frozenset[str]:
-    """Read the fail-closed deployment allow-list before materializing data."""
+    """Read the complete fail-closed gate before materializing private data."""
 
-    if os.environ.get(SERVER_ONLY_RIGHTS_ACK_ENV) != "1":
-        return frozenset()
-    requested = {
-        value.strip()
-        for value in os.environ.get(SERVER_ONLY_RESOURCE_IDS_ENV, "").split(",")
-        if value.strip()
-    }
-    return frozenset(requested & SERVER_ONLY_ELIGIBLE_IDS)
+    return configured_server_only_ids(SERVER_ONLY_ELIGIBLE_IDS)
 
 
 def _local_restricted_enabled() -> bool:
@@ -197,8 +189,12 @@ def _materialize_zip_b64(env_name: str, output_dir_name: str, path_env: str) -> 
 def _materialize_deployment_data() -> None:
     private_restricted = _local_restricted_enabled()
     server_only_ids = _configured_server_only_ids()
-    _materialize_file_b64("LDFREQ_NJ8_CSV_B64", "NJ8.csv", "LDFREQ_NJ8_PATH")
     if private_restricted:
+        _materialize_file_b64(
+            "LDFREQ_NJ8_CSV_B64",
+            "NJ8.csv",
+            "LDFREQ_NJ8_PATH",
+        )
         _materialize_file_b64(
             "LDFREQ_ANTBNC_TXT_B64",
             "antbnc_lemmas_ver_004.txt",
@@ -314,11 +310,11 @@ REGISTRY = [
         "path": _path("LDFREQ_NJ8_PATH", "data/NJ8/NJ8.csv"),
         "loader": load_ranked_list,
         "available": _file_available,
-        "redistributable": True,
-        "public_web": True,
-        "license": "© JACET (see data/NJ8/manifest.json)",
+        "redistributable": False,
+        "public_web": False,
+        "license": "© JACET; independent permission review pending (local-only)",
         "source_url": "https://mizumot.com/nwlc/",
-        "unit": "flemma (POS-less list; no family data)",
+        "unit": "ranked spelling entries with listed variants (POS-less; not pre-grouped flemmas or families)",
     },
     {
         "id": "ngsl",
@@ -331,7 +327,7 @@ REGISTRY = [
         "public_web": True,
         "license": "CC BY-SA 4.0 (Browne, Culligan & Phillips)",
         "source_url": "https://www.newgeneralservicelist.com/",
-        "unit": "lemma-ranked",
+        "unit": "lemma ranks with supplied inflected-form aliases",
     },
     {
         "id": "nation_bnc_coca_families",
@@ -383,7 +379,7 @@ REGISTRY = [
         "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
         "source_url": "https://www.wgtn.ac.nz/lals/resources/paul-nations-resources/paul-nations-publications/publications/documents/10000-headwords.zip",
         "modification_notice": "Loaded from the official ten-band archive without content changes.",
-        "unit": "headwords only → flemma-level coverage (family members not included)",
+        "unit": "ranked headword entries only (not flemmas or word families)",
     },
     {
         "id": "range_baseword",
@@ -415,9 +411,10 @@ def _entry_available(entry) -> bool:
 def server_only_resource_ids() -> frozenset[str]:
     """Return explicitly enabled non-deliverable server resources.
 
-    Enabling requires both an allow-list and a separate operator attestation.
-    This is an engineering guard, not evidence that the operator actually holds
-    the necessary rights.
+    Enabling requires an eligible allow-list, rights acknowledgement, the fixed
+    control profile, and a valid external-evidence reference. This engineering
+    gate validates declarations only; it does not verify rights or shared
+    infrastructure.
     """
 
     return _configured_server_only_ids()
@@ -430,9 +427,11 @@ def server_only_enabled(resource_id: str) -> bool:
 
 
 def available(*, include_restricted: bool | None = None):
-    """Return installed entries allowed by the deployment's rights gate."""
+    """Return installed entries allowed by the deployment's activation mode."""
     if include_restricted is None:
         include_restricted = _local_restricted_enabled()
+    else:
+        include_restricted = bool(include_restricted) and _local_restricted_enabled()
     server_only_ids = server_only_resource_ids()
     return [
         entry
@@ -456,6 +455,7 @@ def available_by_id(list_id: str, *, include_restricted: bool = False):
     for example, never hashes or parses an unrelated operator-only resource.
     """
 
+    include_restricted = bool(include_restricted) and _local_restricted_enabled()
     entry = by_id(list_id)
     if entry is None:
         return None

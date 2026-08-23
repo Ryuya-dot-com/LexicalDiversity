@@ -57,7 +57,10 @@ def main() -> None:
         "--nj8",
         type=Path,
         default=PROJECT_ROOT / "data" / "NJ8" / "NJ8.csv",
-        help="Path to New JACET8000 CSV.",
+        help=(
+            "Path to an operator-authorized local New JACET8000 CSV. NJ8 is "
+            "review-pending and must not be used in a public deployment."
+        ),
     )
     parser.add_argument(
         "--antbnc",
@@ -89,7 +92,7 @@ def main() -> None:
         help="Directory containing AntWordProfiler/Range baseword level-list files.",
     )
     args = parser.parse_args()
-    selected = set(args.only or ("nj8", "nation-family"))
+    selected = set(args.only or ("nation-family",))
 
     entries: list[tuple[str, str]] = []
     if "nj8" in selected and args.nj8.exists():

@@ -5,22 +5,40 @@
   "version": "NJ8 (as supplied, 2023 file)",
   "n_levels": 8,
   "band_size": 1000,
-  "unit": "flemma",
-  "supports_units": ["flemma", "word form (no lemmatization)"],
+  "unit": "ranked spelling entry (POS-less; no pre-grouped flemma or family structure)",
+  "supports_units": ["listed spelling", "listed parenthetical variant"],
   "lemmatizer_default": "open_flemma",
   "lemmatizer_nwlc_parity": "antbnc",
   "population": "Japanese EFL learners (university)",
-  "license": "© JACET — redistribution is permitted for this project",
-  "redistributable": true,
-  "public_web": true,
-  "permission_evidence": "Redistribution confirmed by the project owner on 2026-07-22; retain the original copyright and citation.",
-  "rights_reviewed_at": "2026-07-22",
-  "delivery": "bundled under data/NJ8 for the public Streamlit app",
+  "license": "© JACET — project-owner attestation recorded; independent permission review pending",
+  "redistributable": false,
+  "public_web": false,
+  "public_release_eligible": false,
+  "permission_evidence": "The project owner attested to redistribution and public-Web use on 2026-07-22. The original permission record and an independent complete-scope review are not currently recorded.",
+  "permission_assurance_status": "review-pending",
+  "permission_assurance": {
+    "schema_version": "1.0.0",
+    "status": "review-pending",
+    "owner_attestation_reference": "User confirmation in the project conversation on 2026-07-22",
+    "owner_attested_on": "2026-07-22",
+    "external_permission_record": null,
+    "independent_review_status": "pending",
+    "public_release_eligible": false
+  },
+  "rights_reviewed_at": "2026-08-24",
+  "delivery": "operator-supplied local-only payload; requires LDFREQ_SERVING_MODE=local and LDFREQ_ALLOW_LOCAL_RESTRICTED=1",
+  "runtime_processing": {
+    "payload_at_rest": "direct snapshot; no public build artifact",
+    "listed_variant_expansion_method_id": "parenthetical_variant_expansion_v1",
+    "panel_b_mapping_method_id": "surface_first_rank_lookup_normalized_fallback_v1",
+    "permission_scope_required": "transformation-and-derived-results"
+  },
   "citation": "JACET (2016). New JACET List of 8,000 Basic Words.",
   "notes": [
     "2-column CSV: rank,Word. No POS, no inflected forms.",
     "22 entries carry parenthetical variants (e.g. 'mom (mommy, mum, ...)') -> expanded to the head rank.",
     "Spreadsheet artifacts: 'TRUE'/'FALSE' are the words true/false (restored by lower-casing).",
-    "Because the list is POS-less and one-entry-per-spelling, it is already flemma-grained."
+    "A POS-less one-entry-per-spelling list is not thereby flemma-grained. The runtime uses hybrid surface-first lookup and applies the selected normalizer only when a listed spelling is absent.",
+    "NJ8.csv is intentionally absent from the public source tree, release archive, container image, CI inventory, and public UI while permission assurance remains review-pending."
   ]
 }

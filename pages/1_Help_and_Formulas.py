@@ -35,7 +35,7 @@ st.markdown("""
 | View | Main question | Uses a frequency list? | Main unit |
 |---|---|---:|---|
 | **Panel A** | How varied or repetitive is the text's vocabulary? | No | lower-cased surface tokens |
-| **Panel B** | How much of the text is covered by the selected reference list, and at what frequency bands? | Yes | flemma/head or word-family head + rank |
+| **Panel B** | How much of the text is covered by the selected reference list, and at what frequency bands? | Yes | hybrid surface-first list unit + normalized fallback |
 | **Open corpus frequency** | How frequent and contextually widespread are the words in an open reference corpus? | TUBELEX-EN Treebank | lower-cased Treebank surface/clitic tokens |
 
 Panel A and Panel B start from the same tokenized text, but they intentionally
@@ -48,20 +48,28 @@ The counting unit is fixed to **token**. Panel A therefore uses lower-cased
 surface tokens: repeated occurrences contribute to $N$, and $V$ is counted over token
 forms without lemmatization.
 
-Panel B additionally maps each token to the selected list's lookup unit before
-frequency-list lookup. For NJ8/NGSL/headword lists this is a **flemma/head form**.
-For the BNC/COCA word-family list, related forms are mapped to their **word-family
-head**. For AntWordProfiler/Range lists, unindented basewords define families and
-indented entries are treated as family members.
+Panel B uses a **hybrid surface-first lookup**. It first tries the lower-cased
+surface form as a key in the selected list. Only a miss is passed to the configured
+normalizer and looked up again. NJ8 natively ranks POS-less spellings and listed
+variants; NGSL supplies lemma ranks with inflected-form aliases; the Nation headword
+files contain headwords only. For a rich BNC/COCA word-family list, a direct form key
+maps to its **word-family head**. For AntWordProfiler/Range lists, unindented
+basewords define families and indented entries are treated as family members.
+
+NJ8 is absent from the public selector and release payload while its custom
+permission assurance is `review-pending`. It can appear only when an operator
+supplies a local copy and explicitly enables local restricted mode.
 
 A **flemma** groups forms **regardless of part of speech** (McLean 2017/2018). The noun
 *smoking* (“passive smoking”) and the verb *smoking* (“he is smoking”) are the **same**
 flemma. This is the key contrast with a **lemma**, which groups inflections only
 *within* one part of speech.
 
-This tool's Panel B normalizers map a word form to a head form **without using
-part-of-speech context**, so they cannot separate noun-*smoking* from verb-*smoking* —
-they produce a **flemma, not a true lemma**. The public default is the project's
+This tool's Panel B normalizers map a word form to a POS-agnostic head
+**without using part-of-speech context**, so they cannot separate noun-*smoking*
+from verb-*smoking*. That fallback resembles flemma normalization, but the full
+Panel B method is not a pure flemma pipeline because direct list hits bypass it.
+The public default is the project's
 `open_flemma` algorithm: deterministic inflection rules plus the open NGSL 1.2 form
 table, with rule candidates checked against Open English WordNet 2025. It does not
 use AntBNC or COCA. When POS-less evidence permits more than one head (for example,
@@ -160,22 +168,28 @@ These caps are visual guardrails, not published proficiency benchmarks.
 # ---------------------------------------------------------------- Panel B
 st.header("Panel B — Frequency-based richness (selected reference list)")
 st.markdown(r"""
-Each token is mapped to the selected list's lookup head (flemma/headword or word-family
-head), then to its **rank** in the list; the band is
+Each token is first matched by lower-cased surface key. Only a direct-key miss is
+normalized and looked up again; rich family entries return their family head. The
+resulting selected-list unit is then assigned its **rank**; the band is
 $K=\lfloor(\text{rank}-1)/1000\rfloor+1$ (K1, K2, …), or *off-list*.
 """)
 st.subheader("Tokenizer, proper nouns, and off-list policy")
 st.markdown(r"""
-The tokenizer is intentionally simple and transparent: a token is ASCII letters plus
-an optional internal apostrophe (`[A-Za-z]+(?:'[A-Za-z]+)?`). Numbers are not counted
-as tokens; hyphens and periods split or drop parts of a string. For example,
-`well-known` is tokenized as `well`, `known`, and `U.S.A.` as `U`, `S`, `A`.
+New analyses use the fixed `english_unicode_v1` tokenizer policy. It applies NFC
+(not NFKC), recognizes Unicode letters plus following combining marks, normalizes
+common curly/modifier apostrophes to ASCII `'`, and retains apostrophes only inside
+letter components. Numbers are not tokens; digits, hyphens, dashes, and periods split
+tokens. For example, `well-known` becomes `well`, `known`, `abc123def` becomes
+`abc`, `def`, and `U.S.A.` becomes `U`, `S`, `A`. Lower-casing uses Python
+`str.lower()`, not case-folding. Exported provenance records the validated policy ID.
+The former ASCII regular expression remains available only as the explicit
+`ascii_legacy_v1` compatibility policy.
 
 Proper nouns are **not automatically removed or credited as known**, and
-capitalization is not used to make lookup easier. Lookup uses lower-cased/normalized
-forms, while the original surface forms are retained for diagnostics. If the selected
-list does not contain the token, its normalized flemma/head, or its word-family head,
-the item is treated as **off-list**.
+capitalization is not used to make lookup easier. Public mapping diagnostics retain
+only aggregate path counts/rates and type counts, never submitted terms or
+token-to-head rows. If neither the direct surface key nor its normalized fallback is
+in the selected list, the item is treated as **off-list**.
 
 That is an implementation policy for selected-list matching, not a theoretical claim
 that those words are unknown. Lexical-coverage studies normally include running words
@@ -203,10 +217,10 @@ off-list items cap this selected-list match rate. If off-list items include prop
 nouns or other normally creditable items, review/credit them according to your study
 policy before interpreting the result as reader-known lexical coverage.
 
-The lookup profile table shows the normalized Panel B flemma/head or word-family head
-used for lookup. Results will not necessarily match LexTutor unless the exact same
-frequency list, word-family expansion, tokenization, proper-noun/number policy, and
-lemmatizer are used.
+The aggregate profile reports selected-list bands, not a disclosed token-to-head
+table. Results are not claimed to be numerically comparable to LexTutor. Such a
+comparison would require the same hybrid lookup order, frequency list, word-family
+expansion, tokenization, proper-noun/number policy, and normalizer.
 """)
 st.subheader("Advanced Guiraud, % beyond-K, mean rank")
 st.latex(r"\mathrm{AG}=\frac{V_{\text{adv}}}{\sqrt{N}}\quad"

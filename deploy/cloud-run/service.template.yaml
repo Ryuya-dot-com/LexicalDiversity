@@ -48,11 +48,17 @@ spec:
             - name: LDFREQ_ALLOW_LOCAL_RESTRICTED
               value: "0"
             - name: LDFREQ_SERVER_ONLY_RESOURCE_IDS
-              value: bnc_coca,nation_bnc_coca_families
+              # Fail closed. Populate only in a separately reviewed deployment.
+              value: ""
             - name: LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED
-              # Fail closed. Change to "1" only with the recorded operator
-              # rights decision for the exact mounted artifact/version.
+              # Change to "1" only with the exact resource-rights decision.
               value: "0"
+            - name: LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION
+              # The only accepted non-empty value is shared-abuse-controls-v1.
+              value: ""
+            - name: LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID
+              # Short external record ID only; never a URL, path, or secret.
+              value: ""
             - name: LDFREQ_ANALYSIS_DEADLINE_SECONDS
               value: "120"
             - name: LDFREQ_REAL_WRITING_APPROVED

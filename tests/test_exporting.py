@@ -1,3 +1,4 @@
+import copy
 import io
 import json
 import math
@@ -7,9 +8,72 @@ import zipfile
 from openpyxl import load_workbook
 
 from ldfreq import exporting
+from ldfreq import indices as IDX
 
 
 class ExportingTests(unittest.TestCase):
+    def test_panel_a_rows_expose_structured_method_contract(self):
+        records = IDX.all_index_records(["alpha", "beta", "alpha"])
+        payload = {
+            "document": {"name": "Document 001"},
+            "n_tokens": 3,
+            "settings": {
+                "msttr_segment": 50,
+                "mattr_window": 50,
+                "hdd_sample": 42,
+                "mtld_threshold": 0.72,
+                "vocd_seed": 42,
+            },
+            "panel_a": {key: record["value"] for key, record in records.items()},
+            "panel_a_records": records,
+        }
+
+        rows = exporting.panel_a_rows(payload)
+        mattr = next(row for row in rows if row["index_key"] == "mattr")
+
+        self.assertEqual(mattr["status"], "missing")
+        self.assertEqual(
+            mattr["missing_reason"],
+            "too_short_for_requested_parameter",
+        )
+        self.assertEqual(mattr["method_id"], IDX.METHOD_IDS["mattr"])
+        self.assertEqual(
+            json.loads(mattr["requested_parameters"]),
+            {"window_length": 50},
+        )
+        self.assertEqual(json.loads(mattr["effective_parameters"]), {})
+
+    def test_panel_a_rows_rejects_absent_or_inconsistent_records(self):
+        records = IDX.all_index_records(["alpha", "beta", "alpha"])
+        payload = {
+            "document": {"name": "Document 001"},
+            "n_tokens": 3,
+            "panel_a": {key: record["value"] for key, record in records.items()},
+            "panel_a_records": records,
+        }
+
+        without_records = copy.deepcopy(payload)
+        del without_records["panel_a_records"]
+        with self.assertRaisesRegex(ValueError, "Panel A schema 2.0"):
+            exporting.panel_a_rows(without_records)
+
+        incomplete = copy.deepcopy(payload)
+        del incomplete["panel_a_records"]["mattr"]
+        with self.assertRaisesRegex(ValueError, "Panel A schema 2.0"):
+            exporting.panel_a_rows(incomplete)
+
+        inconsistent = copy.deepcopy(payload)
+        inconsistent["panel_a_records"]["mattr"]["effective_parameters"] = {
+            "window_length": 50
+        }
+        with self.assertRaisesRegex(ValueError, "Panel A schema 2.0"):
+            exporting.panel_a_rows(inconsistent)
+
+        unknown_reason = copy.deepcopy(payload)
+        unknown_reason["panel_a_records"]["mattr"]["missing_reason"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "Panel A schema 2.0"):
+            exporting.panel_a_rows(unknown_reason)
+
     def test_payload_to_json_uses_frozen_precision_and_terminal_newline(self):
         payload = {
             "value": 1.1234567890129,
@@ -38,6 +102,8 @@ class ExportingTests(unittest.TestCase):
             exporting.payload_to_json({"value": math.inf})
 
     def test_payload_to_excel_writes_batch_summary_and_detail_sheets(self):
+        records_a = IDX.all_index_records(["alpha", "alpha", "beta"])
+        records_b = IDX.all_index_records(["alpha", "beta"])
         payload = {
             "ldfreq_version": "test",
             "batch_diagnostics": {
@@ -59,7 +125,10 @@ class ExportingTests(unittest.TestCase):
                     "method_notes": ["Tokenizer policy: test"],
                     "n_tokens": 3,
                     "n_types": 2,
-                    "panel_a": {"ttr": 0.667, "mattr": None, "mtld": None, "hdd": None, "vocd": None},
+                    "panel_a": {
+                        key: record["value"] for key, record in records_a.items()
+                    },
+                    "panel_a_records": records_a,
                     "panel_b": {
                         "lfp": [{"level": "K1", "tokens": 2, "types": 1, "coverage_%": 66.67, "cumulative_%": 66.67}],
                         "coverage_threshold": {90: None},
@@ -86,7 +155,10 @@ class ExportingTests(unittest.TestCase):
                     "settings": {"unit": "token", "list_name": "Test List"},
                     "n_tokens": 2,
                     "n_types": 2,
-                    "panel_a": {"ttr": 1.0},
+                    "panel_a": {
+                        key: record["value"] for key, record in records_b.items()
+                    },
+                    "panel_a_records": records_b,
                     "panel_b": None,
                 },
             ],
@@ -112,12 +184,13 @@ class ExportingTests(unittest.TestCase):
         ttr = next(row for row in descriptives if row["measure"] == "ttr")
         self.assertEqual(ttr["n"], 2)
         self.assertEqual(ttr["missing"], 0)
-        self.assertAlmostEqual(ttr["mean"], 0.8335, places=4)
+        self.assertAlmostEqual(ttr["mean"], 5 / 6, places=12)
         mattr = next(row for row in descriptives if row["measure"] == "mattr")
         self.assertEqual(mattr["n"], 0)
         self.assertEqual(mattr["missing"], 2)
 
     def test_payload_to_excel_is_byte_deterministic_and_has_fixed_zip_metadata(self):
+        records = IDX.all_index_records(["alpha"])
         payload = {
             "ldfreq_version": "test",
             "document": {"name": "Document 001"},
@@ -126,7 +199,8 @@ class ExportingTests(unittest.TestCase):
             "privacy": {},
             "n_tokens": 1,
             "n_types": 1,
-            "panel_a": {"ttr": 1.0},
+            "panel_a": {key: record["value"] for key, record in records.items()},
+            "panel_a_records": records,
             "panel_b": None,
             "semantic_network": None,
             "tubelex": None,

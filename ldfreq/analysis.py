@@ -20,12 +20,10 @@ from . import tubelex as TUBELEX
 from .exporting import clean_deep
 from .lemmatizers import WordFormLemmatizer
 from .privacy import retain_aggregate_result, sensitive_paths
-from .tokenizer import tokenize
-
-
-TOKENIZER_POLICY = (
-    "ASCII letters plus internal apostrophes; numbers, hyphens, and periods "
-    "split or drop."
+from .tokenizer import (
+    DEFAULT_TOKENIZER_POLICY,
+    get_tokenizer_policy,
+    tokenize,
 )
 SERVER_ONLY_MIN_TOKENS = 100
 SERVER_ONLY_MIN_TYPES = 20
@@ -58,10 +56,11 @@ class AnalysisConfig:
     vocd_seed: int = 42
     advanced_cutoff: int = 2
     unit: str = "token"
-    tokenizer_policy: str = TOKENIZER_POLICY
+    tokenizer_policy: str = DEFAULT_TOKENIZER_POLICY
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "thresholds", tuple(self.thresholds))
+        get_tokenizer_policy(self.tokenizer_policy)
         if self.unit != "token":
             raise ValueError("Only token counting is currently supported")
         if not self.thresholds or any(
@@ -85,8 +84,16 @@ class AnalysisConfig:
             or self.vocd_seed < 0
         ):
             raise ValueError("vocd_seed must be a non-negative integer")
-        if not 0 < float(self.mtld_threshold) < 1:
-            raise ValueError("mtld_threshold must be between zero and one")
+        if (
+            isinstance(self.mtld_threshold, bool)
+            or not isinstance(self.mtld_threshold, (int, float))
+            or not math.isfinite(float(self.mtld_threshold))
+            or not 0 < float(self.mtld_threshold) < 1
+        ):
+            raise ValueError(
+                "mtld_threshold must be a finite number between zero and one"
+            )
+        object.__setattr__(self, "mtld_threshold", float(self.mtld_threshold))
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +201,7 @@ def _settings(
         "list_entries": meta.get("entries"),
         "list_levels": meta.get("n_levels"),
         "list_lookup_unit": meta.get("lookup_unit"),
+        "panel_b_mapping_method_id": FRQ.PANEL_B_MAPPING_METHOD_ID,
         "tokenizer_policy": config.tokenizer_policy,
         "thresholds": list(config.thresholds),
         "min_tokens": config.min_tokens,
@@ -217,6 +225,15 @@ def _method_notes(
         "Counting unit is token: Panel A uses lower-cased surface tokens without "
         "lemmatization."
     )
+    notes.append(
+        "Panel A standard method IDs retain the requested segment, window, and "
+        "sample parameters; advisory quality floors never trigger parameter shrinking."
+    )
+    notes.append(
+        "Python MTLD uses a bidirectional arithmetic mean, closes factors at "
+        "TTR <= threshold after at least 10 tokens, and has a Python-specific "
+        "method ID rather than an R-equivalence claim."
+    )
     if getattr(normalizer, "name", None) == "antbnc":
         notes.append(
             "AntBNC mode is an NWLC approximation, not bit-identical to New Word "
@@ -231,6 +248,13 @@ def _method_notes(
             f"tokens and {SERVER_ONLY_MIN_TYPES} distinct surface types per document."
         )
 
+    notes.append(
+        f"Panel B mapping method {FRQ.PANEL_B_MAPPING_METHOD_ID} is hybrid: an exact "
+        "lower-cased surface-form key is looked up first, and the configured "
+        "normalizer is used only after that lookup misses. Direct hits are not "
+        "re-normalized, so this is not a pure flemma or lemma pipeline."
+    )
+
     entry_id = (resources.list_entry or {}).get("id")
     if entry_id in {"bnc_coca_families", "nation_bnc_coca_families"}:
         notes.append(
@@ -244,15 +268,18 @@ def _method_notes(
         )
     else:
         notes.append(
-            "Panel B maps tokens to flemmas/head forms before frequency-list lookup."
+            "For spelling/headword resources, a successful normalized fallback maps "
+            "to the corresponding ranked entry; a direct listed spelling keeps its "
+            "own rank."
         )
     notes.extend([
         "Coverage thresholds are selected-list matched coverage, not an automatic "
         "reader-known coverage estimate.",
         "Proper nouns, marginal words, acronyms, and other potentially known items "
         "are not automatically credited unless they match the selected list/normalizer.",
-        "Coverage can differ from LexTutor unless the frequency list, word-family "
-        "expansion, tokenizer, proper-noun/number policy, and lemmatizer all match.",
+        "Panel B values are not claimed to be numerically comparable to LexTutor. "
+        "Comparison would require the same hybrid lookup order, frequency list, "
+        "word-family expansion, tokenizer, proper-noun/number policy, and normalizer.",
         "P_Lex counts unclassified off-list items as hard words under this app's "
         "no-automatic-proper-noun-adjustment policy.",
         "S uses the selected list's ranks, not Kojima & Yamashita's BNC-spoken "
@@ -287,6 +314,9 @@ def _document_payload(
         "n_tokens": result["n_tokens"],
         "n_types": result["n_types"],
         "panel_a": {key: result["indices"].get(key) for key in IDX._FUNCS},
+        "panel_a_records": {
+            key: result["index_records"][key] for key in IDX._FUNCS
+        },
         "panel_b": (
             {key: value for key, value in panel_b.items() if not str(key).startswith("_")}
             if panel_b is not None
@@ -304,7 +334,11 @@ def _analyze_transient_document(
     resources: AnalysisResources,
     normalizer: Normalizer,
 ) -> dict[str, Any]:
-    raw_surfaces = tokenize(text, lower=False)
+    raw_surfaces = tokenize(
+        text,
+        lower=False,
+        policy=config.tokenizer_policy,
+    )
     raw_tokens = [token.lower() for token in raw_surfaces]
     if not raw_tokens:
         return {"name": label, "error": "No tokens found."}
@@ -321,14 +355,16 @@ def _analyze_transient_document(
             ),
         }
 
-    indices = IDX.all_indices(
+    index_records = IDX.all_index_records(
         raw_tokens,
         segment=config.msttr_segment,
         window=config.mattr_window,
         mtld_threshold=config.mtld_threshold,
         hdd_sample=config.hdd_sample,
         vocd_seed=config.vocd_seed,
+        min_tokens_override=config.min_tokens,
     )
+    indices = {key: record["value"] for key, record in index_records.items()}
     panel_b = None
     if resources.rank_map is not None and resources.list_meta is not None:
         panel_b = FRQ.panel_b(
@@ -413,6 +449,7 @@ def _analyze_transient_document(
         "n_tokens": len(raw_tokens),
         "n_types": len(set(raw_tokens)),
         "indices": indices,
+        "index_records": index_records,
         "panel_b": panel_b,
         "semantic_network": semantic_summary,
         "tubelex": tubelex_summary,

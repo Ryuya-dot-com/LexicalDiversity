@@ -12,7 +12,6 @@ import hashlib
 import math
 import os
 import time
-from collections import Counter
 from pathlib import Path
 
 import pandas as pd
@@ -41,6 +40,8 @@ def _copy_streamlit_secrets_to_env():
         "LDFREQ_NATION_BNCCOCA_RUNTIME_ZIP_B64",
         "LDFREQ_SERVER_ONLY_RESOURCE_IDS",
         "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED",
+        "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION",
+        "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID",
         "LDFREQ_SERVING_MODE",
         "LDFREQ_ANALYSIS_DEADLINE_SECONDS",
         "LDFREQ_REAL_WRITING_APPROVED",
@@ -67,11 +68,11 @@ _copy_streamlit_secrets_to_env()
 from ldfreq import __version__
 from ldfreq import analysis as ANALYSIS
 from ldfreq import indices as IDX
-from ldfreq import frequency as FRQ
 from ldfreq import isolated as ISOLATED
 from ldfreq import privacy as PRIVACY
 from ldfreq import query_guard as QUERY_GUARD
 from ldfreq.exporting import (
+    _validated_panel_a_records,
     clean_deep,
     descriptive_rows,
     payload_to_excel,
@@ -80,6 +81,7 @@ from ldfreq.exporting import (
 )
 from ldfreq.uploads import documents_from_uploads
 from ldfreq import wordlists as WL
+from ldfreq.tokenizer import DEFAULT_TOKENIZER_POLICY
 
 # Data lists live server-side; the location is deployment config (env-overridable),
 # not an end-user setting.
@@ -105,7 +107,7 @@ ALLOW_LOCAL_RESTRICTED = (
 )
 SERVER_ONLY_RESOURCE_IDS = WL.server_only_resource_ids()
 POSIX_ISOLATION_AVAILABLE = os.name == "posix"
-TOKENIZER_POLICY = "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop."
+TOKENIZER_POLICY = DEFAULT_TOKENIZER_POLICY
 SAMPLE = (
     "The study of lexical diversity examines how varied the vocabulary in a text is. "
     "Researchers have proposed many measures, but most simple measures depend heavily on "
@@ -439,7 +441,7 @@ lem_name = st.sidebar.selectbox(
     index=0,
     format_func=lambda value: _lemmatizer_labels[value],
     help="Used when a token is not directly present in the selected frequency list. "
-         "Maps tokens to POS-agnostic flemmas/head forms before retrying lookup. "
+         "Maps a missed token to a POS-agnostic candidate head before retrying lookup. "
          "The project normalizer uses deterministic rules plus NGSL and Open English "
          "WordNet, and keeps unresolved homographs unchanged. AntBNC is available only "
          "in an authorized local/private deployment.")
@@ -492,7 +494,9 @@ for warning in getattr(WL, "MATERIALIZATION_WARNINGS", []):
 if SERVER_ONLY_RESOURCE_IDS:
     st.sidebar.caption(
         "Operator-provisioned server-only resources are active. Their payloads "
-        "are not included in user downloads."
+        "are not included in user downloads. Activation records an external "
+        "control-evidence reference; the application does not verify that "
+        "infrastructure."
     )
 
 thresholds = st.sidebar.multiselect("Coverage thresholds (%)", [90, 95, 98],
@@ -720,19 +724,33 @@ def _list_label(meta, entry=None, path=None):
 
 def _panel_a_rows(result):
     n_tok = result["n_tokens"]
-    settings = (result.get("payload") or {}).get("settings") or {}
-    segment = settings.get("msttr_segment", seg)
-    window = settings.get("mattr_window", win)
-    hdd_sample = settings.get("hdd_sample", hdd_n)
+    records = _validated_panel_a_records(
+        result.get("index_records"),
+        result.get("indices"),
+    )
     rows = []
     for k in IDX._FUNCS:
-        v = result["indices"][k]
-        eff = IDX.effective_min_tokens(k, segment=segment, window=window, hdd_sample=hdd_sample)
-        warning = f"N={n_tok} < {eff}; interpret cautiously" if n_tok < eff else ""
+        record = records[k]
+        v = record["value"]
+        floor = record["advisory_quality_floor_tokens"]
+        status = record["status"]
+        missing_reason = record["missing_reason"]
+        method_id = record["method_id"]
+        warning = (
+            f"N={n_tok} < advisory quality floor {floor}; interpret cautiously"
+            if n_tok < floor
+            else ""
+        )
         if _is_missing(v):
             value = "— (NA)"
             warning = "; ".join(
-                part for part in [warning, "undefined for this text (all-distinct / no convergence)"]
+                part
+                for part in [
+                    warning,
+                    f"not computed: {missing_reason.replace('_', ' ')}"
+                    if missing_reason
+                    else "not computed: unspecified reason",
+                ]
                 if part
             )
         else:
@@ -740,8 +758,11 @@ def _panel_a_rows(result):
         rows.append({
             "Index": IDX.PRETTY[k],
             "Value": value,
+            "Status": status,
+            "Missing reason": missing_reason or "",
+            "Method ID": method_id,
             "↑=diverse": "↑" if IDX.DIRECTION[k] > 0 else "↓",
-            "Required tokens": eff,
+            "Advisory quality floor": floor,
             "Warning": warning,
         })
     return rows
@@ -992,7 +1013,7 @@ def _band_wise_rows(pb):
     rows = []
     for row in pb["band_wise"]:
         d = {k: _fmt(v) for k, v in row.items()}
-        d["Required tokens"] = d.pop("Min N")
+        d["Advisory quality floor"] = d.pop("Min N")
         d["Warning"] = ("" if row["tokens"] >= row["Min N"] else
                         f"{row['tokens']} tokens < {row['Min N']}; interpret cautiously")
         rows.append(d)
@@ -1008,71 +1029,11 @@ def _lookup_labels(meta):
             "profile_title": "Word family profile",
         }
     return {
-        "singular": "flemma",
-        "plural": "flemmas",
-        "head_column": "flemma",
-        "profile_title": "Flemma profile",
+        "singular": "mapped lookup unit",
+        "plural": "mapped lookup units",
+        "head_column": "mapped_unit",
+        "profile_title": "Mapped-unit profile",
     }
-
-
-def _flemma_rows(result):
-    pb = result.get("panel_b") or {}
-    mapped = pb.get("_mapped") or []
-    if not mapped:
-        return []
-
-    labels = _lookup_labels(result.get("list_meta"))
-    head_column = labels["head_column"]
-    raw_surfaces = result.get("raw_surfaces") or result.get("raw_tokens") or []
-    raw_tokens = result.get("raw_tokens") or [str(surface).lower() for surface in raw_surfaces]
-    total = len(mapped)
-    buckets = {}
-    for surface, token, (head, rank) in zip(raw_surfaces, raw_tokens, mapped):
-        level_num = FRQ.level_of(rank)
-        level = f"K{level_num}" if level_num else "off-list"
-        key = (head, rank, level)
-        if key not in buckets:
-            buckets[key] = {
-                head_column: head,
-                "rank": rank,
-                "level": level,
-                "tokens": 0,
-                "token_forms": Counter(),
-                "surface_forms": Counter(),
-            }
-        buckets[key]["tokens"] += 1
-        buckets[key]["token_forms"][token] += 1
-        buckets[key]["surface_forms"][surface] += 1
-
-    def _surface_summary(counter: Counter, limit: int = 8) -> str:
-        parts = []
-        for form, count in counter.most_common(limit):
-            parts.append(f"{form} ({count})" if count > 1 else str(form))
-        if len(counter) > limit:
-            parts.append(f"+{len(counter) - limit} more")
-        return ", ".join(parts)
-
-    rows = []
-    for item in buckets.values():
-        rank = item["rank"]
-        rows.append({
-            head_column: item[head_column],
-            "level": item["level"],
-            "rank": rank if rank is not None else "off-list",
-            "tokens": item["tokens"],
-            "coverage_%": round(100 * item["tokens"] / total, 2) if total else 0.0,
-            "token_forms": _surface_summary(item["token_forms"]),
-            "surface_forms": _surface_summary(item["surface_forms"]),
-        })
-    return sorted(
-        rows,
-        key=lambda row: (
-            row["rank"] == "off-list",
-            row["rank"] if row["rank"] != "off-list" else math.inf,
-            -row["tokens"],
-            row[head_column],
-        ),
-    )
 
 
 def _band_order(level):
@@ -1272,7 +1233,10 @@ def _render_result(result, payload):
         f"**Tokens (N):** {result['n_tokens']} · **Types (V):** {result['n_types']} · "
         f"**Band-wise Min-N:** {min_tokens_label}"
     )
-    st.caption(f"Tokenizer: {TOKENIZER_POLICY}")
+    st.caption(
+        f"Tokenizer: {TOKENIZER_POLICY} (NFC; Unicode letters/marks; common "
+        "typographic apostrophes normalized; hyphens and digits split)"
+    )
     st.info(
         "Panel A and Panel B start from the same tokenized text but answer different "
         "questions. Panel A measures surface-token diversity without a reference list; "
@@ -1304,8 +1268,11 @@ def _render_result(result, payload):
             "No frequency list, rank, word family, or Panel B normalizer is applied."
         )
         st.dataframe(pd.DataFrame(_panel_a_rows(result)), width="stretch", hide_index=True)
-        st.caption("Required tokens = recommended minimum for stable interpretation. "
-                   "Values below that floor are shown with a warning.")
+        st.caption(
+            "The advisory quality floor is a caution threshold, not a computation "
+            "switch. Requested segment/window/sample methods remain NA when their "
+            "actual computational domain is not met; parameters are never silently shrunk."
+        )
         st.caption("↓ indices (Maas, Yule's K) decrease with greater diversity. "
                    "“— (NA)” = no computable value; the **Warning** column says why "
                    "(see the Help / Formulas page).")
@@ -1315,10 +1282,72 @@ def _render_result(result, payload):
             st.warning("No frequency list is installed — Panel B is unavailable.")
         else:
             st.caption(
-                "Panel B is reference-list dependent: each token is matched to a "
-                "flemma/head or word-family head, then assigned a rank, K-band, or "
-                "off-list status in the selected list."
+                "Panel B is reference-list dependent and hybrid: a lower-cased "
+                "surface key is tried first, and only a miss is normalized and "
+                "looked up again. A matched list unit is then assigned a rank, "
+                "K-band, or off-list status. This is not a pure flemma pipeline."
             )
+            mapping = pb.get("mapping_diagnostics") or {}
+            if mapping:
+                st.caption(f"Mapping method: `{mapping.get('method_id')}`")
+                with st.expander("Aggregate mapping-path diagnostics"):
+                    st.dataframe(
+                        pd.DataFrame(
+                            [
+                                {
+                                    "path": "direct surface-key hit",
+                                    "tokens": mapping.get("surface_hit_tokens"),
+                                    "rate_%": round(
+                                        100 * mapping.get("surface_hit_rate", 0.0), 2
+                                    ),
+                                },
+                                {
+                                    "path": "normalized fallback hit",
+                                    "tokens": mapping.get(
+                                        "normalized_fallback_hit_tokens"
+                                    ),
+                                    "rate_%": round(
+                                        100
+                                        * mapping.get(
+                                            "normalized_fallback_hit_rate", 0.0
+                                        ),
+                                        2,
+                                    ),
+                                },
+                                {
+                                    "path": "normalized off-list",
+                                    "tokens": mapping.get(
+                                        "normalized_off_list_tokens"
+                                    ),
+                                    "rate_%": round(
+                                        100
+                                        * mapping.get(
+                                            "normalized_off_list_rate", 0.0
+                                        ),
+                                        2,
+                                    ),
+                                },
+                                {
+                                    "path": "identity fallback off-list",
+                                    "tokens": mapping.get("identity_fallback_tokens"),
+                                    "rate_%": round(
+                                        100
+                                        * mapping.get("identity_fallback_rate", 0.0),
+                                        2,
+                                    ),
+                                },
+                            ]
+                        ),
+                        width="stretch",
+                        hide_index=True,
+                    )
+                    st.caption(
+                        "These are aggregate counts only: "
+                        f"{mapping.get('input_surface_types', 0)} lower-cased surface "
+                        f"types mapped to {mapping.get('mapped_unit_types', 0)} units "
+                        f"({mapping.get('collapsed_surface_types', 0)} collapsed). "
+                        "No submitted terms or token-to-head rows are retained."
+                    )
             lfp_df = pd.DataFrame(pb["lfp"]).rename(columns={"types": lookup_labels["plural"]})
             st.subheader("Lexical Frequency Profile")
             st.dataframe(lfp_df, width="stretch", hide_index=True)
@@ -1342,8 +1371,8 @@ def _render_result(result, payload):
                 "These thresholds use selected-list matched text coverage. Proper nouns, "
                 "marginal words, acronyms, transparent compounds, and other potentially "
                 "known items are not automatically credited unless they match the selected "
-                "list/normalizer; review off-list diagnostics before reporting reader-known "
-                "lexical coverage."
+                "list/normalizer; apply an explicit study-specific classification before "
+                "reporting reader-known lexical coverage."
             )
 
             def _metric(v, digits):

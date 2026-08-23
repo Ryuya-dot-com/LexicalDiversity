@@ -7,6 +7,7 @@ import hashlib
 import json
 import platform
 import sys
+from dataclasses import asdict
 from importlib import metadata
 from io import BytesIO
 from pathlib import Path
@@ -126,9 +127,10 @@ def build_artifacts() -> tuple[dict[str, bytes], dict[str, Any]]:
 
     pins = _require_clean_runtime()
     texts = [path.read_text(encoding="utf-8") for path in INPUT_PATHS]
+    config = AnalysisConfig()
     response = analyze_documents_isolated(
         texts,
-        AnalysisConfig(),
+        config,
         ResourceSpec(
             list_id="ngsl",
             lemmatizer_name="open_flemma",
@@ -187,17 +189,7 @@ def build_artifacts() -> tuple[dict[str, bytes], dict[str, Any]]:
         },
         "analysis": {
             "documents": 2,
-            "config": {
-                "thresholds": [90, 95, 98],
-                "min_tokens": 50,
-                "msttr_segment": 50,
-                "mattr_window": 50,
-                "mtld_threshold": 0.72,
-                "hdd_sample": 42,
-                "vocd_seed": 42,
-                "advanced_cutoff": 2,
-                "unit": "token",
-            },
+            "config": canonical_export_value(asdict(config)),
             "resources": {
                 "list_id": "ngsl",
                 "lemmatizer_name": "open_flemma",

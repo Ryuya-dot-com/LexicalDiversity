@@ -17,11 +17,11 @@ Measures
 
 Caveat: coverage here is selected-list matched coverage. Proper nouns, marginal
 words, acronyms, and other potentially known items are not automatically credited
-unless they match the selected list/normalizer. P_Lex and S use the supplied list's
-ranks (e.g. NJ8 flemma / BNC/COCA headwords), not Kojima & Yamashita's BNC-spoken
-*family* lists. S in particular assumes coverage approaches 100 % within the
-sampled ranks; for written text with headword/flemma coverage it usually does not,
-so S reports ``capped`` and is then not numerically interpretable.
+unless they match the selected list/normalizer. P_Lex and S use the selected list's
+ranks, not Kojima & Yamashita's BNC-spoken *family* lists. S in particular assumes
+coverage approaches 100 % within the sampled ranks; with incomplete selected-list
+coverage it often does not, so S reports ``capped`` and is then not numerically
+interpretable.
 """
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ from collections import Counter, defaultdict
 from . import indices as IDX
 
 OFF_LIST = None  # sentinel rank for tokens not found in the list
+PANEL_B_MAPPING_METHOD_ID = "surface_first_rank_lookup_normalized_fallback_v1"
 
 
 # --------------------------------------------------------------------------- #
@@ -73,6 +74,7 @@ def load_ranked_list(path: str, *, encoding="utf-8-sig"):
             max_rank = max(max_rank, r)
     meta = {"entries": len({v for v in rank.values()}), "keys": len(rank),
             "variants": n_variants, "max_rank": max_rank,
+            "lookup_unit": "listed_surface_form_or_normalized_fallback",
             "n_levels": (max_rank + 999) // 1000}
     return rank, meta
 
@@ -124,6 +126,7 @@ def load_ngsl(dir_path: str, *, encoding="utf-8-sig"):
     max_rank = max(lemma_rank.values(), default=0)
     meta = {"entries": len(lemma_rank), "keys": len(rank),
             "variants": n_variants, "max_rank": max_rank,
+            "lookup_unit": "listed_surface_form_at_lemma_rank_or_normalized_fallback",
             "n_levels": (max_rank + 999) // 1000}
     return rank, meta
 
@@ -147,10 +150,10 @@ def load_headword_bands(dir_path, *, encoding="utf-8-sig"):
     band = line order, so global rank = (K-1)*1000 + line.
 
     NOTE: these are HEADWORDS only — the word-family *members* (derivations) are NOT
-    included (they ship with AntWordProfiler/Range). So profiling here reaches only
-    headword/flemma-level coverage via the lemmatizer; derived family members not
-    reducible by the lemmatizer fall off-list. True word-family coverage needs the
-    member (basewrd) lists.
+    included (they ship with AntWordProfiler/Range). Profiling therefore uses hybrid
+    headword-entry coverage: direct listed headwords plus normalized misses that
+    resolve to a listed headword. Derivations not reducible by the normalizer remain
+    off-list. True word-family coverage needs the member (basewrd) lists.
     """
     def band_of(fp):
         m = _ORD_RE.search(os.path.basename(fp))
@@ -179,7 +182,8 @@ def load_headword_bands(dir_path, *, encoding="utf-8-sig"):
             if w and w not in rank:
                 rank[w] = (b - 1) * 1000 + i + 1
     meta = {"entries": len(rank), "keys": len(rank), "variants": 0,
-            "max_rank": max_band * 1000, "n_levels": max_band}
+            "max_rank": max_band * 1000, "n_levels": max_band,
+            "lookup_unit": "listed_headword_or_normalized_fallback"}
     return rank, meta
 
 
@@ -375,31 +379,73 @@ def _rank_entry(value, fallback_head: str) -> tuple[str, int | None]:
     return fallback_head, value
 
 
+def _map_tokens_with_diagnostics(tokens, rank_map, lemmatizer):
+    """Map tokens and return aggregate diagnostics for the mapping path.
+
+    The four path categories are mutually exclusive. Their token counts therefore
+    sum to ``input_tokens``. Diagnostics deliberately contain no submitted terms.
+    """
+    out = []
+    surface_types = set()
+    path_counts = Counter()
+    for tok in tokens:
+        t = tok.lower()
+        surface_types.add(t)
+        if t in rank_map:
+            out.append(_rank_entry(rank_map[t], t))
+            path_counts["surface_hit"] += 1
+            continue
+
+        normalized = lemmatizer.normalize(t)
+        if normalized in rank_map:
+            out.append(_rank_entry(rank_map[normalized], normalized))
+            path_counts["normalized_fallback_hit"] += 1
+        else:
+            mapped_unit = normalized or t
+            out.append((mapped_unit, OFF_LIST))
+            if normalized and normalized != t:
+                path_counts["normalized_off_list"] += 1
+            else:
+                path_counts["identity_fallback"] += 1
+
+    n = len(out)
+
+    def rate(category: str) -> float:
+        return path_counts[category] / n if n else 0.0
+
+    mapped_types = {head for head, _rank in out}
+    diagnostics = {
+        "method_id": PANEL_B_MAPPING_METHOD_ID,
+        "input_tokens": n,
+        "input_surface_types": len(surface_types),
+        "mapped_unit_types": len(mapped_types),
+        "collapsed_surface_types": len(surface_types) - len(mapped_types),
+        "surface_hit_tokens": path_counts["surface_hit"],
+        "surface_hit_rate": rate("surface_hit"),
+        "normalized_fallback_hit_tokens": path_counts["normalized_fallback_hit"],
+        "normalized_fallback_hit_rate": rate("normalized_fallback_hit"),
+        "normalized_off_list_tokens": path_counts["normalized_off_list"],
+        "normalized_off_list_rate": rate("normalized_off_list"),
+        "identity_fallback_tokens": path_counts["identity_fallback"],
+        "identity_fallback_rate": rate("identity_fallback"),
+    }
+    return out, diagnostics
+
+
 def map_tokens(tokens, rank_map, lemmatizer):
     """Return list of ``(head, rank)`` per token.
 
-    In-list surface hits are taken at face value (NJ8 ranks some inflections such
-    as better/best/went at their own rank, so they are NOT re-lemmatized). Off-list
-    tokens are keyed by their *normalized* (lemma/flemma) head, so two off-list
-    inflections sharing a head collapse to one off-list type — consistent with the
-    selected unit. (Because of the in-list short-circuit, flemma Panel A and Panel B
-    type counts can legitimately differ for words NJ8 lists as separate inflections.)
+    In-list surface hits are taken at face value and are not re-normalized. Off-list
+    tokens are keyed by their normalized fallback head, so two off-list inflections
+    sharing a head collapse to one off-list type. Because of the in-list short-circuit,
+    Panel A surface-token type counts and Panel B mapped-unit type counts can
+    legitimately differ for spellings that the selected list ranks separately.
 
     Word-family lists store richer rank entries, so an in-list surface hit maps to
     the family head rather than to the literal surface form.
     """
-    out = []
-    for tok in tokens:
-        t = tok.lower()
-        if t in rank_map:
-            out.append(_rank_entry(rank_map[t], t))
-            continue
-        head = lemmatizer.normalize(t)
-        if head in rank_map:
-            out.append(_rank_entry(rank_map[head], head))
-        else:
-            out.append((head or t, OFF_LIST))
-    return out
+    mapped, _diagnostics = _map_tokens_with_diagnostics(tokens, rank_map, lemmatizer)
+    return mapped
 
 
 # --------------------------------------------------------------------------- #
@@ -557,9 +603,9 @@ def s_index(mapped, sample=50, ranks=(500, 1000, 1500, 2000, 2500, 3000),
     at each window record cumulative coverage at ranks 500..3000; average over
     windows; least-squares fit S.
 
-    NOTE: K&Y use the BNC-spoken family lists; here we use the supplied list (NJ8)
-    ranks, so S is method-faithful but NOT numerically comparable to K&Y's published
-    S values (~2000-3500).
+    NOTE: K&Y use the BNC-spoken family lists; here we use the selected list's ranks,
+    so S is method-faithful but NOT numerically comparable to K&Y's published S
+    values (~2000-3500).
     """
     n = len(mapped)
     if n < sample:
@@ -586,10 +632,10 @@ def s_index(mapped, sample=50, ranks=(500, 1000, 1500, 2000, 2500, 3000),
             "empirical_coverage_pct": {x: round(emp[x], 2) for x in ranks},
             "capped": capped,
             "reference_list_note": (
-                f"uses the supplied list's ranks (e.g. NJ8), not K&Y's "
+                f"uses the selected list's ranks, not K&Y's "
                 f"BNC-spoken family lists; 'capped' = coverage never approaches "
                 f"100% within rank {max(ranks)}, so S is not interpretable "
-                f"(typical for written text + headword/flemma coverage)"
+                f"(typical when the selected list leaves substantial text off-list)"
             )}
 
 
@@ -600,8 +646,9 @@ def band_wise_diversity(mapped, tokens, n_levels=8, min_tokens=50,
                         index_keys=("mtld", "mattr", "hdd"),
                         mtld_threshold=0.72, mattr_window=50, hdd_sample=42):
     """For each band, raw token/type counts (always) plus selected diversity
-    indices. Bands below the recommended floor still get values where possible;
-    the UI marks those values as unstable.
+    indices. Advisory floors are reported separately in ``Min N``. Requested
+    windows and samples are never reduced to the band size, so a method that is
+    outside its computational domain returns a missing value.
 
     ``tokens`` is the original token list aligned 1:1 with ``mapped`` so each
     band's words keep their order (needed by MTLD/MATTR).
@@ -632,11 +679,9 @@ def band_wise_diversity(mapped, tokens, n_levels=8, min_tokens=50,
             if key == "mtld":
                 row[IDX.PRETTY[key]] = IDX.mtld(heads, threshold=mtld_threshold)
             elif key == "mattr":
-                runtime_window = min(int(mattr_window), nb) if nb else int(mattr_window)
-                row[IDX.PRETTY[key]] = IDX.mattr(heads, window=runtime_window)
+                row[IDX.PRETTY[key]] = IDX.mattr(heads, window=int(mattr_window))
             elif key == "hdd":
-                runtime_sample = min(int(hdd_sample), nb) if nb else int(hdd_sample)
-                row[IDX.PRETTY[key]] = IDX.hdd(heads, sample=runtime_sample)
+                row[IDX.PRETTY[key]] = IDX.hdd(heads, sample=int(hdd_sample))
             else:
                 row[IDX.PRETTY[key]] = IDX._FUNCS[key](heads)
         row["Min N"] = max_floor
@@ -650,8 +695,11 @@ def band_wise_diversity(mapped, tokens, n_levels=8, min_tokens=50,
 def panel_b(tokens, rank_map, lemmatizer, *, n_levels=8, thresholds=(90, 95, 98),
             advanced_cutoff=2, min_tokens=50, mtld_threshold=0.72,
             mattr_window=50, hdd_sample=42):
-    mapped = map_tokens(tokens, rank_map, lemmatizer)
+    mapped, mapping_diagnostics = _map_tokens_with_diagnostics(
+        tokens, rank_map, lemmatizer
+    )
     return {
+        "mapping_diagnostics": mapping_diagnostics,
         "lfp": lexical_frequency_profile(mapped, n_levels),
         "coverage_threshold": coverage_threshold(mapped, thresholds, n_levels),
         "advanced_guiraud": advanced_guiraud(mapped, advanced_cutoff),

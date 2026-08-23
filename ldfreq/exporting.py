@@ -25,9 +25,113 @@ _XLSX_CORE_TIME_PATTERNS = (
     re.compile(rb"(<dcterms:modified\b[^>]*>)[^<]*(</dcterms:modified>)"),
 )
 
+_PANEL_A_RECORD_FIELDS = frozenset(
+    {
+        "value",
+        "status",
+        "missing_reason",
+        "method_id",
+        "requested_parameters",
+        "effective_parameters",
+        "advisory_quality_floor_tokens",
+        "advisory_quality_status",
+    }
+)
+_PANEL_A_STANDARD_KEYS = frozenset(IDX._FUNCS)
+_PANEL_A_ALLOWED_KEYS = _PANEL_A_STANDARD_KEYS | frozenset(
+    IDX.ADAPTIVE_METHOD_IDS
+)
+_PANEL_A_MISSING_REASONS = frozenset(
+    {
+        "empty_input",
+        "insufficient_tokens_for_formula",
+        "too_short_for_requested_parameter",
+        "no_convergence",
+        "zero_denominator",
+        "no_factor",
+        "undefined_for_text",
+    }
+)
+
 
 def _is_missing(value: Any) -> bool:
     return value is None or (isinstance(value, float) and math.isnan(value))
+
+
+def _validated_panel_a_records(
+    records: Any,
+    values: Any,
+) -> dict[str, dict[str, Any]]:
+    """Validate the schema-2 structured records used by public serializers."""
+
+    error = "Panel A schema 2.0 requires complete, consistent structured records"
+    if not isinstance(records, dict) or not isinstance(values, dict):
+        raise ValueError(error)
+    record_keys = frozenset(records)
+    if (
+        not _PANEL_A_STANDARD_KEYS.issubset(record_keys)
+        or not record_keys.issubset(_PANEL_A_ALLOWED_KEYS)
+        or frozenset(values) != record_keys
+    ):
+        raise ValueError(error)
+
+    for key, record in records.items():
+        if not isinstance(record, dict) or frozenset(record) != _PANEL_A_RECORD_FIELDS:
+            raise ValueError(error)
+        value = record["value"]
+        scalar = values[key]
+        value_missing = _is_missing(value)
+        scalar_missing = _is_missing(scalar)
+        if (
+            value_missing != scalar_missing
+            or (
+                not value_missing
+                and (
+                    isinstance(value, bool)
+                    or not isinstance(value, (int, float))
+                    or not math.isfinite(float(value))
+                    or isinstance(scalar, bool)
+                    or not isinstance(scalar, (int, float))
+                    or not math.isfinite(float(scalar))
+                    or value != scalar
+                )
+            )
+            or not isinstance(record["requested_parameters"], dict)
+            or not isinstance(record["effective_parameters"], dict)
+            or isinstance(record["advisory_quality_floor_tokens"], bool)
+            or not isinstance(record["advisory_quality_floor_tokens"], int)
+            or record["advisory_quality_floor_tokens"] <= 0
+            or record["advisory_quality_status"]
+            not in {"below_advisory_floor", "meets_advisory_floor"}
+        ):
+            raise ValueError(error)
+
+        expected_method_id = (
+            IDX.METHOD_IDS[key]
+            if key in _PANEL_A_STANDARD_KEYS
+            else IDX.ADAPTIVE_METHOD_IDS[key]
+        )
+        if record["method_id"] != expected_method_id:
+            raise ValueError(error)
+        if record["status"] == "available":
+            if value_missing or record["missing_reason"] is not None:
+                raise ValueError(error)
+            if (
+                key in _PANEL_A_STANDARD_KEYS
+                and record["effective_parameters"]
+                != record["requested_parameters"]
+            ):
+                raise ValueError(error)
+        elif record["status"] == "missing":
+            if (
+                not value_missing
+                or record["missing_reason"] not in _PANEL_A_MISSING_REASONS
+                or record["effective_parameters"] != {}
+            ):
+                raise ValueError(error)
+        else:
+            raise ValueError(error)
+    return records
 
 
 def clean_deep(obj: Any) -> Any:
@@ -223,14 +327,31 @@ def descriptive_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
 def panel_a_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
     for doc in _docs(payload):
-        panel_a = doc.get("panel_a") or {}
-        for key in IDX._FUNCS:
+        panel_a = doc.get("panel_a")
+        records = _validated_panel_a_records(
+            doc.get("panel_a_records"),
+            panel_a,
+        )
+        keys = [*IDX._FUNCS, *[key for key in records if key not in IDX._FUNCS]]
+        for key in keys:
+            base_key = key.removesuffix("_adaptive")
+            record = records[key]
+            value = record["value"]
             rows.append({
                 "document": _doc_name(doc),
                 "index_key": key,
-                "index": IDX.PRETTY[key],
-                "value": clean_deep(panel_a.get(key)),
-                "direction": "higher" if IDX.DIRECTION[key] > 0 else "lower",
+                "index": IDX.PRETTY.get(key, IDX.ADAPTIVE_PRETTY.get(key, key)),
+                "value": clean_deep(value),
+                "direction": "higher" if IDX.DIRECTION[base_key] > 0 else "lower",
+                "status": record["status"],
+                "missing_reason": record["missing_reason"],
+                "method_id": record["method_id"],
+                "requested_parameters": _json_cell(record["requested_parameters"]),
+                "effective_parameters": _json_cell(record["effective_parameters"]),
+                "advisory_quality_floor_tokens": record[
+                    "advisory_quality_floor_tokens"
+                ],
+                "advisory_quality_status": record["advisory_quality_status"],
             })
     return rows
 
@@ -442,7 +563,10 @@ def payload_to_excel(payload: dict[str, Any]) -> bytes:
     if diagnostics:
         sheets.update({
             "batch_bands": diagnostics.get("bands") or [],
-            "reliability": diagnostics.get("reliability") or [],
+            "reliability": [
+                {key: _json_cell(value) for key, value in row.items()}
+                for row in diagnostics.get("reliability") or []
+            ],
             "off_list": diagnostics.get("off_list") or [],
             "overlap_matrix": diagnostics.get("overlap_matrix") or [],
             "overlap_pairs": diagnostics.get("overlap_pairs") or [],

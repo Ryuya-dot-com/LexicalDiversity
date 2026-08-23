@@ -54,6 +54,8 @@ benchmarks/**
 
 # Server-only and permission-pending lexical payloads. The Cloud Run image
 # receives Nation data from a separate read-only Tokyo Cloud Storage mount.
+data/NJ8
+data/NJ8/**
 data/antbnc
 data/antbnc/**
 data/bnc_coca

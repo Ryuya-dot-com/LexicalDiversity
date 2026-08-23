@@ -2,9 +2,9 @@
 
 > Status: Draft for implementation and institutional review
 >
-> Version: 0.4
+> Version: 0.5
 >
-> Last updated: 2026-07-22
+> Last updated: 2026-08-24
 >
 > Target service: Public web edition of the Lexical Diversity & Frequency-Profile Analyzer
 
@@ -267,7 +267,22 @@ Armor rate limiting is an ingress abuse control rather than a strict per-account
 quota. A durable, authenticated account-wide quota and production anomaly rule
 remain future implementation tasks. Until they are complete, the Tokyo pilot
 MUST be restricted to a small IAP-authorized cohort and MUST NOT be presented as
-an unrestricted production service.
+an unrestricted production service. That limited pilot MAY analyze synthetic or
+otherwise approved text with open resources, but public server-only lexical
+resources MUST remain disabled until an external control record covers the
+shared limiter, authenticated account quota, content-free audit trail, anomaly
+detection, and extraction-resistance tests for the exact deployment.
+
+Server-only activation is fail-closed at the application boundary. It requires
+an eligible `LDFREQ_SERVER_ONLY_RESOURCE_IDS` allowlist,
+`LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED=1`, the exact fixed profile
+`LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION=shared-abuse-controls-v1`, and a valid
+short opaque `LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID`. The evidence ID is only a
+reference to an externally retained record; it MUST NOT be a URL, filesystem
+path, secret, or placeholder. The application validates the declarations and
+ID shape but does not retrieve the record or verify that the controls exist or
+work. Missing or invalid values therefore disable listing, materialization, and
+isolated-worker forwarding rather than falling back to the session guard.
 
 ## 7. Caching and temporary data
 
@@ -641,6 +656,11 @@ export area, snapshot, and backup inventory.
   out-of-perimeter bucket or service.
 - [ ] Rate limiting and abuse controls operate without forwarding essay content
   to an abuse-detection provider.
+- [ ] Any public server-only resource activation uses the fixed
+  `shared-abuse-controls-v1` declaration and a non-secret external evidence ID
+  that binds the exact deployment and resource versions to reviewed control
+  evidence; an independent deployment check confirms the referenced controls,
+  because the application validates only the declaration shape.
 - [x] A one-shot worker enforces the bounded application deadline, disables
   core dumps, rejects source-size/protocol violations, and is reaped after
   success, timeout, and callback abort in repository POSIX tests.
@@ -651,6 +671,9 @@ export area, snapshot, and backup inventory.
 - [ ] Before expansion beyond the limited IAP pilot, a deployment-wide
   authenticated account quota is implemented and tested against new-session and
   multi-worker bypasses.
+- [ ] Until that control evidence exists, the limited pilot uses open resources
+  only and leaves every server-only activation variable at its checked-in
+  fail-closed default.
 
 ### 15.6 Notice, minors, and ethics
 
