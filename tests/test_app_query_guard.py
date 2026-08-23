@@ -5,6 +5,8 @@ from unittest.mock import patch
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from ldfreq.server_only_gate import SERVER_ONLY_CONTROL_PROFILE
+
 
 SERVER_LIST_NAME = "BNC/COCA 25,000 word families (Nation)"
 GUARD_KEY = "_server_only_query_guard"
@@ -42,6 +44,8 @@ def test_server_only_guard_survives_reruns_counts_rejections_and_is_deleted():
         "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
         "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "nation_bnc_coca_families",
         "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
+        "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": SERVER_ONLY_CONTROL_PROFILE,
+        "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "GRC-2026-08-24-001",
     }
 
     with patch.dict(os.environ, environment, clear=False):

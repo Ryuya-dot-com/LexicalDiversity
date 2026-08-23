@@ -50,11 +50,11 @@ NGSL/
 antbnc*.txt
 data/**/*.txt
 
-# Existing local migration snapshots. NJ8 is public-cleared. Official Nation
+# Existing local migration snapshots. NJ8 is review-pending and its CSV remains
+# ignored/local-only; only its governance manifest is public. Official Nation
 # data are green, but raw payloads remain excluded by the server-only product
 # policy; the separate EAPFoundation snapshot is permission-pending.
 !data/NJ8/
-!data/NJ8/NJ8.csv
 !data/NJ8/manifest.json
 /data/bnc_coca/*
 !/data/bnc_coca/manifest.json

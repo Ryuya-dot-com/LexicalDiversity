@@ -7,7 +7,12 @@ from ldfreq import wordlists
 from ldfreq import nation_bnc_coca
 from ldfreq import semantic_network
 from ldfreq import tubelex
-from scripts.check_public_release import AGGREGATE_PUBLICATION_REQUIREMENTS
+from scripts.check_public_release import (
+    AGGREGATE_PUBLICATION_REQUIREMENTS,
+    PERMISSION_ASSURANCE_REQUIRED_EXTERNAL_RECORD_FIELDS,
+    PERMISSION_ASSURANCE_REQUIRED_INDEPENDENT_REVIEW_FIELDS,
+    PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -37,8 +42,31 @@ class ResourceRegistryTests(unittest.TestCase):
             identifiers.append(entry["id"])
         self.assertEqual(len(identifiers), len(set(identifiers)))
 
-    def test_schema_1_2_defines_the_complete_derived_result_contract(self):
-        self.assertEqual(self.registry["schema_version"], "1.2.0")
+    def test_schema_1_3_defines_permission_and_derived_result_contracts(self):
+        self.assertEqual(self.registry["schema_version"], "1.3.0")
+        permission = self.registry["permission_assurance_contract"]
+        self.assertEqual(permission["schema_version"], "1.0.0")
+        self.assertEqual(permission["custom_permission_marker"], "custom-permission")
+        self.assertEqual(
+            permission["known_custom_permission_resource_ids"],
+            ["nj8"],
+        )
+        self.assertEqual(
+            set(permission["statuses"]),
+            {"review-pending", "independently-reviewed"},
+        )
+        self.assertEqual(
+            set(permission["required_public_scopes"]),
+            PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES,
+        )
+        self.assertEqual(
+            set(permission["required_external_record_fields"]),
+            PERMISSION_ASSURANCE_REQUIRED_EXTERNAL_RECORD_FIELDS,
+        )
+        self.assertEqual(
+            set(permission["required_independent_review_fields"]),
+            PERMISSION_ASSURANCE_REQUIRED_INDEPENDENT_REVIEW_FIELDS,
+        )
         contract = self.registry["derived_result_contract"]
         self.assertEqual(contract["manifest_schema_version"], "1.0.0")
         self.assertEqual(contract["public_roots"], ["results/public/"])
@@ -167,7 +195,8 @@ class ResourceRegistryTests(unittest.TestCase):
                 self.assertEqual(resource["status"]["level"], "green", resource["id"])
                 self.assertTrue(resource["license"]["verified"], resource["id"])
 
-        self.assertEqual(seen, known)
+        self.assertTrue(seen <= known)
+        self.assertIn("review-required", seen)
 
     def test_tier_and_provisioning_axes_are_explicit_and_fail_closed(self):
         valid_tiers = set(self.registry["tier_definitions"])
@@ -265,6 +294,53 @@ class ResourceRegistryTests(unittest.TestCase):
             if public_artifacts:
                 self.assertEqual(entry["status"]["level"], "green", entry["id"])
                 self.assertTrue(entry["license"]["verified"], entry["id"])
+
+    def test_nj8_is_review_pending_and_payload_excluded_from_public_modes(self):
+        nj8 = next(
+            entry for entry in self.registry["resources"] if entry["id"] == "nj8"
+        )
+
+        self.assertEqual(nj8["status"]["level"], "yellow")
+        self.assertFalse(nj8["license"]["verified"])
+        self.assertEqual(
+            nj8["license"]["permission_model"],
+            "custom-permission",
+        )
+        self.assertEqual(
+            nj8["permission_assurance"]["status"],
+            "review-pending",
+        )
+        self.assertFalse(nj8["permission_assurance"]["release_eligible"])
+        self.assertTrue(
+            all(
+                nj8["provisioning"][flag] is False
+                for flag in (
+                    "git_payload",
+                    "package_payload",
+                    "container_payload",
+                    "ci_payload",
+                )
+            )
+        )
+        self.assertTrue(
+            all(artifact["public_build"] is False for artifact in nj8["artifacts"])
+        )
+        runtime = next(entry for entry in wordlists.REGISTRY if entry["id"] == "nj8")
+        self.assertFalse(runtime["public_web"])
+        self.assertFalse(runtime["redistributable"])
+        manifest = json.loads(
+            (PROJECT_ROOT / "data" / "NJ8" / "manifest.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            manifest["permission_assurance"]["status"],
+            "review-pending",
+        )
+        self.assertFalse(
+            manifest["permission_assurance"]["public_release_eligible"]
+        )
+        self.assertFalse((PROJECT_ROOT / "data" / "NJ8" / "NJ8.csv").exists())
 
     def test_runtime_public_wordlists_resolve_to_green_registry_entries(self):
         statuses = {

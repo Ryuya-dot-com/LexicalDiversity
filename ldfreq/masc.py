@@ -20,7 +20,7 @@ from datetime import date
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 
-from .tokenizer import tokenize
+from .tokenizer import ASCII_LEGACY_V1, tokenize
 
 
 MASC_VERSION = "3.0.0"
@@ -69,11 +69,12 @@ the American National Corpus project.
 - Official data-only archive: {MASC_SOURCE_URL}
 - License: [{MASC_LICENSE}]({MASC_LICENSE_URL})
 
-Changes made by this project: each UTF-8 text document was tokenized as runs of
-ASCII letters with an optional internal apostrophe, converted to lower case,
-and reduced to aggregate surface-form unigram, document-frequency, bigram, and
-trigram counts. N-grams never cross document boundaries. Source documents,
-document names, annotations, sentences, and longer text spans are not included.
+Changes made by this project: each UTF-8 text document was tokenized with the
+versioned `{ASCII_LEGACY_V1}` policy (ASCII letters with an optional internal
+apostrophe), converted to lower case, and reduced to aggregate surface-form
+unigram, document-frequency, bigram, and trigram counts. N-grams never cross
+document boundaries. Source documents, document names, annotations, sentences,
+and longer text spans are not included.
 
 The repository's software license does not replace the MASC data license. No
 endorsement by the American National Corpus project is implied.
@@ -224,7 +225,11 @@ def _aggregate_archive(
                         errors="strict",
                         newline=None,
                     ) as text:
-                        tokens = tokenize(text.read(), lower=True)
+                        tokens = tokenize(
+                            text.read(),
+                            lower=True,
+                            policy=ASCII_LEGACY_V1,
+                        )
                 if not tokens:
                     empty_documents += 1
                 token_count += len(tokens)
@@ -358,6 +363,7 @@ def make_masc_manifest(
             "trigram_types": artifacts[2]["rows"],
             "document_unit": "one non-directory .txt ZIP member",
             "text_encoding": "UTF-8 (optional leading BOM accepted)",
+            "tokenizer_policy": ASCII_LEGACY_V1,
             "tokenization": (
                 "ASCII letters with one optional internal apostrophe; lower-cased; "
                 "no lemmatization"

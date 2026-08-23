@@ -45,10 +45,8 @@ def test_detail_view_switches_keep_analysis_results_visible():
         selectbox for selectbox in app.selectbox
         if selectbox.label == "Frequency list"
     )
-    assert set(frequency_lists.options) == {
-        "New JACET8000",
-        "NGSL (New General Service List)",
-    }
+    assert frequency_lists.options == ["NGSL (New General Service List)"]
+    assert frequency_lists.value == "NGSL (New General Service List)"
 
     _click_analyze(app)
     app.run(timeout=60)

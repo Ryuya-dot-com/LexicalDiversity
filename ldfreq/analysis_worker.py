@@ -20,7 +20,7 @@ except ModuleNotFoundError:  # pragma: no cover - unavailable on non-POSIX hosts
     resource = None
 
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 MIB = 1024 * 1024
 MAX_SOURCE_BYTES = 20 * MIB
 MAX_REQUEST_BYTES = 48 * MIB

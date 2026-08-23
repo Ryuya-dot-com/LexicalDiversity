@@ -74,7 +74,6 @@ COPY --chown=0:0 ldfreq/ /opt/ldfreq/ldfreq/
 COPY --chown=0:0 pages/ /opt/ldfreq/pages/
 COPY --chown=0:0 .streamlit/config.toml /opt/ldfreq/.streamlit/config.toml
 COPY --chown=0:0 data/resource_registry.json /opt/ldfreq/data/resource_registry.json
-COPY --chown=0:0 data/NJ8/ /opt/ldfreq/data/NJ8/
 COPY --chown=0:0 data/ngsl/ /opt/ldfreq/data/ngsl/
 COPY --chown=0:0 data/open/ /opt/ldfreq/data/open/
 COPY --chown=0:0 deploy/cloud-run/entrypoint.sh /usr/local/bin/ldfreq-entrypoint

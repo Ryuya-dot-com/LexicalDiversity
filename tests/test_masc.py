@@ -14,6 +14,7 @@ from ldfreq.masc import (
     UNIGRAM_ARTIFACT,
     build_masc_aggregates,
 )
+from ldfreq.tokenizer import ASCII_LEGACY_V1
 
 
 DOCUMENTS = {
@@ -87,6 +88,14 @@ class MascAggregateBuilderTests(unittest.TestCase):
             self.assertEqual(manifest["build"]["empty_documents"], 1)
             self.assertEqual(manifest["build"]["ignored_members"], 1)
             self.assertEqual(manifest["build"]["tokens"], 7)
+            self.assertEqual(
+                manifest["build"]["tokenizer_policy"],
+                ASCII_LEGACY_V1,
+            )
+            self.assertIn(
+                f"`{ASCII_LEGACY_V1}`",
+                (output / "NOTICE.md").read_text(encoding="utf-8"),
+            )
 
     def test_outputs_only_aggregates_notice_and_path_free_provenance(self):
         with tempfile.TemporaryDirectory() as tmp:

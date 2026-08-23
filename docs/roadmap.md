@@ -81,6 +81,12 @@ public root. The Alpine security refresh passes all 46 exact runtime pins,
 Package hashes and the exact production Python base-image digest are fixed as
 inputs. The successful hosted build below adds end-to-end candidate-image
 evidence but is not a stable release claim.
+
+That root migration and candidate run are historical milestones, not the
+current release verdict. A later public commit included NJ8 under the now-
+superseded owner-only rights decision, so the reachable-history gate again
+blocks a release even after the CSV is removed from the current/future tree.
+
 The manual candidate-image workflow now specifies two no-cache production
 OCI builds under digest-pinned BuildKit, timestamp normalization, manifest,
 config, and full layer-digest equality, and offline golden verification in a
@@ -120,8 +126,9 @@ pip's random staging path. PR
 [#11](https://github.com/Ryuya-dot-com/LexicalDiversity/pull/11) disabled that
 install-time compilation and made the independent layers equal.
 
-Derived-result Q0 enforcement is also implemented. Registry schema v1.2
-requires upstream resource identities, exact result manifests, artifact-class
+Derived-result Q0 enforcement was introduced in registry schema v1.2 and is
+retained in v1.3. It requires upstream resource identities, exact result
+manifests, artifact-class
 decisions, aggregation and disclosure review, and a dated publication approval.
 The external exact-byte selection manifest and evidence schema v2 bind those
 decisions to each candidate. The legacy TAALES–COCA family is blocked and the
@@ -136,10 +143,16 @@ application-image gate is now green.
 
 - The existing Streamlit application and `ldfreq` core run on Python 3.
 - Legacy TAALES is local-only and not imported by the Web application.
-- NJ8 and NGSL are enabled for public use.
-- AntBNC and the legacy EAPFoundation BNC/COCA snapshot are permission-pending
-  and hidden. The official Nation headword and family resources are `green`,
-  but remain server-only and hidden until the deployment attestation is set.
+- NGSL is enabled for public Panel B use. NJ8 is `review-pending`: the owner
+  attestation is retained, but its CSV is excluded from the current source tree,
+  release/container/CI inventories, and public UI; explicit local mode is its
+  only supported path until an original permission record and independent review
+  establish the complete public scope.
+- AntBNC and the legacy EAPFoundation BNC/COCA snapshot are also
+  permission-pending and hidden. The official Nation headword and family resources are `green`,
+  but remain server-only and hidden until rights, eligible allowlist, fixed
+  control-profile, and external evidence-reference declarations all pass the
+  fail-closed activation gate.
 - Open English WordNet 2025 polysemy and hypernym-depth metrics are integrated.
 - The TUBELEX-EN Treebank published aggregate is pinned and integrated in code
   as an everyday-language frequency/contextual-diversity axis. Its exact
@@ -156,23 +169,30 @@ application-image gate is now green.
 
 ## Phase 0 — governance gate
 
-Status: **implemented; clean public-history boundary and Q0 derived-result
-enforcement verified; candidate-specific approval pending**
+Status: **current-tree controls implemented; NJ8 permission review and
+reachable-history remediation block a release candidate**
 
 - Maintain the machine-readable resource registry and verified hashes.
 - Admit only `green` payloads to public builds.
 - Preserve license notices and transformation provenance.
 - Keep the complete legacy TAALES tree ignored and local-only.
-- AntBNC, EAPFoundation XLSX/PDF, and Nation raw-list payloads have been removed
-  from the Git index while remaining available to authorized local/server paths.
+- NJ8, AntBNC, EAPFoundation XLSX/PDF, and Nation raw-list payloads are absent
+  from the future/current tree while remaining available only through their
+  separately authorized local/server paths.
 - Require `scripts/check_public_release.py` to pass on the exact Git inventory
   used for every public archive and deployment.
-- Require `scripts/check_git_history.py` to pass before any release tag. The
-  clean public root passes. The separate private legacy checkout still fails by
-  design because excluded resources remain reachable in its earlier commits.
-- Registry schema v1.2 separates rights `status`, intended `tier`, and
+- Require `scripts/check_git_history.py` to pass before any release tag. Earlier
+  public commits still contain NJ8, so removing it from the future tree does not
+  retract existing clones or make that history gate pass. A reviewed history
+  boundary/remediation decision is therefore required before a release tag; the
+  separate private legacy evidence vault is not rewritten.
+- Registry schema v1.3 separates rights `status`, intended `tier`, and
   `provisioning.mode`. ELLIPSE is therefore rights-reviewed `green` while still
   being a non-runtime `evaluation-benchmark` with every payload flag disabled.
+- Schema v1.3 also adds a custom-permission assurance contract. Owner
+  attestation cannot promote NJ8: a private original record bound to the exact
+  artifact, complete use scopes, a named record editor, and a rights reviewer
+  distinct from both that editor and the owner-attestor are required.
 - Derived results are separately fail-closed: no aggregate, figure, model,
   coefficient, coverage table, or fingerprint is publishable merely because
   the upstream corpus is registered or the output omits row-level text.
@@ -205,6 +225,13 @@ typed framework-independent `AnalysisConfig` / `analyze_text` service boundary.
 Server-only lookup additionally has a framework-independent, monotonic,
 content-free per-session document budget with failed/short-query counting,
 Retry-After-equivalent responses, cooldown, and deletion coverage.
+Its public activation is now centralized and defaults off: resources are not
+listed, materialized, or forwarded to the worker unless the rights
+acknowledgement, eligible allowlist, exact `shared-abuse-controls-v1` profile,
+and valid opaque external evidence ID are all present. The application validates
+the declaration only; it does not verify the referenced shared abuse-control
+infrastructure. The release gate rejects a checked-in Cloud Run template that
+pre-enables any of these fields.
 The Streamlit path now executes one analysis per subprocess. The parent sends
 source only through a bounded stdin pipe, receives typed aggregate frames on a
 dedicated descriptor, rejects malformed/oversized results, requires normal
@@ -220,7 +247,8 @@ Remaining work:
   when Streamlit cannot signal disconnect immediately;
 - add container-level process-group/FD leak and concurrent-load tests, plus
   authenticated IP/account/global rate limiting shared across every production
-  worker;
+  worker, content-free audit evidence, anomaly detection, account quotas, and
+  extraction-resistance tests suitable for the external activation record;
 - review and instantiate the Tokyo Cloud Run pilot template in a newly created,
   region-pinned institutional project; configure the regional load balancer,
   IAP, Cloud Armor, disabled `_Default` sink, disabled load-balancer logging,

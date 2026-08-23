@@ -1,0 +1,54 @@
+{
+  "contract_id": "ldfreq-tokenizer",
+  "contract_version": "1.0.0",
+  "default_policy_id": "english_unicode_v1",
+  "policies": {
+    "english_unicode_v1": {
+      "algorithm": "unicode_category_scanner_v1",
+      "pattern": null,
+      "normalization": "NFC",
+      "letters": "Unicode General Category L*",
+      "marks": "Unicode General Category M* following a letter or included mark",
+      "apostrophe_input_code_points": [
+        "U+0027",
+        "U+02BC",
+        "U+2018",
+        "U+2019",
+        "U+201B"
+      ],
+      "apostrophe_output": "U+0027 retained only internally between letter components",
+      "hyphens_and_dashes": "split tokens",
+      "numeric_only_runs": "excluded",
+      "alphanumerics": "digits split adjacent alphabetic components",
+      "lowercase": "Python str.lower when lower=true; no casefold",
+      "status": "default"
+    },
+    "ascii_legacy_v1": {
+      "algorithm": "ascii_regex_findall_v1",
+      "normalization": "none",
+      "pattern": "[A-Za-z]+(?:'[A-Za-z]+)?",
+      "letters": "ASCII A-Z and a-z only",
+      "marks": "excluded",
+      "apostrophe_input_code_points": [
+        "U+0027"
+      ],
+      "apostrophe_output": "one optional internal alphabetic segment",
+      "hyphens_and_dashes": "split tokens",
+      "numeric_only_runs": "excluded",
+      "alphanumerics": "digits split adjacent ASCII alphabetic components",
+      "lowercase": "Python str.lower when lower=true",
+      "status": "legacy-opt-in"
+    }
+  },
+  "provenance": {
+    "field": "settings.tokenizer_policy",
+    "value_kind": "registered policy ID",
+    "free_text_allowed": false,
+    "validated_before_tokenization": true
+  },
+  "compatibility": {
+    "ordinary_ascii_text": "Both policies preserve historical boundaries for letter runs, straight-apostrophe contractions, hyphen splitting, and digit splitting.",
+    "intentional_default_changes": "english_unicode_v1 retains Unicode letter/mark words, normalizes listed typographic apostrophes, and supports multiple internal apostrophe-delimited components.",
+    "derived_masc_aggregates": "Pinned to ascii_legacy_v1 to preserve existing aggregate semantics."
+  }
+}

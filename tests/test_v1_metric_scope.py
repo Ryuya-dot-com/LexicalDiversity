@@ -18,6 +18,7 @@ from ldfreq import exporting as EXPORT
 from ldfreq import frequency as FRQ
 from ldfreq import indices as IDX
 from ldfreq import semantic_network as SEMANTIC
+from ldfreq import server_only_gate as SERVER_GATE
 from ldfreq import tubelex as TUBELEX
 from ldfreq import wordlists as WL
 from ldfreq.analysis import (
@@ -123,7 +124,7 @@ def _full_batch_payload() -> dict:
 def test_scope_document_is_valid_and_targets_v1() -> None:
     scope = _scope()
     assert scope["contract_id"] == "ldfreq-public-v1-metric-scope"
-    assert scope["contract_version"] == "1.0.0"
+    assert scope["contract_version"] == "2.0.0"
     assert scope["target_application_release"] == "1.0.0"
     assert scope["release_line"] == "1.x"
     assert scope["status"] == "frozen"
@@ -135,6 +136,19 @@ def test_panel_a_keys_directions_and_floors_match_implementation() -> None:
     assert panel_a["keys"] == list(IDX._FUNCS)
     assert panel_a["diversity_direction"] == IDX.DIRECTION
     assert panel_a["project_minimum_tokens"] == IDX.MIN_TOKENS
+    assert panel_a["method_ids"] == IDX.METHOD_IDS
+    assert panel_a["computational_minimum_tokens_at_default_parameters"] == {
+        key: IDX.computational_min_tokens(key) for key in IDX._FUNCS
+    }
+    records = IDX.all_index_records(["same"] * 10)
+    assert list(records) == panel_a["keys"]
+    assert list(records["mtld"]) == panel_a["record_keys"]
+    assert records["mtld"]["method_id"] == panel_a["method_ids"]["mtld"]
+    assert records["mtld"]["requested_parameters"] == records["mtld"][
+        "effective_parameters"
+    ]
+    assert records["mtld"]["advisory_quality_status"] == "below_advisory_floor"
+    assert records["mtld"]["status"] == "available"
 
 
 def test_panel_b_keys_and_conditional_nested_schemas_match_implementation() -> None:
@@ -152,6 +166,11 @@ def test_panel_b_keys_and_conditional_nested_schemas_match_implementation() -> N
     nested = panel_b_scope["nested_keys"]
 
     assert panel_b_scope["keys"] == list(public_full)
+    assert panel_b_scope["mapping_method_id"] == FRQ.PANEL_B_MAPPING_METHOD_ID
+    assert list(full["mapping_diagnostics"]) == nested["mapping_diagnostics"]
+    assert full["mapping_diagnostics"]["method_id"] == panel_b_scope[
+        "mapping_method_id"
+    ]
     assert list(full["lfp"][0]) == nested["lfp_row"]
     assert list(full["mean_rank"]) == nested["mean_rank"]
     assert list(full["p_lex"]) == nested["p_lex_complete_segments"]
@@ -190,7 +209,19 @@ def test_single_document_and_batch_json_schemas_match_runtime() -> None:
     assert payload["output_schema_version"] == _scope()["contract_version"]
     assert list(payload["document"]) == json_scope["document_keys"]
     assert list(payload["settings"]) == json_scope["settings_keys"]
+    assert payload["settings"]["panel_b_mapping_method_id"] == (
+        FRQ.PANEL_B_MAPPING_METHOD_ID
+    )
     assert list(payload["privacy"]) == json_scope["privacy_keys"]
+    assert payload["panel_a_records"] == {
+        key: payload["panel_a_records"][key]
+        for key in _scope()["metrics"]["panel_a"]["keys"]
+    }
+    assert all(
+        record["effective_parameters"]
+        == (record["requested_parameters"] if record["status"] == "available" else {})
+        for record in payload["panel_a_records"].values()
+    )
     assert payload["privacy"] == _scope()["output_contract"]["privacy"][
         "payload_values"
     ]
@@ -260,6 +291,19 @@ def test_green_runtime_resource_ids_and_runtime_selectors_are_exact() -> None:
         expected_selector_map
     )
     assert actual_selector_map == expected_selector_map
+
+    activation = scope["resources"]["server_only_activation"]
+    assert activation["default_enabled_ids"] == []
+    assert set(activation["eligible_runtime_selector_ids"]) == (
+        SERVER_GATE.SERVER_ONLY_ELIGIBLE_IDS
+    )
+    assert activation["allowlist_with_unknown_id_rejected_as_a_whole"] is True
+    assert activation["control_attestation_profile"] == (
+        SERVER_GATE.SERVER_ONLY_CONTROL_PROFILE
+    )
+    assert activation["external_evidence_id_required"] is True
+    assert activation["external_evidence_id_is_reference_only"] is True
+    assert activation["runtime_verifies_external_controls"] is False
 
     oewn_manifest = _load_json(OEWN_MANIFEST_PATH)
     tubelex_manifest = _load_json(TUBELEX_MANIFEST_PATH)
@@ -359,6 +403,12 @@ def test_batch_row_contract_matches_batch_module() -> None:
             "panel_b": {"lfp": []},
         },
     ]
+    for result in results:
+        records = IDX.all_index_records(result["a_tokens"])
+        result["indices"] = {
+            key: record["value"] for key, record in records.items()
+        }
+        result["index_records"] = records
     produced = {
         "bands": BATCH.band_rows(results),
         "reliability": BATCH.reliability_rows(results),

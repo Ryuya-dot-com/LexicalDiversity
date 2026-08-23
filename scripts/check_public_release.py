@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 from datetime import date
 from pathlib import Path, PurePosixPath
@@ -12,6 +13,64 @@ from typing import Any, Iterable, Mapping
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = PROJECT_ROOT / "data" / "resource_registry.json"
+SERVER_ONLY_TEMPLATE_PATH = "deploy/cloud-run/service.template.yaml"
+SERVER_ONLY_TEMPLATE_DEFAULTS = {
+    "LDFREQ_SERVING_MODE": "public",
+    "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
+    "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "",
+    "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "0",
+    "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": "",
+    "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "",
+}
+PERMISSION_ASSURANCE_SCHEMA_VERSION = "1.0.0"
+CUSTOM_PERMISSION_MARKER = "custom-permission"
+KNOWN_CUSTOM_PERMISSION_RESOURCE_IDS = frozenset({"nj8"})
+PERMISSION_ASSURANCE_STATUSES = frozenset(
+    {"review-pending", "independently-reviewed"}
+)
+PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES = frozenset(
+    {
+        "github-repository-redistribution",
+        "downstream-fork-redistribution",
+        "release-archive-distribution",
+        "container-image-distribution",
+        "public-saas-processing",
+        "transformation-and-derived-results",
+        "commercial-use",
+        "noncommercial-use",
+        "revocation-or-expiry-terms",
+    }
+)
+PERMISSION_ASSURANCE_REQUIRED_EXTERNAL_RECORD_FIELDS = frozenset(
+    {
+        "record_id",
+        "record_sha256",
+        "record_editor",
+        "grantor",
+        "grantor_authority",
+        "granted_on",
+        "scopes",
+        "artifact_bindings",
+        "revocation_or_expiry_terms",
+    }
+)
+PERMISSION_ASSURANCE_REQUIRED_INDEPENDENT_REVIEW_FIELDS = frozenset(
+    {
+        "status",
+        "reviewer",
+        "reviewer_role",
+        "reviewed_on",
+        "decision_reference",
+        "verified_scopes",
+    }
+)
+PERMISSION_RECORD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+FORBIDDEN_TRACKED_PAYLOAD_SHA256 = {
+    # Exact locally held artifact bound to the NJ8 owner attestation. This is a
+    # payload exclusion identity, not a mirror-equivalence assertion.
+    "1433dcd94135f86cfdbcbf5bafc209661678f1104f5062041b737834e99d3cf8": "nj8",
+}
 FORBIDDEN_TRACKED_PREFIXES = (
     ".research/",
     ".streamlit/runtime_lists/",
@@ -24,6 +83,7 @@ FORBIDDEN_TRACKED_PREFIXES = (
     "data/sources/",
 )
 FORBIDDEN_PAYLOAD_DIRS = {
+    "data/NJ8/": {"data/NJ8/manifest.json"},
     "data/antbnc/": {"data/antbnc/manifest.json"},
     "data/bnc_coca/": {"data/bnc_coca/manifest.json"},
 }
@@ -118,6 +178,51 @@ ARCHIVE_MAGIC_PREFIXES = (
 
 def _normalized(path: str) -> str:
     return PurePosixPath(path.replace("\\", "/")).as_posix().rstrip("/")
+
+
+def server_only_template_violations(payload: bytes | str) -> list[str]:
+    """Reject a checked-in deployment template that enables private resources."""
+
+    try:
+        text = payload.decode("utf-8") if isinstance(payload, bytes) else payload
+    except UnicodeDecodeError:
+        return ["server-only deployment template is not valid UTF-8"]
+    if not isinstance(text, str):
+        return ["server-only deployment template payload is invalid"]
+
+    observed: dict[str, list[str]] = {
+        name: [] for name in SERVER_ONLY_TEMPLATE_DEFAULTS
+    }
+    current_name: str | None = None
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- name:"):
+            current_name = stripped.split(":", 1)[1].strip()
+            continue
+        if current_name in observed and stripped.startswith("value:"):
+            value = stripped.split(":", 1)[1].strip()
+            if (
+                len(value) >= 2
+                and value[0] == value[-1]
+                and value[0] in {'"', "'"}
+            ):
+                value = value[1:-1]
+            observed[current_name].append(value)
+            current_name = None
+
+    violations: list[str] = []
+    for name, expected in SERVER_ONLY_TEMPLATE_DEFAULTS.items():
+        values = observed[name]
+        if len(values) != 1:
+            violations.append(
+                f"server-only deployment template must define {name} exactly once"
+            )
+        elif values[0] != expected:
+            violations.append(
+                "server-only deployment template is not fail-closed: "
+                f"{name} must default to {expected!r}"
+            )
+    return violations
 
 
 def _safe_relative(path: str) -> bool:
@@ -655,6 +760,396 @@ def result_bundle_review(
     return sorted(set(violations)), sorted(summaries, key=lambda item: item["id"])
 
 
+def _permission_scope_set(value: object) -> set[str] | None:
+    if (
+        not isinstance(value, list)
+        or any(not isinstance(item, str) or not item for item in value)
+        or len(value) != len(set(value))
+    ):
+        return None
+    return set(value)
+
+
+def _claims_public_custom_permission_use(resource: Mapping[str, Any]) -> bool:
+    provisioning = resource.get("provisioning")
+    if isinstance(provisioning, dict) and any(
+        provisioning.get(flag) is True
+        for flag in ("git_payload", "package_payload", "container_payload", "ci_payload")
+    ):
+        return True
+    artifacts = resource.get("artifacts")
+    if isinstance(artifacts, list) and any(
+        isinstance(artifact, dict) and artifact.get("public_build") is True
+        for artifact in artifacts
+    ):
+        return True
+    redistribution = resource.get("redistribution")
+    if isinstance(redistribution, dict) and any(
+        isinstance(value, str) and value.startswith("allowed")
+        for key, value in redistribution.items()
+        if key != "conditions"
+    ):
+        return True
+    web_use = resource.get("web_use")
+    return isinstance(web_use, dict) and any(
+        isinstance(web_use.get(key), str) and web_use[key].startswith("allowed")
+        for key in ("public_saas_processing", "aggregate_result_publication")
+    )
+
+
+def permission_assurance_violations(registry: Mapping[str, Any]) -> list[str]:
+    """Validate complete, independently reviewed custom-permission claims.
+
+    Owner testimony remains useful evidence, but it cannot by itself authorize a
+    public payload or service. The gate binds an off-repository permission record
+    to the exact resource artifacts and requires a separately identified review.
+    It validates the recorded contract; it cannot prove the off-repository facts.
+    """
+
+    resources_raw = registry.get("resources")
+    resources = resources_raw if isinstance(resources_raw, list) else []
+    contract = registry.get("permission_assurance_contract")
+    violations: list[str] = []
+    custom_resources: list[tuple[dict[str, Any], bool]] = []
+    for raw in resources:
+        if not isinstance(raw, dict):
+            continue
+        public_claim = _claims_public_custom_permission_use(raw)
+        license_record = raw.get("license")
+        resource_id = raw.get("id")
+        if contract is not None and public_claim:
+            if not isinstance(license_record, dict) or "spdx" not in license_record:
+                violations.append(
+                    f"public resource license identity is incomplete: {resource_id}"
+                )
+        explicitly_custom = (
+            isinstance(license_record, dict)
+            and license_record.get("permission_model") == CUSTOM_PERMISSION_MARKER
+        )
+        known_custom = resource_id in KNOWN_CUSTOM_PERMISSION_RESOURCE_IDS
+        owner_attested = isinstance(raw.get("evidence"), list) and any(
+            isinstance(item, dict)
+            and item.get("type") == "project-owner-confirmation"
+            for item in raw["evidence"]
+        )
+        implicit_custom_public_claim = (
+            public_claim
+            and isinstance(license_record, dict)
+            and "spdx" in license_record
+            and license_record.get("spdx") is None
+        )
+        if (
+            explicitly_custom
+            or known_custom
+            or owner_attested
+            or implicit_custom_public_claim
+        ):
+            custom_resources.append((raw, public_claim))
+
+    if contract is None and not custom_resources:
+        return []
+
+    if not isinstance(contract, dict):
+        violations.append("custom-permission assurance contract is missing or malformed")
+    else:
+        if contract.get("schema_version") != PERMISSION_ASSURANCE_SCHEMA_VERSION:
+            violations.append("custom-permission assurance schema version differs")
+        if contract.get("custom_permission_marker") != CUSTOM_PERMISSION_MARKER:
+            violations.append("custom-permission marker contract differs")
+        known_ids = contract.get("known_custom_permission_resource_ids")
+        if (
+            not isinstance(known_ids, list)
+            or any(not isinstance(item, str) for item in known_ids)
+            or len(known_ids) != len(set(known_ids))
+            or set(known_ids) != KNOWN_CUSTOM_PERMISSION_RESOURCE_IDS
+        ):
+            violations.append(
+                "custom-permission known resource ID contract differs"
+            )
+        fields = (
+            ("statuses", PERMISSION_ASSURANCE_STATUSES),
+            (
+                "required_public_scopes",
+                PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES,
+            ),
+            (
+                "required_external_record_fields",
+                PERMISSION_ASSURANCE_REQUIRED_EXTERNAL_RECORD_FIELDS,
+            ),
+            (
+                "required_independent_review_fields",
+                PERMISSION_ASSURANCE_REQUIRED_INDEPENDENT_REVIEW_FIELDS,
+            ),
+        )
+        for field, expected in fields:
+            observed = contract.get(field)
+            if (
+                not isinstance(observed, list)
+                or any(not isinstance(item, str) for item in observed)
+                or len(observed) != len(set(observed))
+                or set(observed) != expected
+            ):
+                violations.append(f"custom-permission {field} contract differs")
+
+    for resource, public_claim in custom_resources:
+        resource_id = str(resource.get("id", "<missing-id>"))
+        assurance = resource.get("permission_assurance")
+        if not isinstance(assurance, dict):
+            violations.append(
+                f"custom-permission resource lacks assurance record: {resource_id}"
+            )
+            continue
+        if assurance.get("schema_version") != PERMISSION_ASSURANCE_SCHEMA_VERSION:
+            violations.append(
+                f"custom-permission assurance schema differs: {resource_id}"
+            )
+        status = assurance.get("status")
+        if status not in PERMISSION_ASSURANCE_STATUSES:
+            violations.append(
+                f"custom-permission assurance status is invalid: {resource_id}"
+            )
+        if type(assurance.get("release_eligible")) is not bool:
+            violations.append(
+                f"custom-permission release eligibility is not boolean: {resource_id}"
+            )
+
+        owner = assurance.get("owner_attestation")
+        if not isinstance(owner, dict):
+            violations.append(
+                f"custom-permission owner attestation is missing: {resource_id}"
+            )
+            owner = {}
+        else:
+            for field in ("attestor", "reference"):
+                if not isinstance(owner.get(field), str) or not owner[field].strip():
+                    violations.append(
+                        f"custom-permission owner attestation {field} is missing: "
+                        f"{resource_id}"
+                    )
+            if not _valid_date(owner.get("attested_on")):
+                violations.append(
+                    f"custom-permission owner attestation date is invalid: {resource_id}"
+                )
+            if _permission_scope_set(owner.get("asserted_scopes")) is None:
+                violations.append(
+                    f"custom-permission owner-attested scopes are malformed: {resource_id}"
+                )
+
+        review = assurance.get("independent_review")
+        if status == "review-pending" and not public_claim:
+            if assurance.get("release_eligible") is not False:
+                violations.append(
+                    f"review-pending custom permission claims release eligibility: {resource_id}"
+                )
+            if assurance.get("external_permission_record") is not None:
+                violations.append(
+                    f"review-pending custom permission claims a completed external record: "
+                    f"{resource_id}"
+                )
+            if not isinstance(review, dict) or review.get("status") != "pending":
+                violations.append(
+                    f"review-pending custom permission lacks pending review state: "
+                    f"{resource_id}"
+                )
+            elif (
+                set(review)
+                != PERMISSION_ASSURANCE_REQUIRED_INDEPENDENT_REVIEW_FIELDS
+                or any(
+                    review.get(field) is not None
+                    for field in (
+                        "reviewer",
+                        "reviewer_role",
+                        "reviewed_on",
+                        "decision_reference",
+                    )
+                )
+                or review.get("verified_scopes") != []
+            ):
+                violations.append(
+                    f"review-pending custom permission records a non-pending review: "
+                    f"{resource_id}"
+                )
+            continue
+
+        if public_claim:
+            license_record = resource.get("license")
+            if (
+                not isinstance(license_record, dict)
+                or license_record.get("permission_model") != CUSTOM_PERMISSION_MARKER
+            ):
+                violations.append(
+                    f"public custom-permission resource lacks explicit marker: {resource_id}"
+                )
+            if status != "independently-reviewed":
+                violations.append(
+                    f"public custom-permission resource is not independently reviewed: "
+                    f"{resource_id}"
+                )
+            if assurance.get("release_eligible") is not True:
+                violations.append(
+                    f"public custom-permission resource is not release eligible: {resource_id}"
+                )
+            if (resource.get("status") or {}).get("level") != "green":
+                violations.append(
+                    f"public custom-permission resource is not green: {resource_id}"
+                )
+            if not isinstance(license_record, dict) or license_record.get("verified") is not True:
+                violations.append(
+                    f"public custom-permission license is not verified: {resource_id}"
+                )
+
+        record = assurance.get("external_permission_record")
+        if not isinstance(record, dict):
+            violations.append(
+                f"custom-permission external record is incomplete: {resource_id}"
+            )
+            continue
+        missing_record = sorted(
+            PERMISSION_ASSURANCE_REQUIRED_EXTERNAL_RECORD_FIELDS - set(record)
+        )
+        if missing_record:
+            violations.append(
+                f"custom-permission external record fields are missing: {resource_id} -> "
+                + ", ".join(missing_record)
+            )
+        record_id = record.get("record_id")
+        if not isinstance(record_id, str) or not PERMISSION_RECORD_ID_RE.fullmatch(record_id):
+            violations.append(
+                f"custom-permission external record ID is invalid: {resource_id}"
+            )
+        record_sha = record.get("record_sha256")
+        if not isinstance(record_sha, str) or not SHA256_RE.fullmatch(record_sha):
+            violations.append(
+                f"custom-permission external record SHA-256 is invalid: {resource_id}"
+            )
+        for field in (
+            "record_editor",
+            "grantor",
+            "grantor_authority",
+            "revocation_or_expiry_terms",
+        ):
+            if not isinstance(record.get(field), str) or not record[field].strip():
+                violations.append(
+                    f"custom-permission external record {field} is missing: {resource_id}"
+                )
+        if not _valid_date(record.get("granted_on")):
+            violations.append(
+                f"custom-permission grant date is invalid: {resource_id}"
+            )
+        scopes = _permission_scope_set(record.get("scopes"))
+        if scopes is None:
+            violations.append(
+                f"custom-permission external scopes are malformed: {resource_id}"
+            )
+            scopes = set()
+        missing_scopes = sorted(PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES - scopes)
+        if missing_scopes:
+            violations.append(
+                f"custom-permission external scopes are incomplete: {resource_id} -> "
+                + ", ".join(missing_scopes)
+            )
+
+        expected_bindings: dict[str, str] = {}
+        artifacts = resource.get("artifacts")
+        if isinstance(artifacts, list):
+            for artifact in artifacts:
+                if not isinstance(artifact, dict):
+                    continue
+                path = artifact.get("path")
+                digest = artifact.get("sha256")
+                if isinstance(path, str) and isinstance(digest, str):
+                    expected_bindings[_normalized(path)] = digest
+        bindings = record.get("artifact_bindings")
+        observed_bindings: dict[str, str] = {}
+        if not isinstance(bindings, list) or not bindings:
+            violations.append(
+                f"custom-permission artifact bindings are missing: {resource_id}"
+            )
+        else:
+            for binding in bindings:
+                if not isinstance(binding, dict):
+                    violations.append(
+                        f"custom-permission artifact binding is malformed: {resource_id}"
+                    )
+                    continue
+                path = binding.get("path")
+                digest = binding.get("sha256")
+                if (
+                    not isinstance(path, str)
+                    or not _safe_relative(path)
+                    or not isinstance(digest, str)
+                    or not SHA256_RE.fullmatch(digest)
+                ):
+                    violations.append(
+                        f"custom-permission artifact binding is invalid: {resource_id}"
+                    )
+                    continue
+                normalized = _normalized(path)
+                if normalized in observed_bindings:
+                    violations.append(
+                        f"custom-permission artifact binding is duplicated: "
+                        f"{resource_id} -> {normalized}"
+                    )
+                observed_bindings[normalized] = digest
+        if observed_bindings != expected_bindings:
+            violations.append(
+                f"custom-permission artifact bindings differ from registry: {resource_id}"
+            )
+
+        if not isinstance(review, dict):
+            violations.append(
+                f"custom-permission independent review is missing: {resource_id}"
+            )
+            continue
+        missing_review = sorted(
+            PERMISSION_ASSURANCE_REQUIRED_INDEPENDENT_REVIEW_FIELDS - set(review)
+        )
+        if missing_review:
+            violations.append(
+                f"custom-permission independent review fields are missing: {resource_id} -> "
+                + ", ".join(missing_review)
+            )
+        if review.get("status") != "approved":
+            violations.append(
+                f"custom-permission independent review is not approved: {resource_id}"
+            )
+        for field in ("reviewer", "reviewer_role", "decision_reference"):
+            if not isinstance(review.get(field), str) or not review[field].strip():
+                violations.append(
+                    f"custom-permission independent review {field} is missing: "
+                    f"{resource_id}"
+                )
+        if review.get("reviewer") == owner.get("attestor"):
+            violations.append(
+                f"custom-permission reviewer is not independent: {resource_id}"
+            )
+        if review.get("reviewer") == record.get("record_editor"):
+            violations.append(
+                f"custom-permission reviewer also edited the permission record: "
+                f"{resource_id}"
+            )
+        if not _valid_date(review.get("reviewed_on")):
+            violations.append(
+                f"custom-permission independent review date is invalid: {resource_id}"
+            )
+        verified_scopes = _permission_scope_set(review.get("verified_scopes"))
+        if verified_scopes is None:
+            violations.append(
+                f"custom-permission reviewed scopes are malformed: {resource_id}"
+            )
+            verified_scopes = set()
+        missing_reviewed_scopes = sorted(
+            PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES - verified_scopes
+        )
+        if missing_reviewed_scopes:
+            violations.append(
+                f"custom-permission reviewed scopes are incomplete: {resource_id} -> "
+                + ", ".join(missing_reviewed_scopes)
+            )
+
+    return sorted(set(violations))
+
+
 def release_violations(
     registry: dict[str, object],
     tracked_paths: Iterable[str],
@@ -667,6 +1162,7 @@ def release_violations(
 
     tracked = {_normalized(path) for path in tracked_paths if path}
     violations: list[str] = []
+    violations.extend(permission_assurance_violations(registry))
     reviewed_public_artifacts = {
         _normalized(str(artifact["path"]))
         for resource in registry.get("resources", [])
@@ -694,6 +1190,29 @@ def release_violations(
         if path.startswith("data/open/") and path not in reviewed_public_artifacts:
             violations.append(f"unregistered public-data artifact is Git-tracked: {path}")
 
+        # Path rules reject the expected and renamed NJ8 directory layouts. An
+        # exact artifact binding also prevents the known snapshot from being
+        # reintroduced under an unrelated filename. Do not interpret this
+        # digest as evidence that any upstream mirror is equivalent.
+        if file_payloads is None or path in file_payloads:
+            try:
+                payload = _payload_for(
+                    path,
+                    project_root=project_root,
+                    file_payloads=file_payloads,
+                )
+            except ValueError:
+                payload = None
+            if payload is not None:
+                blocked_resource = FORBIDDEN_TRACKED_PAYLOAD_SHA256.get(
+                    _sha256(payload)
+                )
+                if blocked_resource is not None:
+                    violations.append(
+                        "blocked exact resource artifact is Git-tracked: "
+                        f"{blocked_resource} -> {path}"
+                    )
+
     for resource in registry.get("resources", []):
         resource_id = str(resource.get("id", "<missing-id>"))
         status = (resource.get("status") or {}).get("level")
@@ -717,6 +1236,24 @@ def release_violations(
                 violations.append(
                     f"public artifact is absent from Git inventory: {resource_id} -> {path}"
                 )
+
+    if SERVER_ONLY_TEMPLATE_PATH in tracked:
+        template_payload = (
+            file_payloads.get(SERVER_ONLY_TEMPLATE_PATH)
+            if file_payloads is not None
+            else None
+        )
+        if template_payload is None:
+            try:
+                template_payload = (
+                    project_root / SERVER_ONLY_TEMPLATE_PATH
+                ).read_bytes()
+            except OSError:
+                violations.append(
+                    "server-only deployment template could not be read"
+                )
+        if template_payload is not None:
+            violations.extend(server_only_template_violations(template_payload))
 
     result_violations, _ = result_bundle_review(
         registry,

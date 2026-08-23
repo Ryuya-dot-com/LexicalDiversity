@@ -26,8 +26,8 @@ def _scope() -> dict:
 def test_release_json_is_the_single_imported_version_authority():
     identity = _identity()
 
-    assert identity["application_version"] == "0.9.0-dev.0"
-    assert identity["output_schema_version"] == "1.0.0"
+    assert identity["application_version"] == "0.10.0-dev.0"
+    assert identity["output_schema_version"] == "2.0.0"
     assert identity["release_phase"] == "development"
     assert ldfreq.__version__ == identity["application_version"]
     assert ldfreq.OUTPUT_SCHEMA_VERSION == identity["output_schema_version"]

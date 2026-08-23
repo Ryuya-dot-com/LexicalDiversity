@@ -6,7 +6,7 @@ from itertools import combinations
 from typing import Any
 
 from . import indices as IDX
-from .exporting import clean_deep
+from .exporting import _validated_panel_a_records, clean_deep
 
 
 DERIVATIONAL_SUFFIXES = (
@@ -53,34 +53,77 @@ def band_rows(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def reliability_rows(
     results: list[dict[str, Any]],
     *,
-    segment: int = 50,
-    window: int = 50,
-    hdd_sample: int = 42,
+    segment: int | None = None,
+    window: int | None = None,
+    hdd_sample: int | None = None,
 ) -> list[dict[str, Any]]:
+    """Return reliability rows using each record's requested method parameters.
+
+    The optional legacy arguments are assertions only.  They can confirm that a
+    caller's batch configuration matches the records, but they never override
+    the parameters recorded by the computation that produced a value or a
+    missing result.
+    """
     rows = []
     for result in results:
         n_tokens = result.get("n_tokens")
         if n_tokens is None:
             n_tokens = len(result.get("a_tokens") or [])
-        indices = result.get("indices") or {}
+        indices = result.get("indices")
+        index_records = _validated_panel_a_records(
+            result.get("index_records"),
+            indices,
+        )
         for key in IDX._FUNCS:
-            value = indices.get(key)
-            required = IDX.effective_min_tokens(
+            record = index_records[key]
+            value = record["value"]
+            requested = record["requested_parameters"]
+            segment_length = requested.get("segment_length", 50)
+            window_length = requested.get("window_length", 50)
+            sample_size = requested.get("sample_size", 42)
+            vocd_hi = requested.get("sample_size_max", 50)
+            mtld_min_factor_len = requested.get("minimum_factor_length", 10)
+
+            assertions = {
+                "msttr": ("segment", segment, segment_length),
+                "mattr": ("window", window, window_length),
+                "hdd": ("hdd_sample", hdd_sample, sample_size),
+            }
+            if key in assertions:
+                argument_name, asserted, recorded = assertions[key]
+                if asserted is not None and asserted != recorded:
+                    raise ValueError(
+                        f"{argument_name} contradicts the structured Panel A record"
+                    )
+            required = IDX.computational_min_tokens(
                 key,
-                segment=segment,
-                window=window,
-                hdd_sample=hdd_sample,
+                segment=segment_length,
+                window=window_length,
+                hdd_sample=sample_size,
+                vocd_hi=vocd_hi,
+                mtld_min_factor_len=mtld_min_factor_len,
             )
+            quality_floor = record["advisory_quality_floor_tokens"]
+            quality_status = record["advisory_quality_status"]
+            missing_reason = record["missing_reason"]
             if value is None or (isinstance(value, float) and value != value):
-                if n_tokens < required:
+                if missing_reason in {
+                    "empty_input",
+                    "insufficient_tokens_for_formula",
+                    "too_short_for_requested_parameter",
+                }:
                     status, code = "too short", 0
-                    note = f"N={n_tokens} < {required}"
+                    note = f"N={n_tokens} < computational minimum {required}"
                 else:
                     status, code = "undefined", 1
-                    note = "undefined for this text"
+                    note = missing_reason.replace("_", " ")
             else:
                 status, code = "available", 2
-                note = ""
+                note = (
+                    f"N={n_tokens} < advisory quality floor {quality_floor}"
+                    if quality_status == "below_advisory_floor"
+                    else ""
+                )
             rows.append({
                 "document": result["name"],
                 "index_key": key,
@@ -91,6 +134,12 @@ def reliability_rows(
                 "required_tokens": required,
                 "value": clean_deep(value),
                 "note": note,
+                "missing_reason": missing_reason,
+                "method_id": record["method_id"],
+                "requested_parameters": clean_deep(record["requested_parameters"]),
+                "effective_parameters": clean_deep(record["effective_parameters"]),
+                "advisory_quality_floor_tokens": quality_floor,
+                "advisory_quality_status": quality_status,
             })
     return rows
 

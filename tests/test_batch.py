@@ -1,11 +1,13 @@
+import copy
 import unittest
 
 from ldfreq import batch as BATCH
+from ldfreq import indices as IDX
 
 
 class BatchDiagnosticsTests(unittest.TestCase):
     def _results(self):
-        return [
+        results = [
             {
                 "name": "a.txt",
                 "raw_tokens": ["alpha", "beta", "xray"],
@@ -35,6 +37,14 @@ class BatchDiagnosticsTests(unittest.TestCase):
                 },
             },
         ]
+        for result in results:
+            records = IDX.all_index_records(result["a_tokens"])
+            result["n_tokens"] = len(result["a_tokens"])
+            result["indices"] = {
+                key: record["value"] for key, record in records.items()
+            }
+            result["index_records"] = records
+        return results
 
     def test_band_rows_include_document_names(self):
         rows = BATCH.band_rows(self._results())
@@ -49,6 +59,50 @@ class BatchDiagnosticsTests(unittest.TestCase):
 
         self.assertEqual(mattr["status"], "too short")
         self.assertEqual(ttr["status"], "available")
+        self.assertEqual(mattr["required_tokens"], 50)
+        self.assertEqual(
+            mattr["missing_reason"],
+            "too_short_for_requested_parameter",
+        )
+        self.assertEqual(mattr["method_id"], IDX.METHOD_IDS["mattr"])
+        self.assertEqual(
+            ttr["advisory_quality_status"],
+            "meets_advisory_floor",
+        )
+
+    def test_reliability_rows_rejects_absent_or_inconsistent_records(self):
+        missing_records = self._results()
+        del missing_records[0]["index_records"]
+        with self.assertRaisesRegex(ValueError, "Panel A schema 2.0"):
+            BATCH.reliability_rows(missing_records)
+
+        inconsistent = copy.deepcopy(self._results())
+        inconsistent[0]["index_records"]["mattr"]["effective_parameters"] = {
+            "window_length": 50
+        }
+        with self.assertRaisesRegex(ValueError, "Panel A schema 2.0"):
+            BATCH.reliability_rows(inconsistent)
+
+    def test_reliability_rows_uses_recorded_parameters_as_authority(self):
+        tokens = ["alpha", "beta", "gamma"] * 20
+        records = IDX.all_index_records(tokens, window=80)
+        result = {
+            "name": "Document 001",
+            "n_tokens": len(tokens),
+            "indices": {key: record["value"] for key, record in records.items()},
+            "index_records": records,
+        }
+
+        rows = BATCH.reliability_rows([result])
+        mattr = next(row for row in rows if row["index_key"] == "mattr")
+        self.assertEqual(mattr["required_tokens"], 80)
+        self.assertEqual(mattr["note"], "N=60 < computational minimum 80")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "window contradicts the structured Panel A record",
+        ):
+            BATCH.reliability_rows([result], window=50)
 
     def test_offlist_rows_group_forms_by_document_and_head(self):
         rows = BATCH.offlist_rows(self._results())

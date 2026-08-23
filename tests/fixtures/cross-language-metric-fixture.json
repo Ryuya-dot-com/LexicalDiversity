@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "ldfreq-cross-language-semantic-metrics",
+  "fixture_version": "1.0.0",
+  "license": "CC0-1.0",
+  "comparison_rule": "Parse and compare the JSON semantics; file-byte or digest equality is not part of this contract.",
+  "numeric_tolerance": {
+    "absolute": 1e-12,
+    "relative": 1e-12
+  },
+  "status_mapping": {
+    "available": {
+      "r": "ok",
+      "python": "available"
+    },
+    "missing": {
+      "r": "missing",
+      "python": "missing"
+    }
+  },
+  "shared_methods": [
+    {"metric_id": "ttr", "method_id": "ttr_v_over_n_v1"},
+    {"metric_id": "rttr", "method_id": "rttr_guiraud_v_over_sqrt_n_v1"},
+    {"metric_id": "cttr", "method_id": "cttr_v_over_sqrt_2n_v1"},
+    {"metric_id": "herdan", "method_id": "herdan_c_logv_over_logn_v1"},
+    {"metric_id": "maas", "method_id": "maas_a2_ln_v1"},
+    {"metric_id": "msttr", "method_id": "msttr_nonoverlap_complete_drop_v1"},
+    {"metric_id": "mattr", "method_id": "mattr_sliding_step1_v1"},
+    {"metric_id": "hdd", "method_id": "hdd_expected_ttr_scaled_v1"},
+    {"metric_id": "yule_k", "method_id": "yule_k_m2_tokens_v1"},
+    {"metric_id": "yule_i", "method_id": "yule_i_types_v2_over_m2_minus_v_v1"}
+  ],
+  "cases": [
+    {
+      "id": "mixed-four",
+      "tokens": ["a", "a", "b", "c"],
+      "parameters": {
+        "segment_length": 2,
+        "window_length": 2,
+        "sample_size": 2
+      },
+      "assertions": [
+        {"metric_id": "ttr", "semantic_status": "available", "value": 0.75},
+        {"metric_id": "rttr", "semantic_status": "available", "value": 1.5},
+        {"metric_id": "cttr", "semantic_status": "available", "value": 1.0606601717798212},
+        {"metric_id": "herdan", "semantic_status": "available", "value": 0.7924812503605782},
+        {"metric_id": "maas", "semantic_status": "available", "value": 0.14969313549813612},
+        {"metric_id": "msttr", "semantic_status": "available", "value": 0.75},
+        {"metric_id": "mattr", "semantic_status": "available", "value": 0.8333333333333334},
+        {"metric_id": "hdd", "semantic_status": "available", "value": 0.9166666666666667},
+        {"metric_id": "yule_k", "semantic_status": "available", "value": 1250.0},
+        {"metric_id": "yule_i", "semantic_status": "available", "value": 3.0}
+      ]
+    },
+    {
+      "id": "strict-short-parameters",
+      "tokens": ["a", "b", "c"],
+      "parameters": {
+        "segment_length": 4,
+        "window_length": 4,
+        "sample_size": 4
+      },
+      "assertions": [
+        {"metric_id": "msttr", "semantic_status": "missing", "value": null, "missing_reason": "too_short_for_requested_parameter"},
+        {"metric_id": "mattr", "semantic_status": "missing", "value": null, "missing_reason": "too_short_for_requested_parameter"},
+        {"metric_id": "hdd", "semantic_status": "missing", "value": null, "missing_reason": "too_short_for_requested_parameter"}
+      ]
+    },
+    {
+      "id": "singleton-domains",
+      "tokens": ["a"],
+      "parameters": {},
+      "assertions": [
+        {"metric_id": "ttr", "semantic_status": "available", "value": 1.0},
+        {"metric_id": "herdan", "semantic_status": "missing", "value": null, "missing_reason": "insufficient_tokens_for_formula"},
+        {"metric_id": "maas", "semantic_status": "missing", "value": null, "missing_reason": "insufficient_tokens_for_formula"},
+        {"metric_id": "yule_i", "semantic_status": "missing", "value": null, "missing_reason": "zero_denominator"}
+      ]
+    },
+    {
+      "id": "empty-input",
+      "tokens": [],
+      "parameters": {"sample_size": 2},
+      "assertions": [
+        {"metric_id": "ttr", "semantic_status": "missing", "value": null, "missing_reason": "empty_input"},
+        {"metric_id": "hdd", "semantic_status": "missing", "value": null, "missing_reason": "empty_input"},
+        {"metric_id": "yule_k", "semantic_status": "missing", "value": null, "missing_reason": "empty_input"}
+      ]
+    }
+  ],
+  "runtime_specific_cases": [
+    {
+      "id": "mtld-threshold-boundary",
+      "tokens": ["u1", "u2", "u3", "u4", "u5", "u6", "u7", "u8", "u9", "u10", "u11", "u12", "u13", "u14", "u15", "u16", "u17", "u18", "u1", "u1", "u1", "u1", "u1", "u1", "u1", "x", "x"],
+      "parameters": {
+        "threshold": 0.72,
+        "minimum_factor_length": 10
+      },
+      "reason": "R closes a factor at TTR < threshold; Python closes at TTR <= threshold. The distinct method IDs prevent a false equivalence claim.",
+      "r": {
+        "metric_id": "mtld",
+        "method_id": "mtld_seq_bidir_dirmean_lt_min10_linear_tail_v1",
+        "status": "ok",
+        "value": 27.0,
+        "missing_reason": null
+      },
+      "python": {
+        "metric_id": "mtld",
+        "method_id": "mtld_bidir_mean_leq_min10_python_v1",
+        "status": "available",
+        "value": 18.346153846153847,
+        "exact": "477/26",
+        "missing_reason": null
+      }
+    }
+  ]
+}

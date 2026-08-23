@@ -1,4 +1,5 @@
 import ast
+from decimal import Decimal
 import io
 import json
 from dataclasses import FrozenInstanceError
@@ -20,6 +21,10 @@ from ldfreq.lemmatizers import WordFormLemmatizer
 from ldfreq.exporting import payload_to_excel
 from ldfreq.privacy import sensitive_paths
 from ldfreq.tubelex import TubelexIndex, TubelexRecord
+from ldfreq.tokenizer import (
+    ASCII_LEGACY_V1,
+    DEFAULT_TOKENIZER_POLICY,
+)
 
 
 def _frequency_resources():
@@ -64,12 +69,36 @@ def test_analysis_module_has_no_streamlit_import():
 def test_analysis_config_is_typed_frozen_and_validated():
     config = AnalysisConfig(thresholds=[90, 95])
     assert config.thresholds == (90, 95)
+    assert isinstance(config.mtld_threshold, float)
+    assert config.tokenizer_policy == DEFAULT_TOKENIZER_POLICY
     with pytest.raises(FrozenInstanceError):
         config.min_tokens = 10
     with pytest.raises(ValueError, match="thresholds"):
         AnalysisConfig(thresholds=(0,))
     with pytest.raises(ValueError, match="mattr_window"):
         AnalysisConfig(mattr_window=0)
+    for invalid in ("0.72", Decimal("0.72"), True, float("nan"), float("inf")):
+        with pytest.raises(ValueError, match="mtld_threshold"):
+            AnalysisConfig(mtld_threshold=invalid)
+    with pytest.raises(ValueError, match="tokenizer_policy must be one of"):
+        AnalysisConfig(tokenizer_policy="Unicode words with apostrophes")
+
+
+def test_analysis_tokenizer_provenance_drives_actual_tokenization():
+    default_result = analyze_text("naïve don’t")
+    legacy_result = analyze_text(
+        "naïve don’t",
+        AnalysisConfig(tokenizer_policy=ASCII_LEGACY_V1),
+    )
+
+    assert default_result["n_tokens"] == 2
+    assert default_result["payload"]["settings"]["tokenizer_policy"] == (
+        DEFAULT_TOKENIZER_POLICY
+    )
+    assert legacy_result["n_tokens"] == 4
+    assert legacy_result["payload"]["settings"]["tokenizer_policy"] == (
+        ASCII_LEGACY_V1
+    )
 
 
 def test_analyze_text_returns_aggregate_only_result():
@@ -83,7 +112,27 @@ def test_analyze_text_returns_aggregate_only_result():
     assert result["name"] == "Document 001"
     assert result["n_tokens"] == 4
     assert result["n_types"] == 3
+    assert result["indices"]["hdd"] is None
+    assert result["index_records"]["hdd"]["missing_reason"] == (
+        "too_short_for_requested_parameter"
+    )
+    assert result["index_records"]["hdd"]["requested_parameters"] == {
+        "sample_size": 42
+    }
+    assert result["index_records"]["hdd"]["effective_parameters"] == {}
+    assert result["payload"]["panel_a_records"] == result["index_records"]
     assert result["panel_b"]["lfp"][0]["tokens"] == 1
+    assert result["payload"]["settings"]["panel_b_mapping_method_id"] == (
+        "surface_first_rank_lookup_normalized_fallback_v1"
+    )
+    assert any(
+        "hybrid" in note and "surface-form key" in note
+        for note in result["payload"]["method_notes"]
+    )
+    assert any(
+        "not claimed to be numerically comparable to LexTutor" in note
+        for note in result["payload"]["method_notes"]
+    )
     assert result["list_path"] == "fixture.csv"
     assert result["effective_lemmatizer"] == {"name": "word_form", "version": "-"}
     assert result["payload"]["privacy"] == {

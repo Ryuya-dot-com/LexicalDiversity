@@ -1,11 +1,20 @@
 import hashlib
 import json
+import re
 import unittest
+from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
 
 from scripts import check_git_history as history_gate
-from scripts.check_public_release import release_violations, result_bundle_review
+from scripts.check_public_release import (
+    PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES,
+    SERVER_ONLY_TEMPLATE_PATH,
+    permission_assurance_violations,
+    release_violations,
+    result_bundle_review,
+    server_only_template_violations,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -206,6 +215,224 @@ def _derived_bundle_case(
 
 
 class PublicReleaseGateTests(unittest.TestCase):
+    def test_review_pending_nj8_record_is_honest_and_not_public_eligible(self):
+        registry = json.loads(
+            (ROOT / "data" / "resource_registry.json").read_text(encoding="utf-8")
+        )
+        nj8 = next(item for item in registry["resources"] if item["id"] == "nj8")
+
+        self.assertEqual(permission_assurance_violations(registry), [])
+        self.assertEqual(nj8["status"]["level"], "yellow")
+        self.assertFalse(nj8["license"]["verified"])
+        self.assertEqual(nj8["permission_assurance"]["status"], "review-pending")
+        self.assertFalse(nj8["permission_assurance"]["release_eligible"])
+        self.assertIsNone(
+            nj8["permission_assurance"]["external_permission_record"]
+        )
+        self.assertTrue(
+            all(
+                nj8["provisioning"][flag] is False
+                for flag in (
+                    "git_payload",
+                    "package_payload",
+                    "container_payload",
+                    "ci_payload",
+                )
+            )
+        )
+        self.assertTrue(
+            all(artifact["public_build"] is False for artifact in nj8["artifacts"])
+        )
+
+    def test_owner_attestation_cannot_authorize_public_custom_permission_use(self):
+        registry = json.loads(
+            (ROOT / "data" / "resource_registry.json").read_text(encoding="utf-8")
+        )
+        candidate = deepcopy(registry)
+        nj8 = next(item for item in candidate["resources"] if item["id"] == "nj8")
+        nj8["provisioning"]["git_payload"] = True
+        nj8["artifacts"][0]["public_build"] = True
+        nj8["redistribution"]["repository_bundle"] = "allowed"
+
+        violations = permission_assurance_violations(candidate)
+
+        self.assertTrue(
+            any("not independently reviewed" in item for item in violations),
+            violations,
+        )
+        self.assertTrue(
+            any("external record is incomplete" in item for item in violations),
+            violations,
+        )
+
+    def test_complete_independent_custom_permission_contract_is_accepted(self):
+        registry = json.loads(
+            (ROOT / "data" / "resource_registry.json").read_text(encoding="utf-8")
+        )
+        digest = "a" * 64
+        resource = {
+            "id": "custom-reviewed",
+            "provisioning": {
+                "mode": "bundled",
+                "git_payload": True,
+                "package_payload": True,
+                "container_payload": True,
+                "ci_payload": True,
+            },
+            "license": {
+                "spdx": None,
+                "verified": True,
+                "permission_model": "custom-permission",
+            },
+            "artifacts": [
+                {
+                    "path": "data/custom-reviewed/list.csv",
+                    "sha256": digest,
+                    "public_build": True,
+                }
+            ],
+            "redistribution": {"repository_bundle": "allowed"},
+            "web_use": {
+                "public_saas_processing": "allowed",
+                "aggregate_result_publication": "allowed-with-citation",
+            },
+            "status": {"level": "green"},
+            "permission_assurance": {
+                "schema_version": "1.0.0",
+                "status": "independently-reviewed",
+                "release_eligible": True,
+                "owner_attestation": {
+                    "attestor": "project-owner",
+                    "attested_on": "2026-08-20",
+                    "reference": "owner-record-2026-08-20",
+                    "asserted_scopes": ["repository-redistribution"],
+                },
+                "external_permission_record": {
+                    "record_id": "PERM-2026-0001",
+                    "record_sha256": "b" * 64,
+                    "record_editor": "permission-record-editor",
+                    "grantor": "rights-holder",
+                    "grantor_authority": "authorized-licensing-officer",
+                    "granted_on": "2026-08-21",
+                    "scopes": sorted(PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES),
+                    "artifact_bindings": [
+                        {
+                            "path": "data/custom-reviewed/list.csv",
+                            "sha256": digest,
+                        }
+                    ],
+                    "revocation_or_expiry_terms": (
+                        "No expiry; written revocation applies prospectively."
+                    ),
+                },
+                "independent_review": {
+                    "status": "approved",
+                    "reviewer": "independent-reviewer",
+                    "reviewer_role": "release-rights-reviewer",
+                    "reviewed_on": "2026-08-22",
+                    "decision_reference": "RIGHTS-REVIEW-2026-0001",
+                    "verified_scopes": sorted(
+                        PERMISSION_ASSURANCE_REQUIRED_PUBLIC_SCOPES
+                    ),
+                },
+            },
+        }
+        candidate = {
+            "permission_assurance_contract": registry[
+                "permission_assurance_contract"
+            ],
+            "resources": [resource],
+        }
+
+        self.assertEqual(permission_assurance_violations(candidate), [])
+
+        owner_review = deepcopy(candidate)
+        owner_review["resources"][0]["permission_assurance"][
+            "independent_review"
+        ]["reviewer"] = "project-owner"
+        self.assertTrue(
+            any(
+                "reviewer is not independent" in item
+                for item in permission_assurance_violations(owner_review)
+            )
+        )
+
+        editor_review = deepcopy(candidate)
+        editor_review["resources"][0]["permission_assurance"][
+            "independent_review"
+        ]["reviewer"] = "permission-record-editor"
+        self.assertTrue(
+            any(
+                "reviewer also edited the permission record" in item
+                for item in permission_assurance_violations(editor_review)
+            )
+        )
+
+        missing_editor = deepcopy(candidate)
+        del missing_editor["resources"][0]["permission_assurance"][
+            "external_permission_record"
+        ]["record_editor"]
+        self.assertTrue(
+            any(
+                "external record fields are missing" in item
+                and "record_editor" in item
+                for item in permission_assurance_violations(missing_editor)
+            )
+        )
+
+        wrong_binding = deepcopy(candidate)
+        wrong_binding["resources"][0]["permission_assurance"][
+            "external_permission_record"
+        ]["artifact_bindings"][0]["sha256"] = "c" * 64
+        self.assertTrue(
+            any(
+                "artifact bindings differ" in item
+                for item in permission_assurance_violations(wrong_binding)
+            )
+        )
+
+    def test_cloud_run_template_defaults_fail_closed_for_server_only_resources(self):
+        template = (ROOT / SERVER_ONLY_TEMPLATE_PATH).read_bytes()
+
+        self.assertEqual(server_only_template_violations(template), [])
+        self.assertEqual(
+            release_violations(
+                {"resources": []},
+                [SERVER_ONLY_TEMPLATE_PATH],
+                file_payloads={SERVER_ONLY_TEMPLATE_PATH: template},
+            ),
+            [],
+        )
+
+    def test_public_release_rejects_each_server_only_activation_default(self):
+        template = (ROOT / SERVER_ONLY_TEMPLATE_PATH).read_text(encoding="utf-8")
+        mutations = {
+            "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "bnc_coca",
+            "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
+            "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": "shared-abuse-controls-v1",
+            "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "GRC-2026-08-24-001",
+        }
+        for name, enabled_value in mutations.items():
+            mutated = re.sub(
+                rf"(- name: {name}\n(?:\s*#.*\n)*\s*value:) (?:\"\"|\"0\")",
+                rf"\1 {enabled_value}",
+                template,
+                count=1,
+            )
+            self.assertNotEqual(mutated, template, name)
+            violations = release_violations(
+                {"resources": []},
+                [SERVER_ONLY_TEMPLATE_PATH],
+                file_payloads={
+                    SERVER_ONLY_TEMPLATE_PATH: mutated.encode("utf-8")
+                },
+            )
+            self.assertTrue(
+                any("server-only deployment template is not fail-closed" in item
+                    for item in violations),
+                (name, violations),
+            )
+
     def test_blocks_restricted_payload_and_requires_public_artifact(self):
         registry = {
             "resources": [
@@ -278,6 +505,42 @@ class PublicReleaseGateTests(unittest.TestCase):
         self.assertEqual(len(violations), 7)
         self.assertTrue(any("server-only payload" in item for item in violations))
         self.assertTrue(any("private deployment payload" in item for item in violations))
+
+    def test_blocks_any_nj8_payload_reintroduced_beside_public_manifest(self):
+        violations = release_violations(
+            {"resources": []},
+            [
+                "data/NJ8/manifest.json",
+                "data/NJ8/NJ8.csv",
+                "data/NJ8/renamed.bin",
+                "data/NJ8/nested/list.dat",
+            ],
+        )
+
+        self.assertEqual(len(violations), 3)
+        self.assertTrue(
+            all("server-only payload is Git-tracked" in item for item in violations)
+        )
+
+    def test_blocks_exact_nj8_artifact_identity_after_unrelated_rename(self):
+        payload = b"test-only exact protected resource bytes\n"
+        digest = hashlib.sha256(payload).hexdigest()
+        path = "assets/renamed-reference.dat"
+
+        with patch(
+            "scripts.check_public_release.FORBIDDEN_TRACKED_PAYLOAD_SHA256",
+            {digest: "nj8"},
+        ):
+            violations = release_violations(
+                {"resources": []},
+                [path],
+                file_payloads={path: payload},
+            )
+
+        self.assertEqual(
+            violations,
+            [f"blocked exact resource artifact is Git-tracked: nj8 -> {path}"],
+        )
 
     def test_blocks_generated_quarto_outputs_but_allows_source(self):
         registry = {"resources": []}
@@ -468,7 +731,7 @@ class PublicReleaseGateTests(unittest.TestCase):
                     "license_verified": True,
                 },
                 {
-                    "id": "nj8",
+                    "id": "citation-resource",
                     "decision": "allowed-with-citation",
                     "status": "green",
                     "license_verified": True,

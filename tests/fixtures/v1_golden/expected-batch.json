@@ -1,6 +1,6 @@
 {
-  "ldfreq_version": "0.9.0-dev.0",
-  "output_schema_version": "1.0.0",
+  "ldfreq_version": "0.10.0-dev.0",
+  "output_schema_version": "2.0.0",
   "batch": {
     "n_documents": 2
   },
@@ -81,7 +81,13 @@
         "n_tokens": 155,
         "required_tokens": 1,
         "value": 0.793548387097,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "ttr_v_over_n_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 1,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -92,7 +98,13 @@
         "n_tokens": 155,
         "required_tokens": 1,
         "value": 9.879597745501,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "rttr_guiraud_v_over_sqrt_n_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 1,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -103,7 +115,13 @@
         "n_tokens": 155,
         "required_tokens": 1,
         "value": 6.985930561239,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "cttr_v_over_sqrt_2n_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 1,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -114,7 +132,13 @@
         "n_tokens": 155,
         "required_tokens": 2,
         "value": 0.95415005553,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "herdan_c_logv_over_logn_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -125,7 +149,13 @@
         "n_tokens": 155,
         "required_tokens": 2,
         "value": 0.009091033059,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "maas_a2_ln_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -136,7 +166,17 @@
         "n_tokens": 155,
         "required_tokens": 50,
         "value": 0.9,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "msttr_nonoverlap_complete_drop_v1",
+        "requested_parameters": {
+          "segment_length": 50
+        },
+        "effective_parameters": {
+          "segment_length": 50
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -147,7 +187,17 @@
         "n_tokens": 155,
         "required_tokens": 50,
         "value": 0.915471698113,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "mattr_sliding_step1_v1",
+        "requested_parameters": {
+          "window_length": 50
+        },
+        "effective_parameters": {
+          "window_length": 50
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -156,9 +206,33 @@
         "status": "available",
         "status_code": 2,
         "n_tokens": 155,
-        "required_tokens": 50,
+        "required_tokens": 10,
         "value": 210.21875,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "mtld_bidir_mean_leq_min10_python_v1",
+        "requested_parameters": {
+          "threshold": 0.72,
+          "minimum_factor_length": 10,
+          "factor_boundary_comparator": "<=",
+          "directions": [
+            "forward",
+            "reverse"
+          ],
+          "direction_aggregation": "arithmetic_mean_available"
+        },
+        "effective_parameters": {
+          "threshold": 0.72,
+          "minimum_factor_length": 10,
+          "factor_boundary_comparator": "<=",
+          "directions": [
+            "forward",
+            "reverse"
+          ],
+          "direction_aggregation": "arithmetic_mean_available"
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -169,7 +243,17 @@
         "n_tokens": 155,
         "required_tokens": 42,
         "value": 0.903238914818,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "hdd_expected_ttr_scaled_v1",
+        "requested_parameters": {
+          "sample_size": 42
+        },
+        "effective_parameters": {
+          "sample_size": 42
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -180,7 +264,27 @@
         "n_tokens": 155,
         "required_tokens": 50,
         "value": 176.065175501568,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "vocd_d_monte_carlo_python_v1",
+        "requested_parameters": {
+          "seed": 42,
+          "trials_per_sample_size": 100,
+          "sample_size_min": 35,
+          "sample_size_max": 50,
+          "grid_max": 200.0,
+          "runs": 3
+        },
+        "effective_parameters": {
+          "seed": 42,
+          "trials_per_sample_size": 100,
+          "sample_size_min": 35,
+          "sample_size_max": 50,
+          "grid_max": 200.0,
+          "runs": 3
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -189,9 +293,15 @@
         "status": "available",
         "status_code": 2,
         "n_tokens": 155,
-        "required_tokens": 100,
+        "required_tokens": 1,
         "value": 59.105098855359,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "yule_k_m2_tokens_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 100,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 001",
@@ -200,9 +310,15 @@
         "status": "available",
         "status_code": 2,
         "n_tokens": 155,
-        "required_tokens": 100,
+        "required_tokens": 1,
         "value": 86.948275862069,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "yule_i_types_v2_over_m2_minus_v_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 100,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -213,7 +329,13 @@
         "n_tokens": 158,
         "required_tokens": 1,
         "value": 0.79746835443,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "ttr_v_over_n_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 1,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -224,7 +346,13 @@
         "n_tokens": 158,
         "required_tokens": 1,
         "value": 10.024021780614,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "rttr_guiraud_v_over_sqrt_n_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 1,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -235,7 +363,13 @@
         "n_tokens": 158,
         "required_tokens": 1,
         "value": 7.088053775834,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "cttr_v_over_sqrt_2n_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 1,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -246,7 +380,13 @@
         "n_tokens": 158,
         "required_tokens": 2,
         "value": 0.95529701179,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "herdan_c_logv_over_logn_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -257,7 +397,13 @@
         "n_tokens": 158,
         "required_tokens": 2,
         "value": 0.008830054136,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "maas_a2_ln_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -268,7 +414,17 @@
         "n_tokens": 158,
         "required_tokens": 50,
         "value": 0.913333333333,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "msttr_nonoverlap_complete_drop_v1",
+        "requested_parameters": {
+          "segment_length": 50
+        },
+        "effective_parameters": {
+          "segment_length": 50
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -279,7 +435,17 @@
         "n_tokens": 158,
         "required_tokens": 50,
         "value": 0.915596330275,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "mattr_sliding_step1_v1",
+        "requested_parameters": {
+          "window_length": 50
+        },
+        "effective_parameters": {
+          "window_length": 50
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -288,9 +454,33 @@
         "status": "available",
         "status_code": 2,
         "n_tokens": 158,
-        "required_tokens": 50,
+        "required_tokens": 10,
         "value": 218.435,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "mtld_bidir_mean_leq_min10_python_v1",
+        "requested_parameters": {
+          "threshold": 0.72,
+          "minimum_factor_length": 10,
+          "factor_boundary_comparator": "<=",
+          "directions": [
+            "forward",
+            "reverse"
+          ],
+          "direction_aggregation": "arithmetic_mean_available"
+        },
+        "effective_parameters": {
+          "threshold": 0.72,
+          "minimum_factor_length": 10,
+          "factor_boundary_comparator": "<=",
+          "directions": [
+            "forward",
+            "reverse"
+          ],
+          "direction_aggregation": "arithmetic_mean_available"
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -301,7 +491,17 @@
         "n_tokens": 158,
         "required_tokens": 42,
         "value": 0.904835486661,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "hdd_expected_ttr_scaled_v1",
+        "requested_parameters": {
+          "sample_size": 42
+        },
+        "effective_parameters": {
+          "sample_size": 42
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -312,7 +512,27 @@
         "n_tokens": 158,
         "required_tokens": 50,
         "value": 182.733979001104,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "vocd_d_monte_carlo_python_v1",
+        "requested_parameters": {
+          "seed": 42,
+          "trials_per_sample_size": 100,
+          "sample_size_min": 35,
+          "sample_size_max": 50,
+          "grid_max": 200.0,
+          "runs": 3
+        },
+        "effective_parameters": {
+          "seed": 42,
+          "trials_per_sample_size": 100,
+          "sample_size_min": 35,
+          "sample_size_max": 50,
+          "grid_max": 200.0,
+          "runs": 3
+        },
+        "advisory_quality_floor_tokens": 50,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -321,9 +541,15 @@
         "status": "available",
         "status_code": 2,
         "n_tokens": 158,
-        "required_tokens": 100,
+        "required_tokens": 1,
         "value": 64.092292901779,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "yule_k_m2_tokens_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 100,
+        "advisory_quality_status": "meets_advisory_floor"
       },
       {
         "document": "Document 002",
@@ -332,9 +558,15 @@
         "status": "available",
         "status_code": 2,
         "n_tokens": 158,
-        "required_tokens": 100,
+        "required_tokens": 1,
         "value": 82.6875,
-        "note": ""
+        "note": "",
+        "missing_reason": null,
+        "method_id": "yule_i_types_v2_over_m2_minus_v_v1",
+        "requested_parameters": {},
+        "effective_parameters": {},
+        "advisory_quality_floor_tokens": 100,
+        "advisory_quality_status": "meets_advisory_floor"
       }
     ],
     "overlap_matrix": [
@@ -381,8 +613,8 @@
   },
   "documents": [
     {
-      "ldfreq_version": "0.9.0-dev.0",
-      "output_schema_version": "1.0.0",
+      "ldfreq_version": "0.10.0-dev.0",
+      "output_schema_version": "2.0.0",
       "document": {
         "name": "Document 001"
       },
@@ -404,8 +636,9 @@
         "server_only_min_types": null,
         "list_entries": 2809,
         "list_levels": 3,
-        "list_lookup_unit": null,
-        "tokenizer_policy": "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "list_lookup_unit": "listed_surface_form_at_lemma_rank_or_normalized_fallback",
+        "panel_b_mapping_method_id": "surface_first_rank_lookup_normalized_fallback_v1",
+        "tokenizer_policy": "english_unicode_v1",
         "thresholds": [
           90,
           95,
@@ -420,12 +653,15 @@
         "advanced_cutoff": 2
       },
       "method_notes": [
-        "Tokenizer policy: ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "Tokenizer policy: english_unicode_v1",
         "Counting unit is token: Panel A uses lower-cased surface tokens without lemmatization.",
-        "Panel B maps tokens to flemmas/head forms before frequency-list lookup.",
+        "Panel A standard method IDs retain the requested segment, window, and sample parameters; advisory quality floors never trigger parameter shrinking.",
+        "Python MTLD uses a bidirectional arithmetic mean, closes factors at TTR <= threshold after at least 10 tokens, and has a Python-specific method ID rather than an R-equivalence claim.",
+        "Panel B mapping method surface_first_rank_lookup_normalized_fallback_v1 is hybrid: an exact lower-cased surface-form key is looked up first, and the configured normalizer is used only after that lookup misses. Direct hits are not re-normalized, so this is not a pure flemma or lemma pipeline.",
+        "For spelling/headword resources, a successful normalized fallback maps to the corresponding ranked entry; a direct listed spelling keeps its own rank.",
         "Coverage thresholds are selected-list matched coverage, not an automatic reader-known coverage estimate.",
         "Proper nouns, marginal words, acronyms, and other potentially known items are not automatically credited unless they match the selected list/normalizer.",
-        "Coverage can differ from LexTutor unless the frequency list, word-family expansion, tokenizer, proper-noun/number policy, and lemmatizer all match.",
+        "Panel B values are not claimed to be numerically comparable to LexTutor. Comparison would require the same hybrid lookup order, frequency list, word-family expansion, tokenizer, proper-noun/number policy, and normalizer.",
         "P_Lex counts unclassified off-list items as hard words under this app's no-automatic-proper-noun-adjustment policy.",
         "S uses the selected list's ranks, not Kojima & Yamashita's BNC-spoken family lists; values are not directly comparable to published S values."
       ],
@@ -450,7 +686,188 @@
         "yule_k": 59.105098855359,
         "yule_i": 86.948275862069
       },
+      "panel_a_records": {
+        "ttr": {
+          "value": 0.793548387097,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "ttr_v_over_n_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 1,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "rttr": {
+          "value": 9.879597745501,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "rttr_guiraud_v_over_sqrt_n_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 1,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "cttr": {
+          "value": 6.985930561239,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "cttr_v_over_sqrt_2n_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 1,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "herdan": {
+          "value": 0.95415005553,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "herdan_c_logv_over_logn_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "maas": {
+          "value": 0.009091033059,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "maas_a2_ln_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "msttr": {
+          "value": 0.9,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "msttr_nonoverlap_complete_drop_v1",
+          "requested_parameters": {
+            "segment_length": 50
+          },
+          "effective_parameters": {
+            "segment_length": 50
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "mattr": {
+          "value": 0.915471698113,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "mattr_sliding_step1_v1",
+          "requested_parameters": {
+            "window_length": 50
+          },
+          "effective_parameters": {
+            "window_length": 50
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "mtld": {
+          "value": 210.21875,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "mtld_bidir_mean_leq_min10_python_v1",
+          "requested_parameters": {
+            "threshold": 0.72,
+            "minimum_factor_length": 10,
+            "factor_boundary_comparator": "<=",
+            "directions": [
+              "forward",
+              "reverse"
+            ],
+            "direction_aggregation": "arithmetic_mean_available"
+          },
+          "effective_parameters": {
+            "threshold": 0.72,
+            "minimum_factor_length": 10,
+            "factor_boundary_comparator": "<=",
+            "directions": [
+              "forward",
+              "reverse"
+            ],
+            "direction_aggregation": "arithmetic_mean_available"
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "hdd": {
+          "value": 0.903238914818,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "hdd_expected_ttr_scaled_v1",
+          "requested_parameters": {
+            "sample_size": 42
+          },
+          "effective_parameters": {
+            "sample_size": 42
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "vocd": {
+          "value": 176.065175501568,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "vocd_d_monte_carlo_python_v1",
+          "requested_parameters": {
+            "seed": 42,
+            "trials_per_sample_size": 100,
+            "sample_size_min": 35,
+            "sample_size_max": 50,
+            "grid_max": 200.0,
+            "runs": 3
+          },
+          "effective_parameters": {
+            "seed": 42,
+            "trials_per_sample_size": 100,
+            "sample_size_min": 35,
+            "sample_size_max": 50,
+            "grid_max": 200.0,
+            "runs": 3
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "yule_k": {
+          "value": 59.105098855359,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "yule_k_m2_tokens_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 100,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "yule_i": {
+          "value": 86.948275862069,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "yule_i_types_v2_over_m2_minus_v_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 100,
+          "advisory_quality_status": "meets_advisory_floor"
+        }
+      },
       "panel_b": {
+        "mapping_diagnostics": {
+          "method_id": "surface_first_rank_lookup_normalized_fallback_v1",
+          "input_tokens": 155,
+          "input_surface_types": 123,
+          "mapped_unit_types": 123,
+          "collapsed_surface_types": 0,
+          "surface_hit_tokens": 153,
+          "surface_hit_rate": 0.987096774194,
+          "normalized_fallback_hit_tokens": 0,
+          "normalized_fallback_hit_rate": 0.0,
+          "normalized_off_list_tokens": 1,
+          "normalized_off_list_rate": 0.006451612903,
+          "identity_fallback_tokens": 1,
+          "identity_fallback_rate": 0.006451612903
+        },
         "lfp": [
           {
             "level": "K1",
@@ -535,7 +952,7 @@
             "3000": 98.71
           },
           "capped": false,
-          "reference_list_note": "uses the supplied list's ranks (e.g. NJ8), not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical for written text + headword/flemma coverage)"
+          "reference_list_note": "uses the selected list's ranks, not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical when the selected list leaves substantial text off-list)"
         },
         "band_wise": [
           {
@@ -552,8 +969,8 @@
             "tokens": 21,
             "types": 17,
             "MTLD": 30.87,
-            "MATTR": 0.809523809524,
-            "HD-D": 0.809523809524,
+            "MATTR": null,
+            "HD-D": null,
             "Min N": 50
           },
           {
@@ -561,8 +978,8 @@
             "tokens": 4,
             "types": 4,
             "MTLD": null,
-            "MATTR": 1.0,
-            "HD-D": 1.0,
+            "MATTR": null,
+            "HD-D": null,
             "Min N": 50
           },
           {
@@ -570,8 +987,8 @@
             "tokens": 2,
             "types": 2,
             "MTLD": null,
-            "MATTR": 1.0,
-            "HD-D": 1.0,
+            "MATTR": null,
+            "HD-D": null,
             "Min N": 50
           }
         ]
@@ -635,8 +1052,8 @@
       }
     },
     {
-      "ldfreq_version": "0.9.0-dev.0",
-      "output_schema_version": "1.0.0",
+      "ldfreq_version": "0.10.0-dev.0",
+      "output_schema_version": "2.0.0",
       "document": {
         "name": "Document 002"
       },
@@ -658,8 +1075,9 @@
         "server_only_min_types": null,
         "list_entries": 2809,
         "list_levels": 3,
-        "list_lookup_unit": null,
-        "tokenizer_policy": "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "list_lookup_unit": "listed_surface_form_at_lemma_rank_or_normalized_fallback",
+        "panel_b_mapping_method_id": "surface_first_rank_lookup_normalized_fallback_v1",
+        "tokenizer_policy": "english_unicode_v1",
         "thresholds": [
           90,
           95,
@@ -674,12 +1092,15 @@
         "advanced_cutoff": 2
       },
       "method_notes": [
-        "Tokenizer policy: ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop.",
+        "Tokenizer policy: english_unicode_v1",
         "Counting unit is token: Panel A uses lower-cased surface tokens without lemmatization.",
-        "Panel B maps tokens to flemmas/head forms before frequency-list lookup.",
+        "Panel A standard method IDs retain the requested segment, window, and sample parameters; advisory quality floors never trigger parameter shrinking.",
+        "Python MTLD uses a bidirectional arithmetic mean, closes factors at TTR <= threshold after at least 10 tokens, and has a Python-specific method ID rather than an R-equivalence claim.",
+        "Panel B mapping method surface_first_rank_lookup_normalized_fallback_v1 is hybrid: an exact lower-cased surface-form key is looked up first, and the configured normalizer is used only after that lookup misses. Direct hits are not re-normalized, so this is not a pure flemma or lemma pipeline.",
+        "For spelling/headword resources, a successful normalized fallback maps to the corresponding ranked entry; a direct listed spelling keeps its own rank.",
         "Coverage thresholds are selected-list matched coverage, not an automatic reader-known coverage estimate.",
         "Proper nouns, marginal words, acronyms, and other potentially known items are not automatically credited unless they match the selected list/normalizer.",
-        "Coverage can differ from LexTutor unless the frequency list, word-family expansion, tokenizer, proper-noun/number policy, and lemmatizer all match.",
+        "Panel B values are not claimed to be numerically comparable to LexTutor. Comparison would require the same hybrid lookup order, frequency list, word-family expansion, tokenizer, proper-noun/number policy, and normalizer.",
         "P_Lex counts unclassified off-list items as hard words under this app's no-automatic-proper-noun-adjustment policy.",
         "S uses the selected list's ranks, not Kojima & Yamashita's BNC-spoken family lists; values are not directly comparable to published S values."
       ],
@@ -704,7 +1125,188 @@
         "yule_k": 64.092292901779,
         "yule_i": 82.6875
       },
+      "panel_a_records": {
+        "ttr": {
+          "value": 0.79746835443,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "ttr_v_over_n_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 1,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "rttr": {
+          "value": 10.024021780614,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "rttr_guiraud_v_over_sqrt_n_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 1,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "cttr": {
+          "value": 7.088053775834,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "cttr_v_over_sqrt_2n_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 1,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "herdan": {
+          "value": 0.95529701179,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "herdan_c_logv_over_logn_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "maas": {
+          "value": 0.008830054136,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "maas_a2_ln_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "msttr": {
+          "value": 0.913333333333,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "msttr_nonoverlap_complete_drop_v1",
+          "requested_parameters": {
+            "segment_length": 50
+          },
+          "effective_parameters": {
+            "segment_length": 50
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "mattr": {
+          "value": 0.915596330275,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "mattr_sliding_step1_v1",
+          "requested_parameters": {
+            "window_length": 50
+          },
+          "effective_parameters": {
+            "window_length": 50
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "mtld": {
+          "value": 218.435,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "mtld_bidir_mean_leq_min10_python_v1",
+          "requested_parameters": {
+            "threshold": 0.72,
+            "minimum_factor_length": 10,
+            "factor_boundary_comparator": "<=",
+            "directions": [
+              "forward",
+              "reverse"
+            ],
+            "direction_aggregation": "arithmetic_mean_available"
+          },
+          "effective_parameters": {
+            "threshold": 0.72,
+            "minimum_factor_length": 10,
+            "factor_boundary_comparator": "<=",
+            "directions": [
+              "forward",
+              "reverse"
+            ],
+            "direction_aggregation": "arithmetic_mean_available"
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "hdd": {
+          "value": 0.904835486661,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "hdd_expected_ttr_scaled_v1",
+          "requested_parameters": {
+            "sample_size": 42
+          },
+          "effective_parameters": {
+            "sample_size": 42
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "vocd": {
+          "value": 182.733979001104,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "vocd_d_monte_carlo_python_v1",
+          "requested_parameters": {
+            "seed": 42,
+            "trials_per_sample_size": 100,
+            "sample_size_min": 35,
+            "sample_size_max": 50,
+            "grid_max": 200.0,
+            "runs": 3
+          },
+          "effective_parameters": {
+            "seed": 42,
+            "trials_per_sample_size": 100,
+            "sample_size_min": 35,
+            "sample_size_max": 50,
+            "grid_max": 200.0,
+            "runs": 3
+          },
+          "advisory_quality_floor_tokens": 50,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "yule_k": {
+          "value": 64.092292901779,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "yule_k_m2_tokens_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 100,
+          "advisory_quality_status": "meets_advisory_floor"
+        },
+        "yule_i": {
+          "value": 82.6875,
+          "status": "available",
+          "missing_reason": null,
+          "method_id": "yule_i_types_v2_over_m2_minus_v_v1",
+          "requested_parameters": {},
+          "effective_parameters": {},
+          "advisory_quality_floor_tokens": 100,
+          "advisory_quality_status": "meets_advisory_floor"
+        }
+      },
       "panel_b": {
+        "mapping_diagnostics": {
+          "method_id": "surface_first_rank_lookup_normalized_fallback_v1",
+          "input_tokens": 158,
+          "input_surface_types": 126,
+          "mapped_unit_types": 126,
+          "collapsed_surface_types": 0,
+          "surface_hit_tokens": 148,
+          "surface_hit_rate": 0.936708860759,
+          "normalized_fallback_hit_tokens": 0,
+          "normalized_fallback_hit_rate": 0.0,
+          "normalized_off_list_tokens": 3,
+          "normalized_off_list_rate": 0.018987341772,
+          "identity_fallback_tokens": 7,
+          "identity_fallback_rate": 0.044303797468
+        },
         "lfp": [
           {
             "level": "K1",
@@ -789,7 +1391,7 @@
             "3000": 93.67
           },
           "capped": false,
-          "reference_list_note": "uses the supplied list's ranks (e.g. NJ8), not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical for written text + headword/flemma coverage)"
+          "reference_list_note": "uses the selected list's ranks, not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical when the selected list leaves substantial text off-list)"
         },
         "band_wise": [
           {
@@ -806,8 +1408,8 @@
             "tokens": 27,
             "types": 26,
             "MTLD": 204.12,
-            "MATTR": 0.962962962963,
-            "HD-D": 0.962962962963,
+            "MATTR": null,
+            "HD-D": null,
             "Min N": 50
           },
           {
@@ -815,8 +1417,8 @@
             "tokens": 5,
             "types": 5,
             "MTLD": null,
-            "MATTR": 1.0,
-            "HD-D": 1.0,
+            "MATTR": null,
+            "HD-D": null,
             "Min N": 50
           },
           {
@@ -824,8 +1426,8 @@
             "tokens": 10,
             "types": 9,
             "MTLD": 28.0,
-            "MATTR": 0.9,
-            "HD-D": 0.9,
+            "MATTR": null,
+            "HD-D": null,
             "Min N": 50
           }
         ]

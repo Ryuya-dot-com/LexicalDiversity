@@ -21,6 +21,7 @@ AGGREGATE_RESULT_KEYS = frozenset(
         "n_tokens",
         "n_types",
         "indices",
+        "index_records",
         "panel_b",
         "semantic_network",
         "tubelex",

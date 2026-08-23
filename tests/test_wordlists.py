@@ -10,9 +10,39 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ldfreq import wordlists as WL
+from ldfreq.server_only_gate import SERVER_ONLY_CONTROL_PROFILE
+
+
+CONTROL_EVIDENCE_ID = "GRC-2026-08-24-001"
+
+
+def _server_only_environment(resource_ids: str) -> dict[str, str]:
+    return {
+        "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
+        "LDFREQ_SERVER_ONLY_RESOURCE_IDS": resource_ids,
+        "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
+        "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": SERVER_ONLY_CONTROL_PROFILE,
+        "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": CONTROL_EVIDENCE_ID,
+    }
 
 
 class WordlistRegistryTests(unittest.TestCase):
+    def test_plain_ranked_resource_units_do_not_claim_unprovided_grouping(self):
+        entries = {entry["id"]: entry for entry in WL.REGISTRY}
+
+        self.assertEqual(
+            entries["nj8"]["unit"],
+            "ranked spelling entries with listed variants (POS-less; not pre-grouped flemmas or families)",
+        )
+        self.assertEqual(
+            entries["ngsl"]["unit"],
+            "lemma ranks with supplied inflected-form aliases",
+        )
+        self.assertEqual(
+            entries["bnc_coca"]["unit"],
+            "ranked headword entries only (not flemmas or word families)",
+        )
+
     def test_invalid_base64_secret_is_ignored_with_warning(self):
         WL.MATERIALIZATION_WARNINGS.clear()
 
@@ -106,6 +136,8 @@ class WordlistRegistryTests(unittest.TestCase):
                     "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
                     "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "",
                     "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "0",
+                    "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": "",
+                    "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "",
                 },
                 clear=False,
             ):
@@ -113,22 +145,25 @@ class WordlistRegistryTests(unittest.TestCase):
 
             restricted_ids = {entry["id"] for entry in WL.restricted_installed()}
 
-        self.assertIn("nj8", public_ids)
+        self.assertNotIn("nj8", public_ids)
         self.assertIn("ngsl", public_ids)
         self.assertNotIn("bnc_coca", public_ids)
         self.assertNotIn("bnc_coca_families", public_ids)
 
+        self.assertIn("nj8", restricted_ids)
         self.assertIn("bnc_coca", restricted_ids)
         self.assertIn("bnc_coca_families", restricted_ids)
 
-    def test_server_only_mode_requires_allowlist_and_rights_attestation(self):
+    def test_server_only_mode_requires_rights_and_control_attestations(self):
         with patch.object(WL, "_entry_available", return_value=True):
             with patch.dict(
                 os.environ,
                 {
                     "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
                     "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "bnc_coca,nation_bnc_coca_families",
-                    "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "0",
+                    "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
+                    "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": "",
+                    "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "",
                 },
                 clear=False,
             ):
@@ -136,11 +171,9 @@ class WordlistRegistryTests(unittest.TestCase):
 
             with patch.dict(
                 os.environ,
-                {
-                    "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
-                    "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "bnc_coca,nation_bnc_coca_families,bnc_coca_families,range_baseword",
-                    "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
-                },
+                _server_only_environment(
+                    "bnc_coca,nation_bnc_coca_families"
+                ),
                 clear=False,
             ):
                 server_only = {entry["id"] for entry in WL.available()}
@@ -154,8 +187,27 @@ class WordlistRegistryTests(unittest.TestCase):
 
     def test_targeted_rights_gate_only_checks_the_requested_resource(self):
         nj8 = WL.by_id("nj8")
-        with patch.object(WL, "_entry_available", return_value=True) as available:
-            selected = WL.available_by_id("nj8")
+        with patch.object(WL, "_entry_available", return_value=True) as available, patch.dict(
+            os.environ,
+            {
+                "LDFREQ_SERVING_MODE": "public",
+                "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
+            },
+            clear=True,
+        ):
+            selected = WL.available_by_id("nj8", include_restricted=True)
+        self.assertIsNone(selected)
+        available.assert_not_called()
+
+        with patch.object(WL, "_entry_available", return_value=True) as available, patch.dict(
+            os.environ,
+            {
+                "LDFREQ_SERVING_MODE": "local",
+                "LDFREQ_ALLOW_LOCAL_RESTRICTED": "1",
+            },
+            clear=True,
+        ):
+            selected = WL.available_by_id("nj8", include_restricted=True)
         self.assertIs(selected, nj8)
         available.assert_called_once_with(nj8)
 
@@ -164,6 +216,8 @@ class WordlistRegistryTests(unittest.TestCase):
             {
                 "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "",
                 "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "0",
+                "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": "",
+                "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "",
             },
             clear=False,
         ):
@@ -184,13 +238,35 @@ class WordlistRegistryTests(unittest.TestCase):
 
         with patch.dict(
             os.environ,
-            {
-                "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "antbnc",
-                "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
-            },
+            _server_only_environment("antbnc"),
             clear=False,
         ):
             self.assertFalse(WL.server_only_enabled("antbnc"))
+
+    def test_server_payload_materialization_requires_control_evidence(self):
+        environment = _server_only_environment(
+            "bnc_coca,nation_bnc_coca_families"
+        )
+        environment["LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID"] = ""
+        with patch.dict(os.environ, environment, clear=True), patch.object(
+            WL, "_materialize_zip_b64"
+        ) as materialize_zip:
+            WL._materialize_deployment_data()
+
+        materialize_zip.assert_not_called()
+
+    def test_complete_gate_materializes_only_the_allowlisted_server_resource(self):
+        environment = _server_only_environment("bnc_coca")
+        with patch.dict(os.environ, environment, clear=True), patch.object(
+            WL, "_materialize_file_b64"
+        ), patch.object(WL, "_materialize_zip_b64") as materialize_zip:
+            WL._materialize_deployment_data()
+
+        materialize_zip.assert_called_once_with(
+            "LDFREQ_BNCCOCA_ZIP_B64",
+            "NationBNCCOCA",
+            "LDFREQ_BNCCOCA_PATH",
+        )
 
     def test_restricted_secrets_are_not_materialized_before_rights_gate(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -202,6 +278,7 @@ class WordlistRegistryTests(unittest.TestCase):
                     "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "antbnc",
                     "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "1",
                     "LDFREQ_ANTBNC_TXT_B64": encoded,
+                    "LDFREQ_NJ8_CSV_B64": encoded,
                     "LDFREQ_BNCCOCA_ZIP_B64": encoded,
                     "LDFREQ_NATION_BNCCOCA_RUNTIME_ZIP_B64": encoded,
                 },
@@ -210,6 +287,7 @@ class WordlistRegistryTests(unittest.TestCase):
                 WL._materialize_deployment_data()
 
             self.assertFalse((Path(tmp) / "antbnc_lemmas_ver_004.txt").exists())
+            self.assertFalse((Path(tmp) / "NJ8.csv").exists())
             self.assertFalse((Path(tmp) / "NationBNCCOCA").exists())
             self.assertFalse((Path(tmp) / "nation_bnc_coca_25000").exists())
 
@@ -223,11 +301,13 @@ class WordlistRegistryTests(unittest.TestCase):
                 "LDFREQ_SERVING_MODE": "public",
                 "LDFREQ_ALLOW_LOCAL_RESTRICTED": "1",
                 "LDFREQ_ANTBNC_TXT_B64": encoded,
+                "LDFREQ_NJ8_CSV_B64": encoded,
             },
             clear=True,
         ):
             WL._materialize_deployment_data()
             self.assertFalse((Path(tmp) / "antbnc_lemmas_ver_004.txt").exists())
+            self.assertFalse((Path(tmp) / "NJ8.csv").exists())
 
         with tempfile.TemporaryDirectory() as tmp, patch.object(
             WL, "_RUNTIME_DIR", tmp
@@ -237,11 +317,30 @@ class WordlistRegistryTests(unittest.TestCase):
                 "LDFREQ_SERVING_MODE": "local",
                 "LDFREQ_ALLOW_LOCAL_RESTRICTED": "1",
                 "LDFREQ_ANTBNC_TXT_B64": encoded,
+                "LDFREQ_NJ8_CSV_B64": encoded,
             },
             clear=True,
         ):
             WL._materialize_deployment_data()
             self.assertTrue((Path(tmp) / "antbnc_lemmas_ver_004.txt").is_file())
+            self.assertTrue((Path(tmp) / "NJ8.csv").is_file())
+
+    def test_explicit_include_restricted_cannot_bypass_local_serving_mode(self):
+        with patch.object(WL, "_entry_available", return_value=True), patch.dict(
+            os.environ,
+            {
+                "LDFREQ_SERVING_MODE": "public",
+                "LDFREQ_ALLOW_LOCAL_RESTRICTED": "1",
+            },
+            clear=True,
+        ):
+            public_ids = {
+                entry["id"] for entry in WL.available(include_restricted=True)
+            }
+            selected = WL.available_by_id("antbnc", include_restricted=True)
+
+        self.assertNotIn("antbnc", public_ids)
+        self.assertIsNone(selected)
 
 
 if __name__ == "__main__":

@@ -1,12 +1,14 @@
 import hashlib
 import json
 import platform
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
 
 from ldfreq import OUTPUT_SCHEMA_VERSION, RELEASE_PHASE, __version__
-from ldfreq.exporting import payload_to_excel, payload_to_json
+from ldfreq.analysis import AnalysisConfig
+from ldfreq.exporting import canonical_export_value, payload_to_excel, payload_to_json
 from scripts import build_v1_golden_fixtures as golden
 from scripts.check_runtime_environment import runtime_environment_violations
 
@@ -32,6 +34,9 @@ def test_golden_fixture_inventory_is_self_consistent_and_public_only():
     )
     assert manifest["release_identity"]["release_phase"] == RELEASE_PHASE
     assert manifest["serialization"]["release_image_digest_frozen"] is False
+    assert manifest["analysis"]["config"] == canonical_export_value(
+        asdict(AnalysisConfig())
+    )
 
     for path in golden.INPUT_PATHS:
         recorded = manifest["inputs"][path.name]

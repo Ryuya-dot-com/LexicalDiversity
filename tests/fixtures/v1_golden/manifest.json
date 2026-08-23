@@ -6,8 +6,8 @@
   "human_or_learner_writing": false,
   "external_api_calls": 0,
   "release_identity": {
-    "application_version": "0.9.0-dev.0",
-    "output_schema_version": "1.0.0",
+    "application_version": "0.10.0-dev.0",
+    "output_schema_version": "2.0.0",
     "target_application_release": "1.0.0",
     "release_phase": "development"
   },
@@ -26,7 +26,8 @@
       "hdd_sample": 42,
       "vocd_seed": 42,
       "advanced_cutoff": 2,
-      "unit": "token"
+      "unit": "token",
+      "tokenizer_policy": "english_unicode_v1"
     },
     "resources": {
       "list_id": "ngsl",
@@ -55,37 +56,37 @@
   },
   "expected_files": {
     "expected-single.json": {
-      "bytes": 8168,
-      "sha256": "faf3040b0c7a032e0fc61568379dcc6c0fe9a35b01fbb0aeb2b46dcd962cc676"
+      "bytes": 14517,
+      "sha256": "849285e3da2f165513b8f4faff381765f85de8346fd95defd279723f49e91d62"
     },
     "expected-batch.json": {
-      "bytes": 27655,
-      "sha256": "52b53fa592e5b2735d10dc40f24550f4f9aea09e1da9b8f6549993b38a923c6e"
+      "bytes": 50313,
+      "sha256": "28f663f35b136459caeb4e53b6cedf9bf829d1673ce441d303744b8f48c6e254"
     },
     "expected-single-workbook.json": {
-      "bytes": 23340,
-      "sha256": "6fe3392493300be643c862ea8bd5309ef76d0f365f1d4773ee5d8953f648d880"
+      "bytes": 27366,
+      "sha256": "67204e5dacb4029dadfa256e48f8c18384ed9b5d874be645735cdda30c3e0654"
     },
     "expected-batch-workbook.json": {
-      "bytes": 43779,
-      "sha256": "09b3229b3a7f7c108d0d8a9df0f572763cafcab4eec47de2e92150e69a773b5f"
+      "bytes": 56573,
+      "sha256": "27ee80f767c639f919a9ae99793b72a3657ad434cec41b8644131991453ad6ba"
     }
   },
   "provisional_xlsx_binary": {
     "single": {
-      "bytes": 17128,
-      "sha256": "86fc08be813ad647000611a676cf6534ee0b55c0d51bfcaaa7610ec44587f540"
+      "bytes": 18360,
+      "sha256": "3834004da12ee34ae2612a3ae6d12f1a0381ebfab3b2a6b3f8c9ac72a623849a"
     },
     "batch": {
-      "bytes": 24758,
-      "sha256": "3cc822a8ff8469cf74b6d550c33334eb6811604e93176361c61115470a94c683"
+      "bytes": 27377,
+      "sha256": "46151c477f5ecc7ee3a24ecea01459caa87419191419109865e1c7d0940c3c2d"
     }
   },
   "generator": {
     "python": "3.12.13",
     "implementation": "CPython",
     "platform": "macOS-26.5.2-arm64-arm-64bit",
-    "production_version_graph_sha256": "43aca90091bb41c087590b17f9c0adaaa133718dbe9e3428095a3101de0eedf1",
+    "production_version_graph_sha256": "795523ccb88437a914cdbc81a72a6acc3926c2cfa34a164e593a4b8474dfbdb2",
     "production_wheel_lock_sha256": "9a892bc9dcabf68a3b803a0f9a9481e8968901fb74f2a667dfb4778779ec2871",
     "production_watchdog_wheel_lock_sha256": "b283227b22a36f85459abbaa87bda16ec1328250d4e97120c7bffb5e989891b6",
     "base_image_identity_sha256": "5253a9b4fda5ff536faf08c4bf688d9e0d2d0b5f1400299d35544d10660fa16a",

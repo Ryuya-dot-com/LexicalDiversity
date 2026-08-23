@@ -23,9 +23,10 @@ SOFTWARE.
 ----------------------------------------------------------------------------
 NOTE: This MIT license covers the SOURCE CODE only. Word-list *data* shipped,
 derived, or loaded at runtime is licensed separately (see each
-data/*/manifest.json). New JACET8000 is approved for redistribution in this
-project. NGSL and the official Paul Nation BNC/COCA headword/family resources
-remain governed by CC BY-SA 4.0; the Nation resources are server-only by
-product policy. The separate EAPFoundation snapshot and AntBNC remain
-permission-pending for public-Web use and are blocked unless an authorized
-operator has separately confirmed the intended processing rights.
+data/*/manifest.json). NGSL and the official Paul Nation BNC/COCA
+headword/family resources remain governed by CC BY-SA 4.0; the Nation resources
+are server-only by product policy. New JACET8000, the separate EAPFoundation
+snapshot, and AntBNC are review- or permission-pending for public-Web use and
+are not covered by this MIT license. Their payloads are excluded from the public
+release. NJ8 may be loaded only as an operator-supplied resource in explicit
+local mode; that engineering switch is not a public-use permission decision.

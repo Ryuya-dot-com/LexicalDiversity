@@ -192,8 +192,9 @@ def _panel_a_short_flag(n_tokens: int, settings: Mapping[str, Any]) -> dict[str,
         "severity": "caution",
         "message": (
             "This text is below the displayed recommended minimum for one or more "
-            "Panel A indices. Retained values are descriptive but may be unstable; use "
-            "the per-index Warning column."
+            "Panel A indices. This is an advisory quality flag, not a computation "
+            "rule: computed values may be unstable, while requested segment/window/"
+            "sample methods can be missing when their actual domain is not met."
         ),
         "observed": {"n_tokens": int(n_tokens)},
         "threshold": {"minimum_tokens_by_index": thresholds},

@@ -30,6 +30,8 @@ def test_docker_build_context_excludes_private_and_local_payloads():
         "LexicalSophistication/**",
         "TAALED/**",
         "NationBNCCOCA/**",
+        "data/NJ8",
+        "data/NJ8/**",
         "data/antbnc/**",
         "data/bnc_coca/**",
         "data/raw/**",
@@ -100,12 +102,12 @@ def test_dockerfile_is_fail_closed_and_copies_only_reviewed_runtime_inputs():
         "pages/",
         ".streamlit/config.toml",
         "data/resource_registry.json",
-        "data/NJ8/",
         "data/ngsl/",
         "data/open/",
     ):
         assert public_source in copied
     for forbidden_source in (
+        "data/NJ8",
         "data/antbnc",
         "data/bnc_coca",
         ".streamlit/runtime_lists",
@@ -163,6 +165,21 @@ def test_streamlit_hides_error_details_from_clients():
     assert 'showErrorDetails = "none"' in config
     assert "showErrorDetails = false" not in config
     assert 'fileWatcherType = "none"' in config
+
+
+def test_app_bootstrap_forwards_server_only_control_declarations_before_imports():
+    source = _read(ROOT / "app.py")
+    call_offset = source.index("\n_copy_streamlit_secrets_to_env()\n")
+    bootstrap = source[:call_offset]
+
+    for name in (
+        "LDFREQ_SERVER_ONLY_RESOURCE_IDS",
+        "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED",
+        "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION",
+        "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID",
+    ):
+        assert f'"{name}"' in bootstrap
+    assert call_offset < source.index("from ldfreq")
 
 
 def test_production_requirements_pin_complete_runtime_dependency_graph():
@@ -259,15 +276,24 @@ def test_cloud_run_template_fixes_tokyo_and_least_privilege_runtime_contract():
     assert "timeoutSeconds: 1800" in service
     assert "@sha256:IMAGE_DIGEST" in service
 
-    assert "value: bnc_coca,nation_bnc_coca_families" in service
-    assert "name: LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED" in service
-    assert re.search(
-        r"name: LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED[\s\S]{0,220}value: \"0\"",
-        service,
-    )
-    assert "name: LDFREQ_SERVING_MODE" in service
-    assert "value: public" in service
-    assert "name: LDFREQ_ALLOW_LOCAL_RESTRICTED" in service
+    fail_closed_defaults = {
+        "LDFREQ_SERVING_MODE": "public",
+        "LDFREQ_ALLOW_LOCAL_RESTRICTED": "0",
+        "LDFREQ_SERVER_ONLY_RESOURCE_IDS": "",
+        "LDFREQ_SERVER_ONLY_RIGHTS_ACKNOWLEDGED": "0",
+        "LDFREQ_SERVER_ONLY_CONTROL_ATTESTATION": "",
+        "LDFREQ_SERVER_ONLY_CONTROL_EVIDENCE_ID": "",
+    }
+    for name, expected in fail_closed_defaults.items():
+        match = re.findall(
+            rf"- name: {name}\n(?:\s*#.*\n)*\s*value: (?:\"([^\"]*)\"|'([^']*)'|([^\s#]+))",
+            service,
+        )
+        assert len(match) == 1
+        observed = next((value for value in match[0] if value), "")
+        assert observed == expected
+    assert "shared-abuse-controls-v1" in service
+    assert "Short external record ID only; never a URL, path, or secret." in service
     assert "name: LDFREQ_ANALYSIS_DEADLINE_SECONDS" in service
     assert "name: LDFREQ_REAL_WRITING_APPROVED" in service
     assert 'value: "120"' in service

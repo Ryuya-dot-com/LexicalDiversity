@@ -48,7 +48,7 @@
           "open_flemma",
           "open-flemma-1.0.0+b59b8f4efcd2",
           "NGSL (New General Service List)",
-          null,
+          "listed_surface_form_at_lemma_rank_or_normalized_fallback",
           0.793548387097,
           0.915471698113,
           210.21875,
@@ -411,98 +411,189 @@
     {
       "name": "panel_a",
       "max_row": 13,
-      "max_column": 5,
+      "max_column": 12,
       "rows": [
         [
           "document",
           "index_key",
           "index",
           "value",
-          "direction"
+          "direction",
+          "status",
+          "missing_reason",
+          "method_id",
+          "requested_parameters",
+          "effective_parameters",
+          "advisory_quality_floor_tokens",
+          "advisory_quality_status"
         ],
         [
           "Document 001",
           "ttr",
           "TTR",
           0.793548387097,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "ttr_v_over_n_v1",
+          "{}",
+          "{}",
+          1,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "rttr",
           "RTTR (Guiraud)",
           9.879597745501,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "rttr_guiraud_v_over_sqrt_n_v1",
+          "{}",
+          "{}",
+          1,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "cttr",
           "CTTR",
           6.985930561239,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "cttr_v_over_sqrt_2n_v1",
+          "{}",
+          "{}",
+          1,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "herdan",
           "Herdan C",
           0.95415005553,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "herdan_c_logv_over_logn_v1",
+          "{}",
+          "{}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "maas",
           "Maas a² (↓)",
           0.009091033059,
-          "lower"
+          "lower",
+          "available",
+          null,
+          "maas_a2_ln_v1",
+          "{}",
+          "{}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "msttr",
           "MSTTR",
           0.9,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "msttr_nonoverlap_complete_drop_v1",
+          "{\"segment_length\": 50}",
+          "{\"segment_length\": 50}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "mattr",
           "MATTR",
           0.915471698113,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "mattr_sliding_step1_v1",
+          "{\"window_length\": 50}",
+          "{\"window_length\": 50}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "mtld",
           "MTLD",
           210.21875,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "mtld_bidir_mean_leq_min10_python_v1",
+          "{\"threshold\": 0.72, \"minimum_factor_length\": 10, \"factor_boundary_comparator\": \"<=\", \"directions\": [\"forward\", \"reverse\"], \"direction_aggregation\": \"arithmetic_mean_available\"}",
+          "{\"threshold\": 0.72, \"minimum_factor_length\": 10, \"factor_boundary_comparator\": \"<=\", \"directions\": [\"forward\", \"reverse\"], \"direction_aggregation\": \"arithmetic_mean_available\"}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "hdd",
           "HD-D",
           0.903238914818,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "hdd_expected_ttr_scaled_v1",
+          "{\"sample_size\": 42}",
+          "{\"sample_size\": 42}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "vocd",
           "vocd-D",
           176.065175501568,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "vocd_d_monte_carlo_python_v1",
+          "{\"seed\": 42, \"trials_per_sample_size\": 100, \"sample_size_min\": 35, \"sample_size_max\": 50, \"grid_max\": 200.0, \"runs\": 3}",
+          "{\"seed\": 42, \"trials_per_sample_size\": 100, \"sample_size_min\": 35, \"sample_size_max\": 50, \"grid_max\": 200.0, \"runs\": 3}",
+          50,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "yule_k",
           "Yule's K (↓)",
           59.105098855359,
-          "lower"
+          "lower",
+          "available",
+          null,
+          "yule_k_m2_tokens_v1",
+          "{}",
+          "{}",
+          100,
+          "meets_advisory_floor"
         ],
         [
           "Document 001",
           "yule_i",
           "Yule's I",
           86.948275862069,
-          "higher"
+          "higher",
+          "available",
+          null,
+          "yule_i_types_v2_over_m2_minus_v_v1",
+          "{}",
+          "{}",
+          100,
+          "meets_advisory_floor"
         ]
       ]
     },
@@ -613,7 +704,7 @@
           "Document 001",
           "S capped",
           false,
-          "uses the supplied list's ranks (e.g. NJ8), not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical for written text + headword/flemma coverage)"
+          "uses the selected list's ranks, not K&Y's BNC-spoken family lists; 'capped' = coverage never approaches 100% within rank 3000, so S is not interpretable (typical when the selected list leaves substantial text off-list)"
         ]
       ]
     },
@@ -769,8 +860,8 @@
           21,
           17,
           30.87,
-          0.809523809524,
-          0.809523809524,
+          null,
+          null,
           50
         ],
         [
@@ -779,8 +870,8 @@
           4,
           4,
           null,
-          1,
-          1,
+          null,
+          null,
           50
         ],
         [
@@ -789,8 +880,8 @@
           2,
           2,
           null,
-          1,
-          1,
+          null,
+          null,
           50
         ]
       ]
@@ -885,7 +976,7 @@
     },
     {
       "name": "metadata",
-      "max_row": 38,
+      "max_row": 42,
       "max_column": 3,
       "rows": [
         [
@@ -896,12 +987,12 @@
         [
           "Document 001",
           "ldfreq_version",
-          "0.9.0-dev.0"
+          "0.10.0-dev.0"
         ],
         [
           "Document 001",
           "output_schema_version",
-          "1.0.0"
+          "2.0.0"
         ],
         [
           "Document 001",
@@ -991,12 +1082,17 @@
         [
           "Document 001",
           "list_lookup_unit",
-          null
+          "listed_surface_form_at_lemma_rank_or_normalized_fallback"
+        ],
+        [
+          "Document 001",
+          "panel_b_mapping_method_id",
+          "surface_first_rank_lookup_normalized_fallback_v1"
         ],
         [
           "Document 001",
           "tokenizer_policy",
-          "ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop."
+          "english_unicode_v1"
         ],
         [
           "Document 001",
@@ -1041,7 +1137,7 @@
         [
           "Document 001",
           "method_note",
-          "Tokenizer policy: ASCII letters plus internal apostrophes; numbers, hyphens, and periods split or drop."
+          "Tokenizer policy: english_unicode_v1"
         ],
         [
           "Document 001",
@@ -1051,7 +1147,22 @@
         [
           "Document 001",
           "method_note",
-          "Panel B maps tokens to flemmas/head forms before frequency-list lookup."
+          "Panel A standard method IDs retain the requested segment, window, and sample parameters; advisory quality floors never trigger parameter shrinking."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Python MTLD uses a bidirectional arithmetic mean, closes factors at TTR <= threshold after at least 10 tokens, and has a Python-specific method ID rather than an R-equivalence claim."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "Panel B mapping method surface_first_rank_lookup_normalized_fallback_v1 is hybrid: an exact lower-cased surface-form key is looked up first, and the configured normalizer is used only after that lookup misses. Direct hits are not re-normalized, so this is not a pure flemma or lemma pipeline."
+        ],
+        [
+          "Document 001",
+          "method_note",
+          "For spelling/headword resources, a successful normalized fallback maps to the corresponding ranked entry; a direct listed spelling keeps its own rank."
         ],
         [
           "Document 001",
@@ -1066,7 +1177,7 @@
         [
           "Document 001",
           "method_note",
-          "Coverage can differ from LexTutor unless the frequency list, word-family expansion, tokenizer, proper-noun/number policy, and lemmatizer all match."
+          "Panel B values are not claimed to be numerically comparable to LexTutor. Comparison would require the same hybrid lookup order, frequency list, word-family expansion, tokenizer, proper-noun/number policy, and normalizer."
         ],
         [
           "Document 001",
